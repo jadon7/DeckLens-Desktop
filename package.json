@@ -1,0 +1,98 @@
+{
+  "name": "decklens-desktop",
+  "version": "0.2.0",
+  "private": true,
+  "description": "DeckLens desktop shell for macOS and Windows.",
+  "author": "DeckLens",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "electron:dev": "electron .",
+    "electron:pack": "electron-builder --dir",
+    "electron:dist": "electron-builder",
+    "electron:dist:mac": "electron-builder --mac",
+    "electron:dist:mac:signed": "APPLE_KEYCHAIN_PROFILE=decklens-notary electron-builder --mac",
+    "electron:dist:win": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "42.0.1",
+    "electron-builder": "26.8.1"
+  },
+  "build": {
+    "appId": "app.decklens.desktop",
+    "productName": "DeckLens",
+    "asar": true,
+    "compression": "normal",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://updates.dsxzai.com/"
+      }
+    ],
+    "files": [
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "app.py",
+        "to": "backend/app.py"
+      },
+      {
+        "from": "engine.py",
+        "to": "backend/engine.py"
+      },
+      {
+        "from": "requirements.txt",
+        "to": "backend/requirements.txt"
+      },
+      {
+        "from": "templates",
+        "to": "backend/templates",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "static",
+        "to": "backend/static",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "font_matcher",
+        "to": "backend/font_matcher",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc"
+        ]
+      }
+    ],
+    "mac": {
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "notarize": true,
+      "sign": "./build/sign-mac.cjs",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  }
+}

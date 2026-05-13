@@ -1,0 +1,218 @@
+{
+  "dream-sans-w3": {
+    "category": "heiti",
+    "weight": 0.05388,
+    "width_ratio": 1.1102,
+    "variance": 0.020512,
+    "stroke_ratio": 0.9792,
+    "pptx_name": "Dream Han Sans SC W3",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/f690928f8fa5d1deba105ff911ad3354.ttc"
+  },
+  "dream-sans-w8": {
+    "category": "heiti",
+    "weight": 0.07739,
+    "width_ratio": 1.0987,
+    "variance": 0.025614,
+    "stroke_ratio": 0.9767,
+    "pptx_name": "Dream Han Sans SC W8",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/a1b1eed376f3011a946beeee4bd5926a.ttc"
+  },
+  "dream-sans-w17": {
+    "category": "heiti",
+    "weight": 0.11972,
+    "width_ratio": 1.0765,
+    "variance": 0.030848,
+    "stroke_ratio": 0.9105,
+    "pptx_name": "Dream Han Sans SC W17",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/2a1f641e06fbbf03d3be6ff6ef687488.ttc"
+  },
+  "dream-sans-w21": {
+    "category": "heiti",
+    "weight": 0.14084,
+    "width_ratio": 1.0693,
+    "variance": 0.035973,
+    "stroke_ratio": 1.0028,
+    "pptx_name": "Dream Han Sans SC W21",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/a6634573dfc62727d37c0dd576fd5cc1.ttc"
+  },
+  "alibaba-light": {
+    "category": "heiti",
+    "weight": 0.07078,
+    "width_ratio": 1.0969,
+    "variance": 0.021788,
+    "stroke_ratio": 1.055,
+    "pptx_name": "Alibaba PuHuiTi 2.0 45 Light",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/AlibabaPuHuiTi_2_45_Light.ttf"
+  },
+  "alibaba-bold": {
+    "category": "heiti",
+    "weight": 0.12203,
+    "width_ratio": 1.0806,
+    "variance": 0.032169,
+    "stroke_ratio": 1.0324,
+    "pptx_name": "Alibaba PuHuiTi 2.0 75 SemiBold",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/AlibabaPuHuiTi_2_75_SemiBold.ttf"
+  },
+  "misans-regular": {
+    "category": "heiti",
+    "weight": 0.09792,
+    "width_ratio": 1.0951,
+    "variance": 0.026499,
+    "stroke_ratio": 0.9759,
+    "pptx_name": "MiSans",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/MiSans-Regular.ttf"
+  },
+  "misans-bold": {
+    "category": "heiti",
+    "weight": 0.15861,
+    "width_ratio": 1.0778,
+    "variance": 0.03525,
+    "stroke_ratio": 0.9404,
+    "pptx_name": "MiSans Bold",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/MiSans-Bold.ttf"
+  },
+  "misans-demibold": {
+    "category": "heiti",
+    "weight": 0.1227,
+    "width_ratio": 1.0887,
+    "variance": 0.029746,
+    "stroke_ratio": 0.944,
+    "pptx_name": "MiSans Demibold",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/MiSans-Demibold.ttf"
+  },
+  "monotitl": {
+    "category": "heiti",
+    "weight": 0.10378,
+    "width_ratio": 0.9918,
+    "variance": 0.027795,
+    "stroke_ratio": 1.1545,
+    "pptx_name": "MonuTitl CnMd",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/MonuTitl-CnMd.ttf"
+  },
+  "smiley-sans": {
+    "category": "heiti",
+    "weight": 0.10541,
+    "width_ratio": 0.8246,
+    "variance": 0.03092,
+    "stroke_ratio": 1.2682,
+    "pptx_name": "Smiley Sans Oblique",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/SmileySans-Oblique.ttf"
+  },
+  "misans-heavy": {
+    "category": "heiti",
+    "weight": 0.17083,
+    "width_ratio": 1.0704,
+    "variance": 0.036363,
+    "stroke_ratio": 1.1284,
+    "pptx_name": "MiSans Heavy",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/MiSans-Heavy.ttf"
+  },
+  "dream-serif-w3": {
+    "category": "songti",
+    "weight": 0.06446,
+    "width_ratio": 1.091,
+    "variance": 0.025742,
+    "stroke_ratio": 0.7202,
+    "pptx_name": "Dream Han Serif CN W3",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/DreamHanSerifCN-W3.ttf"
+  },
+  "dream-serif-w8": {
+    "category": "songti",
+    "weight": 0.07662,
+    "width_ratio": 1.0824,
+    "variance": 0.027542,
+    "stroke_ratio": 0.6729,
+    "pptx_name": "Dream Han Serif CN W8",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/DreamHanSerifCN-W8.ttf"
+  },
+  "dream-serif-w17": {
+    "category": "songti",
+    "weight": 0.10172,
+    "width_ratio": 1.0621,
+    "variance": 0.030592,
+    "stroke_ratio": 0.5096,
+    "pptx_name": "Dream Han Serif CN W17",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/DreamHanSerifCN-W17.ttf"
+  },
+  "xinyi-jixiang-song": {
+    "category": "songti",
+    "weight": 0.05569,
+    "width_ratio": 0.9811,
+    "variance": 0.018417,
+    "stroke_ratio": 0.8411,
+    "pptx_name": "Fontquan-XinYiJiXiangSong",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/Fontquan-XinYiJiXiangSong-Regular.ttf"
+  },
+  "houzun-song": {
+    "category": "songti",
+    "weight": 0.07829,
+    "width_ratio": 0.6617,
+    "variance": 0.022388,
+    "stroke_ratio": 0.8826,
+    "pptx_name": "HouZunSongTi",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/HouZunSongTi.ttf"
+  },
+  "flower-fangsong": {
+    "category": "songti",
+    "weight": 0.05829,
+    "width_ratio": 0.9626,
+    "variance": 0.02562,
+    "stroke_ratio": 0.6516,
+    "pptx_name": "FlowerFangSong",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/FlowerFangSong-.ttf"
+  },
+  "lxgw-wenkai": {
+    "category": "maobi",
+    "weight": 0.07681,
+    "width_ratio": 1.1087,
+    "variance": 0.023338,
+    "stroke_ratio": 0.9439,
+    "pptx_name": "LXGW WenKai",
+    "path": "/Users/sunyi/Desktop/CodeX Project/非主线任务/fonts/LXGWWenKai/LXGWWenKai-Regular.ttf"
+  },
+  "oswald": {
+    "category": "digit",
+    "weight": 0.05635,
+    "width_ratio": 0.5869,
+    "variance": 0.011595,
+    "stroke_ratio": 1.8357,
+    "pptx_name": "Oswald",
+    "path": "/Library/Fonts/Oswald/Oswald-VariableFont_wght.ttf"
+  },
+  "bebas-neue": {
+    "category": "digit",
+    "weight": 0.05211,
+    "width_ratio": 0.5563,
+    "variance": 0.008432,
+    "stroke_ratio": 2.3907,
+    "pptx_name": "Bebas Neue",
+    "path": "/Library/Fonts/Bebas_Neue/BebasNeue-Regular.ttf"
+  },
+  "d-din": {
+    "category": "digit",
+    "weight": 0.0366,
+    "width_ratio": 0.7617,
+    "variance": 0.007541,
+    "stroke_ratio": 1.2221,
+    "pptx_name": "D-DIN",
+    "path": "/Users/sunyi/Library/Fonts/EagleApp/D-DIN.ttf"
+  },
+  "roboto-mono": {
+    "category": "digit",
+    "weight": 0.04837,
+    "width_ratio": 0.8515,
+    "variance": 0.008207,
+    "stroke_ratio": 0.9464,
+    "pptx_name": "Roboto Mono",
+    "path": "/Users/sunyi/Desktop/CodeX Project/非主线任务/fonts/RobotoMono/RobotoMono-Regular.ttf"
+  },
+  "montserrat": {
+    "category": "digit",
+    "weight": 0.01241,
+    "width_ratio": 0.9057,
+    "variance": 0.002961,
+    "stroke_ratio": 0.9936,
+    "pptx_name": "Montserrat",
+    "path": "/Library/Fonts/Montserrat/Montserrat-VariableFont_wght.ttf"
+  }
+}

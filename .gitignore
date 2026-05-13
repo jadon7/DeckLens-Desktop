@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+.venv/
+.venv*/
+env/
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads and outputs (用户数据，不入库)
+uploads/
+outputs/
+logs/
+.data/
+test-materials/
+release/
+dist/
+
+# Model cache
+*.pt
+*.pth
+*.onnx
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+.venv/
+.env

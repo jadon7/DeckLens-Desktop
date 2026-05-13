@@ -1,0 +1,12 @@
+name = "decklens-updates"
+main = "cloudflare/update-worker.js"
+compatibility_date = "2026-05-13"
+account_id = "0eedb61d5ddbea42f84455c9455addb0"
+
+routes = [
+  { pattern = "updates.dsxzai.com", custom_domain = true }
+]
+
+[[r2_buckets]]
+binding = "DECKLENS_UPDATES"
+bucket_name = "decklens-updates"

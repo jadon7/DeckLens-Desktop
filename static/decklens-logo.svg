@@ -1,0 +1,58 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="appBg" x1="186" y1="138" x2="856" y2="906" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FBFF"/>
+      <stop offset="0.32" stop-color="#DFF4FF"/>
+      <stop offset="0.66" stop-color="#BDEFD9"/>
+      <stop offset="1" stop-color="#DDE3FF"/>
+    </linearGradient>
+    <linearGradient id="glassStroke" x1="230" y1="174" x2="826" y2="844" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.96"/>
+      <stop offset="0.46" stop-color="#8CDDF4" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#7077FF" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="lens" x1="330" y1="262" x2="722" y2="782" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#348BFF"/>
+      <stop offset="0.48" stop-color="#57C9C2"/>
+      <stop offset="1" stop-color="#7B61FF"/>
+    </linearGradient>
+    <linearGradient id="pageFill" x1="300" y1="210" x2="690" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#F6FBFF" stop-opacity="0.58"/>
+    </linearGradient>
+    <filter id="softShadow" x="102" y="112" width="820" height="814" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="30"/>
+      <feGaussianBlur stdDeviation="42"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.08 0 0 0 0 0.14 0 0 0 0 0.28 0 0 0 0.24 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+    </filter>
+    <filter id="innerGlow" x="184" y="184" width="656" height="656" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="blur" in2="SourceAlpha" operator="in" result="inner"/>
+      <feColorMatrix in="inner" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.45 0"/>
+      <feBlend mode="screen" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="232" fill="#F7FAFF"/>
+  <g filter="url(#softShadow)">
+    <rect x="158" y="148" width="708" height="708" rx="176" fill="url(#appBg)"/>
+    <rect x="171" y="161" width="682" height="682" rx="164" stroke="url(#glassStroke)" stroke-width="26"/>
+  </g>
+  <path d="M244 266C315 190 443 182 548 211C652 240 765 314 800 424C839 547 764 681 650 748C534 816 378 803 290 711C202 620 163 352 244 266Z" fill="#FFFFFF" fill-opacity="0.34"/>
+  <path d="M244 268C317 199 420 195 522 221" stroke="#FFFFFF" stroke-opacity="0.58" stroke-width="24" stroke-linecap="round"/>
+  <g filter="url(#innerGlow)">
+    <rect x="292" y="246" width="354" height="486" rx="64" fill="url(#pageFill)" stroke="#FFFFFF" stroke-opacity="0.82" stroke-width="22"/>
+    <path d="M362 370H572" stroke="#7A8AA3" stroke-opacity="0.46" stroke-width="24" stroke-linecap="round"/>
+    <path d="M362 460H604" stroke="#7A8AA3" stroke-opacity="0.34" stroke-width="24" stroke-linecap="round"/>
+    <path d="M362 550H520" stroke="#7A8AA3" stroke-opacity="0.30" stroke-width="24" stroke-linecap="round"/>
+  </g>
+  <circle cx="615" cy="620" r="170" fill="url(#lens)" fill-opacity="0.96"/>
+  <circle cx="615" cy="620" r="124" fill="#FFFFFF" fill-opacity="0.24" stroke="#FFFFFF" stroke-opacity="0.82" stroke-width="28"/>
+  <path d="M726 748L806 828" stroke="#4D5DE8" stroke-width="48" stroke-linecap="round"/>
+  <path d="M534 563C560 526 616 505 670 521" stroke="#FFFFFF" stroke-opacity="0.78" stroke-width="26" stroke-linecap="round"/>
+  <path d="M300 770C365 820 489 842 595 810" stroke="#FFFFFF" stroke-opacity="0.34" stroke-width="22" stroke-linecap="round"/>
+</svg>

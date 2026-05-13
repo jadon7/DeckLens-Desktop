@@ -1,0 +1,5436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeckLens — 图片化页面转可编辑 PPTX 与元素分层工作台</title>
+    <link rel="icon" href="/static/decklens-logo.svg" type="image/svg+xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 720px;
+            width: 100%;
+            padding: 60px 24px;
+            transition: max-width 0.3s;
+        }
+
+        .container.preview-mode {
+            max-width: 1100px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 15px;
+            margin-bottom: 48px;
+            line-height: 1.6;
+        }
+
+        /* 拖拽上传区域 */
+        .upload-zone {
+            border: 2px dashed #333;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #1a1a1a;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #4a9eff;
+            background: #1a2a3a;
+        }
+
+        .upload-zone .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-zone .text {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+
+        .upload-zone .hint {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .upload-zone input[type="file"] {
+            display: none;
+        }
+
+        /* 选项区域 */
+        .options-panel {
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .option-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #4a9eff;
+        }
+
+        .option-row .option-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .option-row .option-badge.off {
+            background: #333;
+            color: #888;
+        }
+
+        .option-row .option-badge.on {
+            background: #1a3a2a;
+            color: #6f6;
+        }
+
+        /* 文件列表 */
+        .file-list {
+            display: none;
+            margin-top: 24px;
+            padding: 16px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .file-list.active {
+            display: block;
+        }
+
+        .file-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .file-list-header h3 {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .file-list-header .count {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            background: #222;
+        }
+
+        .file-item .file-icon {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        .file-item .file-name {
+            flex: 1;
+            font-size: 13px;
+            color: #ccc;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-item .file-size {
+            font-size: 12px;
+            color: #666;
+            margin-left: 8px;
+        }
+
+        .file-item .file-remove {
+            margin-left: 8px;
+            cursor: pointer;
+            color: #666;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .file-item .file-remove:hover {
+            color: #f66;
+        }
+
+        .file-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        /* 处理状态 */
+        .status-panel {
+            display: none;
+            margin-top: 32px;
+            padding: 24px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .status-panel.active {
+            display: block;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .status-header .task-info {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .status-header .elapsed {
+            font-size: 13px;
+            color: #666;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a9eff, #6ab4ff);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .status-step {
+            font-size: 14px;
+            color: #ddd;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .status-detail {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .status-mode {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #1a3a2a;
+            color: #6f6;
+        }
+
+        .status-mode.normal {
+            background: #2a2a2a;
+            color: #888;
+        }
+
+        /* 结果区域 */
+        .result-panel {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: #1a2a1a;
+            border-radius: 12px;
+            border: 1px solid #2a3a2a;
+            text-align: center;
+        }
+
+        .result-panel.active {
+            display: block;
+        }
+
+        .result-panel .success-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .result-panel .message {
+            font-size: 15px;
+            color: #8f8;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: #4a9eff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #3a8eef;
+        }
+
+        .btn-secondary {
+            background: #333;
+            margin-left: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .btn-sm {
+            padding: 8px 20px;
+            font-size: 13px;
+        }
+
+        /* 错误状态 */
+        .error-panel {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: #2a1a1a;
+            border-radius: 12px;
+            border: 1px solid #3a2a2a;
+            text-align: center;
+        }
+
+        .error-panel.active {
+            display: block;
+        }
+
+        .error-panel .message {
+            font-size: 14px;
+            color: #f88;
+        }
+
+        /* 功能说明 */
+        .features {
+            margin-top: 64px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .feature-card {
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .feature-card h3 {
+            font-size: 14px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        footer {
+            margin-top: 64px;
+            text-align: center;
+            color: #444;
+            font-size: 12px;
+            padding-bottom: 32px;
+        }
+
+        /* 脉冲动画 */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* 预览面板 */
+        .preview-panel {
+            display: none;
+            margin-top: 32px;
+        }
+
+        .preview-panel.active {
+            display: block;
+        }
+
+        .preview-panel.active ~ .features,
+        .preview-panel.active ~ footer {
+            display: none;
+        }
+
+        .preview-header {
+            margin-bottom: 16px;
+        }
+
+        .preview-header h2 {
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .preview-hint {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .preview-slide-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .preview-slide-nav .slide-tab {
+            padding: 6px 14px;
+            background: #222;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #aaa;
+            cursor: pointer;
+            border: 1px solid #333;
+        }
+
+        .preview-slide-nav .slide-tab.active {
+            background: #1a3a5a;
+            color: #6af;
+            border-color: #4a9eff;
+        }
+
+        /* 预览主体：左右分栏 */
+        .preview-body {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* 左侧面板：元素列表 + 操作按钮 */
+        .preview-left {
+            width: 220px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-element-list {
+            flex: 1;
+            max-height: 500px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            padding: 8px;
+            margin-bottom: 12px;
+        }
+
+        .preview-element-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 2px;
+            font-size: 13px;
+            color: #ccc;
+            cursor: pointer;
+            gap: 8px;
+            transition: background 0.1s;
+        }
+
+        .preview-element-item:hover,
+        .preview-element-item.hovered {
+            background: #252525;
+        }
+
+        .preview-element-item.selected {
+            background: #2a1a1a;
+            border: 1px solid #e05555;
+        }
+
+        .preview-element-item.deleted {
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+
+        .preview-element-item.merged {
+            border-left: 3px solid #6f6;
+            opacity: 0.7;
+        }
+
+        .preview-element-item .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .preview-list-section-label {
+            font-size: 11px;
+            color: #666;
+            padding: 6px 10px 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-left-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .preview-left-buttons .btn {
+            width: 100%;
+            text-align: center;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        /* 右侧：画布区域（占满剩余空间） */
+        .preview-right {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .preview-canvas-wrap {
+            position: relative;
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .preview-canvas-wrap .canvas-container {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        .preview-floating-toolbar {
+            display: none;
+            padding: 10px 16px;
+            background: #1a3a5a;
+            border: 1px solid #4a9eff;
+            border-radius: 8px;
+            margin-top: 12px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .preview-floating-toolbar.active {
+            display: flex;
+        }
+
+        .preview-floating-toolbar .selected-count {
+            font-size: 13px;
+            color: #6af;
+            white-space: nowrap;
+        }
+
+        /* Toast 提示 */
+        .preview-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .preview-toast.show {
+            opacity: 1;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        /* DeckLens brand refresh */
+        :root {
+            --dl-bg: #f5f7ef;
+            --dl-bg-soft: #eef4e8;
+            --dl-panel: #101827;
+            --dl-panel-2: #111c2e;
+            --dl-ink: #111827;
+            --dl-muted: #667085;
+            --dl-soft: #475467;
+            --dl-line: rgba(148, 163, 184, 0.22);
+            --dl-blue: #245bff;
+            --dl-blue-2: #7c3aed;
+            --dl-green: #2f6f4e;
+            --dl-orange: #f59e0b;
+            --dl-red: #ef4444;
+            --dl-shadow: 0 24px 70px rgba(16, 24, 40, 0.16);
+        }
+
+        body {
+            align-items: stretch;
+            background:
+                radial-gradient(circle at 16% 14%, rgba(47, 111, 78, 0.12), transparent 28%),
+                radial-gradient(circle at 86% 12%, rgba(36, 91, 255, 0.10), transparent 30%),
+                linear-gradient(180deg, #f8faf3 0%, #f3f6ed 52%, #ffffff 52%, #ffffff 100%);
+            color: var(--dl-ink);
+        }
+
+        .container,
+        .container.preview-mode {
+            max-width: 1180px;
+            padding: 24px 24px 48px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 42px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: #111827;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            display: block;
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            filter: drop-shadow(0 14px 24px rgba(36, 91, 255, 0.16));
+        }
+
+        .brand-text strong,
+        .brand-text span {
+            display: block;
+        }
+
+        .brand-text strong {
+            font-size: 18px;
+            letter-spacing: 0;
+        }
+
+        .brand-text span {
+            color: #667085;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .trust-strip {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 14px 0 26px;
+        }
+
+        .trust-strip div {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 30px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(16px);
+        }
+
+        .trust-strip strong {
+            color: #d7ff7a;
+            font-size: 13px;
+        }
+
+        .trust-strip span {
+            color: rgba(255, 255, 255, 0.70);
+            font-size: 12px;
+        }
+
+        .hero-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 440px;
+            gap: 36px;
+            align-items: start;
+        }
+
+        .hero-copy {
+            padding-top: 22px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border: 1px solid rgba(47, 111, 78, 0.28);
+            border-radius: 999px;
+            color: #2f6f4e;
+            background: rgba(47, 111, 78, 0.08);
+            font-size: 12px;
+        }
+
+        .hero-copy h1 {
+            max-width: 700px;
+            margin: 18px 0 18px;
+            color: #101828;
+            font-size: clamp(44px, 6vw, 76px);
+            line-height: 1.02;
+            text-align: left;
+            letter-spacing: 0;
+        }
+
+        .hero-title-line {
+            display: block;
+            white-space: nowrap;
+        }
+
+        .hero-copy .subtitle {
+            max-width: 660px;
+            margin: 0;
+            color: #475467;
+            font-size: 17px;
+            line-height: 1.8;
+            text-align: left;
+        }
+
+        .hero-chips,
+        .tech-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .hero-chips span,
+        .tech-strip span {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 11px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+            color: #344054;
+            font-size: 12px;
+            box-shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .hero-workbench {
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.94);
+            color: #0f172a;
+            box-shadow: var(--dl-shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .mode-card small {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .mode-card {
+            display: grid;
+            gap: 5px;
+            min-height: 104px;
+            padding: 13px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+
+        .mode-card:hover {
+            border-color: rgba(74, 158, 255, 0.55);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .mode-card.active {
+            border-color: var(--dl-blue);
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.14);
+        }
+
+        .mode-card strong {
+            color: #0f172a;
+            font-size: 14px;
+        }
+
+        .mode-card .tag {
+            width: fit-content;
+            padding: 2px 8px;
+            border-radius: 999px;
+            color: #1d4ed8;
+            background: #dbeafe;
+            font-size: 11px;
+        }
+
+        .mode-card.layer .tag {
+            color: #15803d;
+            background: #dcfce7;
+        }
+
+        .mode-card input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .option-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 13px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #fff;
+        }
+
+        .option-card span {
+            display: grid;
+            gap: 3px;
+        }
+
+        .option-card strong {
+            color: #0f172a;
+            font-size: 14px;
+        }
+
+        .option-card small {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .option-card select {
+            min-width: 86px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: #f8fafc;
+            color: #0f172a;
+            font: inherit;
+        }
+
+        .options-panel {
+            margin-top: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+        }
+
+        .option-row {
+            position: relative;
+            display: block;
+        }
+
+        .option-row > span:not(.option-badge) {
+            display: none;
+        }
+
+        .option-badge {
+            display: none !important;
+        }
+
+        .upload-zone {
+            min-height: 220px;
+            padding: 28px 22px;
+            border-color: #cbd5e1;
+            border-radius: 16px;
+            background:
+                linear-gradient(180deg, rgba(74, 158, 255, 0.07), transparent),
+                #f8fafc;
+            color: #0f172a;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--dl-blue);
+            background: #eff6ff;
+        }
+
+        .upload-zone .icon {
+            display: grid;
+            width: 54px;
+            height: 54px;
+            place-items: center;
+            margin: 0 auto 14px;
+            border-radius: 14px;
+            color: #fff;
+            background: linear-gradient(145deg, var(--dl-blue), var(--dl-blue-2));
+            font-size: 0;
+        }
+
+        .upload-zone .icon::before {
+            content: "";
+            width: 22px;
+            height: 27px;
+            border: 2px solid currentColor;
+            border-radius: 5px;
+            box-shadow: 8px 8px 0 -5px currentColor;
+        }
+
+        .upload-zone .text {
+            color: #0f172a;
+            font-weight: 650;
+        }
+
+        .upload-zone .hint {
+            color: #64748b;
+        }
+
+        .file-list,
+        .status-panel,
+        .result-panel,
+        .error-panel {
+            border-color: #e2e8f0;
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .file-list-header h3,
+        .status-header .task-info,
+        .status-step {
+            color: #0f172a;
+        }
+
+        .file-item {
+            background: #f8fafc;
+        }
+
+        .file-item .file-name {
+            color: #1e293b;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+        }
+
+        .progress-bar .fill {
+            background: linear-gradient(90deg, var(--dl-blue), var(--dl-green));
+        }
+
+        .status-mode {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-mode.normal {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .btn {
+            border-radius: 10px;
+            background: #245bff;
+            font-weight: 650;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .preview-panel {
+            padding: 20px;
+            border: 1px solid #dbe3ef;
+            border-radius: 20px;
+            background: #fff;
+            color: #0f172a;
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        .preview-header h2 {
+            color: #0f172a;
+        }
+
+        .preview-hint,
+        .preview-list-section-label {
+            color: #64748b;
+        }
+
+        .preview-element-list,
+        .preview-canvas-wrap {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .preview-element-item {
+            color: #334155;
+        }
+
+        .preview-element-item:hover,
+        .preview-element-item.hovered {
+            background: #eef6ff;
+        }
+
+        .preview-floating-toolbar {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .process-section,
+        .proof-section,
+        .features {
+            margin-top: 52px;
+            color: #0f172a;
+        }
+
+        .section-head {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .section-head h2 {
+            color: #0f172a;
+            font-size: 28px;
+            letter-spacing: 0;
+        }
+
+        .section-head p {
+            max-width: 720px;
+            color: #64748b;
+            line-height: 1.7;
+        }
+
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .process-step,
+        .feature-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 12px 34px rgba(15, 23, 42, 0.05);
+        }
+
+        .process-step {
+            display: grid;
+            gap: 8px;
+            min-height: 118px;
+            padding: 14px;
+        }
+
+        .process-step span {
+            display: grid;
+            width: 28px;
+            height: 28px;
+            place-items: center;
+            border-radius: 9px;
+            color: #fff;
+            background: #0f172a;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .process-step strong {
+            color: #0f172a;
+            font-size: 13px;
+        }
+
+        .process-step p {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .features {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .proof-section {
+            display: grid;
+            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+            gap: 22px;
+            align-items: stretch;
+        }
+
+        .proof-copy,
+        .comparison-panel {
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 12px 34px rgba(15, 23, 42, 0.05);
+        }
+
+        .proof-copy {
+            padding: 24px;
+        }
+
+        .proof-copy h2 {
+            color: #0f172a;
+            font-size: 30px;
+            line-height: 1.16;
+        }
+
+        .proof-copy p {
+            margin-top: 12px;
+            color: #64748b;
+            line-height: 1.75;
+        }
+
+        .comparison-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            overflow: hidden;
+        }
+
+        .compare-card {
+            position: relative;
+            overflow: hidden;
+            display: grid;
+            gap: 12px;
+            padding: 18px;
+        }
+
+        .compare-card + .compare-card {
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .mini-slide {
+            position: relative;
+            height: 160px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f1f5f9, #dbeafe);
+            overflow: hidden;
+        }
+
+        .mini-slide .bar,
+        .mini-slide .line,
+        .mini-slide .shape {
+            position: absolute;
+            border-radius: 999px;
+        }
+
+        .mini-slide .bar {
+            left: 16px;
+            top: 20px;
+            width: 55%;
+            height: 14px;
+            background: #0f172a;
+        }
+
+        .mini-slide .line {
+            left: 16px;
+            top: 48px;
+            width: 42%;
+            height: 8px;
+            background: #64748b;
+        }
+
+        .mini-slide .shape {
+            right: 18px;
+            bottom: 18px;
+            width: 82px;
+            height: 82px;
+            border-radius: 22px;
+            background: linear-gradient(145deg, #4a9eff, #22c55e);
+        }
+
+        .mini-slide.output .bar,
+        .mini-slide.output .line,
+        .mini-slide.output .shape {
+            outline: 2px solid rgba(74, 158, 255, 0.65);
+            outline-offset: 3px;
+        }
+
+        .compare-card strong {
+            color: #0f172a;
+        }
+
+        .compare-card p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .feature-card {
+            padding: 18px;
+        }
+
+        .feature-card h3 {
+            color: #0f172a;
+            font-size: 15px;
+        }
+
+        .feature-card p {
+            color: #64748b;
+        }
+
+        .boundary-note {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border: 1px solid #fde68a;
+            border-radius: 14px;
+            background: #fffbeb;
+            color: #92400e;
+            line-height: 1.7;
+        }
+
+        footer {
+            color: #64748b;
+        }
+
+        @media (max-width: 980px) {
+            .topbar,
+            .hero-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero-shell {
+                display: grid;
+            }
+
+            .process-grid,
+            .proof-section,
+            .features {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .preview-body {
+                flex-direction: column;
+            }
+
+            .preview-left {
+                width: 100%;
+            }
+
+            .mode-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container,
+            .container.preview-mode {
+                padding: 18px 14px 36px;
+            }
+
+            .hero-actions,
+            .mode-grid,
+            .process-grid,
+            .proof-section,
+            .comparison-panel,
+            .features {
+                grid-template-columns: 1fr;
+                display: grid;
+            }
+
+            .hero-copy h1 {
+                font-size: 40px;
+            }
+        }
+
+        /* Leadpages-inspired interaction pass */
+        @property --angle {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes promptbar-rotate-gradient {
+            to { --angle: 360deg; }
+        }
+
+        @keyframes hero-gradient-shift {
+            0% { background-position: 0%; }
+            100% { background-position: -200%; }
+        }
+
+        @keyframes hero-caret {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes hero-fade-in {
+            0% { opacity: 0.01; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes hero-fade-up {
+            0% {
+                opacity: 0.01;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 50% 12%, rgba(124, 123, 255, 0.12), transparent 30%),
+                radial-gradient(circle at 74% 72%, rgba(206, 255, 102, 0.08), transparent 28%),
+                #111018;
+            color: #fff;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-size: 256px 256px;
+            z-index: 0;
+        }
+
+        .container,
+        .container.preview-mode {
+            max-width: 1280px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .topbar {
+            margin-bottom: 116px;
+            animation: hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .brand {
+            color: #fff;
+        }
+
+        .brand-text span {
+            color: rgba(255, 255, 255, 0.62);
+        }
+
+        .hero-shell {
+            position: relative;
+            display: block;
+            min-height: 760px;
+            text-align: center;
+            overflow: hidden;
+            border-radius: 28px;
+            margin: 0 -18px;
+            padding: 0 18px 34px;
+        }
+
+        .light-wave {
+            position: absolute;
+            inset: 0;
+            display: none;
+            pointer-events: none;
+            opacity: 0.68;
+            background:
+                linear-gradient(155deg, transparent 25%, rgba(98, 69, 242, 0.16) 38%, rgba(118, 255, 193, 0.10) 50%, rgba(206, 255, 102, 0.08) 62%, transparent 75%),
+                radial-gradient(ellipse 90% 50% at 65% 60%, rgba(98, 69, 242, 0.10) 0%, rgba(118, 255, 193, 0.05) 40%, transparent 70%),
+                radial-gradient(ellipse 40% 35% at 80% 30%, rgba(206, 255, 102, 0.07) 0%, transparent 70%);
+        }
+
+        .hero-wave-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.72;
+            pointer-events: none;
+            z-index: 0;
+            display: none;
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 1;
+            max-width: 880px;
+            margin: 0 auto;
+            padding-top: 0;
+            animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+        }
+
+        .eyebrow {
+            min-height: auto;
+            padding: 0;
+            color: rgba(255, 255, 255, 0.52);
+            border: 0;
+            background: transparent;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .hero-copy h1 {
+            max-width: 980px;
+            margin: 24px auto 20px;
+            color: #fff;
+            text-align: center;
+            font-size: clamp(42px, 5.35vw, 70px);
+            line-height: 1.06;
+            font-weight: 800;
+        }
+
+        .hero-title-line {
+            display: block;
+            white-space: nowrap;
+        }
+
+        .gradient-word-wrap {
+            position: relative;
+            display: inline-block;
+            min-width: 8.2em;
+        }
+
+        .gradient-text {
+            display: inline-block;
+            white-space: nowrap;
+            color: transparent;
+            background: linear-gradient(90deg, #ceff66 0%, #6245f2 25%, #76ffc1 50%, #6245f2 75%, #ceff66 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: none;
+        }
+
+        .gradient-text-glow {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            user-select: none;
+            filter: blur(16px) brightness(1.5);
+            opacity: 0.58;
+        }
+
+        .typing-caret {
+            display: inline-block;
+            width: 4px;
+            height: 0.9em;
+            margin-left: 8px;
+            vertical-align: -0.08em;
+            background: #ceff66;
+            display: none;
+            animation: none;
+        }
+
+        .hero-copy .subtitle {
+            max-width: 640px;
+            margin: 0 auto;
+            color: rgba(255, 255, 255, 0.58);
+            text-align: center;
+        }
+
+        .hero-chips,
+        .tech-strip,
+        .hero-actions {
+            justify-content: center;
+        }
+
+        .trust-strip {
+            margin: 20px 0 28px;
+            animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 120ms both;
+        }
+
+        .trust-strip div {
+            border: 0;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+            backdrop-filter: blur(8px);
+            transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .trust-strip div:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 10px 24px rgba(0, 0, 0, 0.16);
+        }
+
+        .trust-strip strong {
+            color: #ceff66;
+        }
+
+        .hero-chips span,
+        .tech-strip span {
+            border: 0;
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.76);
+            opacity: 0.42;
+            box-shadow: none;
+            transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+        }
+
+        .hero-chips span:hover,
+        .tech-strip span:hover {
+            opacity: 0.78;
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .hero-actions .btn,
+        .hero-workbench .btn {
+            color: #111018;
+            background: #ceff66;
+            border-radius: 11px;
+            box-shadow: 0 14px 28px rgba(206, 255, 102, 0.16);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .hero-actions .btn:hover,
+        .hero-workbench .btn:hover {
+            color: #111018;
+            background: #d9ff80;
+            transform: scale(1.02);
+            box-shadow: 0 18px 36px rgba(206, 255, 102, 0.22);
+        }
+
+        .hero-actions .btn-secondary,
+        .hero-workbench .btn-secondary {
+            color: rgba(255, 255, 255, 0.72);
+            background: rgba(255, 255, 255, 0.10);
+            box-shadow: none;
+        }
+
+        .hero-actions .btn-secondary:hover,
+        .hero-workbench .btn-secondary:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .hero-workbench {
+            position: relative;
+            z-index: 1;
+            max-width: 860px;
+            margin: 44px auto 0;
+            padding: 16px;
+            overflow: hidden;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 28px 90px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(24px) saturate(1.4);
+            animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 260ms both;
+        }
+
+        .hero-workbench::after,
+        .mode-card::after,
+        .feature-card::after,
+        .process-step::after,
+        .compare-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            background: radial-gradient(420px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(118, 255, 193, 0.10), transparent 62%);
+            transition: opacity 0.3s ease;
+        }
+
+        .hero-workbench:hover::after,
+        .mode-card:hover::after,
+        .feature-card:hover::after,
+        .process-step:hover::after,
+        .compare-card:hover::after {
+            opacity: 1;
+        }
+
+        .mode-card small {
+            color: rgba(255, 255, 255, 0.50);
+        }
+
+        .mode-card {
+            position: relative;
+            overflow: hidden;
+            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .mode-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.16);
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+        }
+
+        .mode-card strong {
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        .mode-card.active {
+            border-color: rgba(103, 243, 202, 0.75);
+            box-shadow: 0 0 0 3px rgba(103, 243, 202, 0.10);
+        }
+
+        .mode-card .tag {
+            color: #ceff66;
+            background: rgba(206, 255, 102, 0.12);
+        }
+
+        .mode-card.layer .tag {
+            color: #76ffc1;
+            background: rgba(118, 255, 193, 0.10);
+        }
+
+        .upload-zone {
+            position: relative;
+            min-height: 190px;
+            overflow: hidden;
+            text-align: center;
+            border: 1.5px solid transparent;
+            border-radius: 18px;
+            background:
+                linear-gradient(#1a1825, #1a1825) padding-box,
+                conic-gradient(from var(--angle, 0deg), #ceff66, #6245f2, #76ffc1, #ceff66) border-box;
+            animation: none;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 0 36px rgba(118, 255, 193, 0.14), inset 0 0 28px rgba(103, 243, 202, 0.04);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .upload-zone::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(500px circle at var(--mouse-x, 50%) var(--mouse-y, 45%), rgba(118, 255, 193, 0.08), transparent 55%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            background:
+                linear-gradient(#1a1825, #1a1825) padding-box,
+                conic-gradient(from var(--angle, 0deg), #ceff66, #6245f2, #76ffc1, #ceff66) border-box;
+            box-shadow: 0 0 0 2px rgba(206, 255, 102, 0.12), 0 0 48px rgba(118, 255, 193, 0.18), inset 0 0 34px rgba(103, 243, 202, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .upload-zone.attention {
+            box-shadow: 0 0 0 3px rgba(206, 255, 102, 0.20), 0 0 56px rgba(118, 255, 193, 0.24), inset 0 0 34px rgba(103, 243, 202, 0.08);
+        }
+
+        .upload-zone:hover::before,
+        .upload-zone.dragover::before {
+            opacity: 1;
+        }
+
+        .upload-zone > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-zone .icon {
+            background: rgba(255, 255, 255, 0.10);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.20);
+        }
+
+        .upload-zone .text {
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .upload-zone .hint {
+            color: rgba(255, 255, 255, 0.46);
+        }
+
+        .upload-zone-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            margin: 24px -22px -28px;
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .upload-zone-toolbar span,
+        .upload-zone-toolbar strong {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 11px;
+            border-radius: 11px;
+            color: rgba(255, 255, 255, 0.36);
+            background: rgba(255, 255, 255, 0.035);
+            font-size: 12px;
+            font-weight: 650;
+            transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+        }
+
+        .upload-zone:hover .upload-zone-toolbar span {
+            color: rgba(255, 255, 255, 0.62);
+        }
+
+        .upload-zone-toolbar strong {
+            margin-left: auto;
+            color: rgba(255, 255, 255, 0.32);
+            background: rgba(255, 255, 255, 0.10);
+        }
+
+        .upload-zone:hover .upload-zone-toolbar strong {
+            color: rgba(17, 16, 24, 0.92);
+            background: #ceff66;
+            transform: translateX(1px);
+        }
+
+        #qwenLayerControl {
+            align-items: center;
+            margin: 12px 0 14px !important;
+            padding: 13px 14px;
+            border: 1px solid rgba(118, 255, 193, 0.18);
+            border-radius: 16px;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(118, 255, 193, 0.10), transparent 34%),
+                rgba(255, 255, 255, 0.045);
+            color: #fff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        #qwenLayerControl span {
+            gap: 2px;
+        }
+
+        #qwenLayerControl strong {
+            color: rgba(255, 255, 255, 0.90);
+            font-size: 13px;
+        }
+
+        #qwenLayerControl small {
+            color: rgba(255, 255, 255, 0.48);
+            font-size: 12px;
+        }
+
+        #qwenLayerControl select {
+            min-width: 96px;
+            min-height: 42px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 12px;
+            padding: 0 34px 0 14px;
+            color: rgba(255, 255, 255, 0.92);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04));
+            font-weight: 800;
+            outline: none;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        #qwenLayerControl select:focus {
+            border-color: rgba(118, 255, 193, 0.58);
+            box-shadow: 0 0 0 3px rgba(118, 255, 193, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+        }
+
+        #qwenLayerControl select option {
+            color: #111827;
+            background: #f8fafc;
+        }
+
+        .status-panel {
+            margin-top: 18px;
+            padding: 20px 18px 18px;
+            border-color: rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.02);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 42px rgba(0, 0, 0, 0.24);
+            backdrop-filter: blur(18px) saturate(1.25);
+        }
+
+        .status-header {
+            margin-bottom: 18px;
+        }
+
+        .status-header .task-info {
+            color: rgba(255, 255, 255, 0.86);
+            font-weight: 700;
+        }
+
+        .status-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-panel .elapsed {
+            color: rgba(255, 255, 255, 0.38);
+        }
+
+        .status-panel .status-mode {
+            margin-top: 0;
+            padding: 5px 10px;
+            border-radius: 999px;
+            color: #76ffc1;
+            background: rgba(118, 255, 193, 0.10);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-panel .status-mode.normal {
+            color: #ceff66;
+            background: rgba(206, 255, 102, 0.10);
+        }
+
+        .status-panel .progress-bar {
+            display: none;
+        }
+
+        .processing-flow {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 10px;
+            margin: 8px auto 32px;
+            padding: 0 0 22px;
+        }
+
+        .flow-step {
+            display: grid;
+            justify-items: center;
+            gap: 6px;
+            min-width: 84px;
+            color: rgba(255, 255, 255, 0.34);
+            transition: color 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .flow-circle {
+            display: grid;
+            width: 48px;
+            height: 48px;
+            place-items: center;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.34);
+            transition: border-color 0.5s ease, background 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease, color 0.5s ease;
+        }
+
+        .flow-circle span {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .flow-step strong {
+            color: currentColor;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .flow-step small {
+            color: rgba(255, 255, 255, 0.30);
+            font-size: 10px;
+            line-height: 1.25;
+            white-space: nowrap;
+            transition: color 0.5s ease;
+        }
+
+        .flow-step.is-complete,
+        .flow-step.is-active {
+            color: var(--flow-color);
+        }
+
+        .flow-step.is-complete .flow-circle {
+            border-color: var(--flow-color);
+            background: color-mix(in srgb, var(--flow-color) 14%, transparent);
+            color: var(--flow-color);
+        }
+
+        .flow-step.is-active .flow-circle {
+            border-color: var(--flow-color);
+            background: color-mix(in srgb, var(--flow-color) 16%, transparent);
+            color: var(--flow-color);
+            transform: scale(1.1);
+            box-shadow: 0 0 22px color-mix(in srgb, var(--flow-color) 28%, transparent);
+        }
+
+        .flow-step.is-active small,
+        .flow-step.is-complete small {
+            color: rgba(255, 255, 255, 0.46);
+        }
+
+        .flow-line {
+            width: 38px;
+            height: 1px;
+            margin-top: 24px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.10);
+            transition: background 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .flow-line.is-complete,
+        .flow-line.is-active {
+            background: linear-gradient(90deg, #6366f1, #76ffc1, #ceff66);
+            box-shadow: 0 0 14px rgba(118, 255, 193, 0.16);
+        }
+
+        .flow-repeat {
+            position: absolute;
+            left: 50%;
+            bottom: -5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: rgba(255, 255, 255, 0.30);
+            font-size: 10px;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .flow-repeat svg {
+            color: rgba(255, 255, 255, 0.20);
+        }
+
+        .status-live-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 15px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-step {
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.86);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .status-detail {
+            color: rgba(255, 255, 255, 0.42);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .live-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #76ffc1;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .live-dot {
+            position: relative;
+            display: inline-flex;
+            width: 8px;
+            height: 8px;
+        }
+
+        .live-dot::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            background: #76ffc1;
+            opacity: 0.5;
+            animation: livePing 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        .live-dot span {
+            position: relative;
+            display: inline-flex;
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #76ffc1;
+        }
+
+        @keyframes livePing {
+            75%, 100% {
+                transform: scale(2.2);
+                opacity: 0;
+            }
+        }
+
+        .result-panel {
+            position: relative;
+            margin-top: 18px;
+            padding: 0;
+            overflow: hidden;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at 18% 14%, rgba(118, 255, 193, 0.18), transparent 32%),
+                radial-gradient(circle at 92% 76%, rgba(206, 255, 102, 0.12), transparent 30%),
+                rgba(255, 255, 255, 0.035);
+            color: #fff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 22px 58px rgba(0, 0, 0, 0.30);
+            backdrop-filter: blur(22px) saturate(1.35);
+        }
+
+        .result-panel.active {
+            display: block;
+            animation: hero-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .result-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(120deg, rgba(255, 255, 255, 0.10), transparent 34%, rgba(118, 255, 193, 0.06));
+            opacity: 0.72;
+        }
+
+        .result-shell {
+            position: relative;
+            display: grid;
+            grid-template-columns: 0.82fr 1.18fr;
+            min-height: 254px;
+        }
+
+        .result-visual {
+            position: relative;
+            display: grid;
+            min-height: 254px;
+            place-items: center;
+            overflow: hidden;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+            background:
+                linear-gradient(150deg, rgba(206, 255, 102, 0.10), transparent 42%),
+                rgba(255, 255, 255, 0.025);
+        }
+
+        .result-visual::before,
+        .result-visual::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+        }
+
+        .result-visual::before {
+            width: 190px;
+            height: 190px;
+            border: 1px solid rgba(118, 255, 193, 0.14);
+            box-shadow: 0 0 48px rgba(118, 255, 193, 0.12), inset 0 0 30px rgba(206, 255, 102, 0.06);
+        }
+
+        .result-visual::after {
+            width: 118px;
+            height: 118px;
+            background: rgba(255, 255, 255, 0.04);
+            filter: blur(10px);
+        }
+
+        .result-check {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            width: 96px;
+            height: 96px;
+            place-items: center;
+            border-radius: 28px;
+            background: linear-gradient(145deg, #ceff66, #76ffc1);
+            box-shadow: 0 18px 42px rgba(118, 255, 193, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+        }
+
+        .result-check::before {
+            content: "";
+            width: 38px;
+            height: 20px;
+            margin-top: -4px;
+            border-left: 7px solid #111018;
+            border-bottom: 7px solid #111018;
+            border-radius: 0 0 0 5px;
+            transform: rotate(-45deg);
+        }
+
+        .result-stack {
+            position: absolute;
+            right: 22px;
+            bottom: 22px;
+            display: grid;
+            gap: 7px;
+            opacity: 0.78;
+        }
+
+        .result-stack span {
+            display: block;
+            width: 54px;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .result-stack span:nth-child(2) {
+            width: 70px;
+            background: rgba(118, 255, 193, 0.28);
+        }
+
+        .result-stack span:nth-child(3) {
+            width: 42px;
+            background: rgba(206, 255, 102, 0.24);
+        }
+
+        .result-content {
+            position: relative;
+            display: grid;
+            align-content: center;
+            gap: 16px;
+            padding: 32px;
+        }
+
+        .result-kicker {
+            display: inline-flex;
+            width: fit-content;
+            padding: 5px 10px;
+            border-radius: 999px;
+            color: #76ffc1;
+            background: rgba(118, 255, 193, 0.10);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .result-content h3 {
+            color: rgba(255, 255, 255, 0.94);
+            font-size: 30px;
+            line-height: 1.12;
+            font-weight: 800;
+        }
+
+        .result-panel .message {
+            max-width: 520px;
+            margin: -4px 0 0;
+            color: rgba(255, 255, 255, 0.52);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .result-stats div {
+            min-width: 0;
+            padding: 13px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.045);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .result-stats span {
+            display: block;
+            margin-bottom: 7px;
+            color: rgba(255, 255, 255, 0.38);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .result-stats strong {
+            display: block;
+            overflow: hidden;
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 17px;
+            line-height: 1.2;
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .result-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .result-actions .btn {
+            margin-left: 0;
+        }
+
+        .process-section,
+        .proof-section,
+        .features,
+        .boundary-note,
+        footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        .process-section,
+        .proof-section,
+        .features {
+            color: #fff;
+        }
+
+        .section-head h2,
+        .proof-copy h2,
+        .feature-card h3,
+        .compare-card strong,
+        .process-step strong {
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .section-head p,
+        .proof-copy p,
+        .feature-card p,
+        .compare-card p,
+        .process-step p {
+            color: rgba(255, 255, 255, 0.54);
+        }
+
+        .process-step,
+        .feature-card,
+        .proof-copy,
+        .comparison-panel {
+            border-color: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(18px) saturate(1.2);
+        }
+
+        .process-step span {
+            color: #ceff66;
+            background: rgba(255, 255, 255, 0.10);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .compare-card + .compare-card {
+            border-left-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .boundary-note {
+            border-color: rgba(206, 255, 102, 0.24);
+            background: rgba(206, 255, 102, 0.08);
+            color: rgba(236, 255, 184, 0.86);
+        }
+
+        .section-kicker {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            min-height: 28px;
+            margin-bottom: 12px;
+            padding: 0 11px;
+            border-radius: 999px;
+            color: #ceff66;
+            background: rgba(206, 255, 102, 0.10);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .process-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .process-step {
+            min-height: 142px;
+            padding: 18px;
+        }
+
+        .process-step span {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+        }
+
+        .proof-section {
+            grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+            gap: 18px;
+            margin-top: 32px;
+        }
+
+        .proof-copy,
+        .comparison-panel {
+            min-height: 320px;
+        }
+
+        .proof-copy {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .proof-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .proof-list span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 13px;
+        }
+
+        .proof-list span::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ceff66;
+            box-shadow: 0 0 18px rgba(206, 255, 102, 0.42);
+        }
+
+        .compare-card {
+            align-content: start;
+            gap: 14px;
+        }
+
+        .features {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .feature-card {
+            min-height: 132px;
+            padding: 18px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 8px;
+        }
+
+        .boundary-note {
+            margin-top: 14px;
+            padding: 18px 20px;
+        }
+
+        .file-list {
+            margin-top: 18px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at 14% 0%, rgba(118, 255, 193, 0.10), transparent 34%),
+                rgba(255, 255, 255, 0.035);
+            color: #fff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 42px rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(18px) saturate(1.25);
+        }
+
+        .file-list-header {
+            margin-bottom: 14px;
+        }
+
+        .file-list-header h3 {
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .file-list-header .count {
+            color: rgba(255, 255, 255, 0.44);
+            font-size: 12px;
+        }
+
+        .file-item {
+            gap: 12px;
+            min-height: 52px;
+            margin-bottom: 8px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.055);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .file-item .file-icon {
+            display: inline-grid;
+            width: 42px;
+            height: 32px;
+            place-items: center;
+            margin-right: 0;
+            border-radius: 10px;
+            color: #ceff66;
+            background: rgba(206, 255, 102, 0.10);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .file-item .file-name {
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 13px;
+        }
+
+        .file-item .file-size {
+            color: rgba(255, 255, 255, 0.46);
+            font-size: 12px;
+        }
+
+        .file-item .file-remove {
+            display: inline-grid;
+            width: 28px;
+            height: 28px;
+            place-items: center;
+            margin-left: 0;
+            border-radius: 9px;
+            color: rgba(255, 255, 255, 0.46);
+            background: rgba(255, 255, 255, 0.06);
+            font-size: 18px;
+        }
+
+        .file-item .file-remove:hover {
+            color: #fff;
+            background: rgba(239, 68, 68, 0.32);
+        }
+
+        .file-actions {
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+        }
+
+        .file-actions .btn {
+            margin-left: 0;
+        }
+
+        .status-panel .progress-bar {
+            display: block;
+            height: 11px;
+            margin: -8px 0 16px;
+            padding: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .status-panel .progress-bar .fill {
+            position: relative;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #6366f1, #76ffc1, #ceff66);
+            box-shadow: 0 0 20px rgba(118, 255, 193, 0.26);
+        }
+
+        .status-panel .progress-bar .fill::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.44), transparent);
+            transform: translateX(-100%);
+            animation: progressShimmer 1.35s ease-in-out infinite;
+        }
+
+        @keyframes progressShimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        .step-feed {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .feed-item {
+            min-height: 78px;
+            padding: 11px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.035);
+            color: rgba(255, 255, 255, 0.42);
+            transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+        }
+
+        .feed-item strong,
+        .feed-item span {
+            display: block;
+        }
+
+        .feed-item strong {
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .feed-item span {
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        .feed-item.is-active {
+            color: rgba(255, 255, 255, 0.88);
+            border-color: rgba(118, 255, 193, 0.36);
+            background: rgba(118, 255, 193, 0.075);
+            transform: translateY(-1px);
+        }
+
+        .feed-item.is-complete {
+            color: rgba(255, 255, 255, 0.62);
+            border-color: rgba(206, 255, 102, 0.18);
+            background: rgba(206, 255, 102, 0.045);
+        }
+
+        .preview-panel {
+            padding: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(118, 255, 193, 0.08), transparent 34%),
+                rgba(255, 255, 255, 0.035);
+            color: #fff;
+            box-shadow: 0 28px 90px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(24px) saturate(1.25);
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .preview-header h2 {
+            color: rgba(255, 255, 255, 0.94);
+            font-size: 22px;
+        }
+
+        .preview-hint {
+            color: rgba(255, 255, 255, 0.48);
+        }
+
+        .preview-body {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 14px;
+        }
+
+        .preview-left {
+            width: auto;
+            min-width: 0;
+        }
+
+        .preview-element-list,
+        .preview-canvas-wrap {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .preview-element-list {
+            border-radius: 16px;
+            max-height: 520px;
+        }
+
+        .preview-list-section-label {
+            color: rgba(255, 255, 255, 0.42);
+        }
+
+        .preview-element-item {
+            color: rgba(255, 255, 255, 0.68);
+            border: 1px solid transparent;
+        }
+
+        .preview-element-item:hover,
+        .preview-element-item.hovered {
+            background: rgba(118, 255, 193, 0.08);
+        }
+
+        .preview-element-item.selected {
+            border-color: rgba(118, 255, 193, 0.46);
+            background: rgba(118, 255, 193, 0.12);
+        }
+
+        .preview-canvas-wrap {
+            padding: 10px;
+            border-radius: 18px;
+            overflow: auto;
+        }
+
+        .preview-canvas-wrap canvas {
+            border-radius: 12px;
+        }
+
+        .preview-left-buttons,
+        .preview-actions {
+            gap: 8px;
+        }
+
+        .preview-left-buttons .btn,
+        .preview-actions .btn {
+            margin-left: 0;
+        }
+
+        .preview-panel .btn {
+            color: #111018;
+            background: #ceff66;
+            box-shadow: 0 12px 24px rgba(206, 255, 102, 0.14);
+        }
+
+        .preview-panel .btn:hover {
+            background: #d9ff80;
+        }
+
+        .preview-panel .btn-secondary {
+            color: rgba(255, 255, 255, 0.76);
+            background: rgba(255, 255, 255, 0.10);
+            box-shadow: none;
+        }
+
+        .preview-panel .btn-secondary:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .preview-floating-toolbar {
+            border-color: rgba(118, 255, 193, 0.32);
+            background: rgba(118, 255, 193, 0.08);
+        }
+
+        .preview-floating-toolbar .selected-count {
+            color: #76ffc1;
+        }
+
+        footer {
+            color: rgba(255, 255, 255, 0.42);
+        }
+
+        @media (max-width: 760px) {
+            .topbar {
+                margin-bottom: 64px;
+            }
+
+            .hero-shell {
+                min-height: auto;
+                margin: 0;
+                padding: 0 0 26px;
+                border-radius: 18px;
+            }
+
+            .light-wave {
+                display: block;
+            }
+
+            .hero-wave-canvas {
+                display: none;
+            }
+
+            .hero-title-line {
+                white-space: normal;
+            }
+
+            .gradient-word-wrap {
+                min-width: 0;
+            }
+
+            .upload-zone-toolbar {
+                flex-wrap: wrap;
+                margin-bottom: -20px;
+            }
+
+            .upload-zone-toolbar strong {
+                margin-left: 0;
+            }
+
+            .processing-flow {
+                gap: 6px;
+                justify-content: space-between;
+            }
+
+            .flow-step {
+                min-width: 58px;
+            }
+
+            .flow-circle {
+                width: 40px;
+                height: 40px;
+            }
+
+            .flow-line {
+                width: 16px;
+                margin-top: 20px;
+            }
+
+            .flow-step small {
+                display: none;
+            }
+
+            .status-live-card,
+            .status-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .result-shell,
+            .step-feed,
+            .preview-body {
+                grid-template-columns: 1fr;
+            }
+
+            .result-visual {
+                min-height: 178px;
+                border-right: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            }
+
+            .result-content {
+                padding: 24px 18px 20px;
+            }
+
+            .result-content h3 {
+                font-size: 25px;
+            }
+
+            .result-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .result-actions .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* Desktop app shell override */
+        html,
+        body {
+            width: 100%;
+            min-width: 0;
+            min-height: 100%;
+            overflow: hidden;
+            background: #fff;
+            color: #0a0a0a;
+        }
+
+        body {
+            align-items: stretch;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        }
+
+        .window-drag-region {
+            display: none;
+        }
+
+        .electron-shell.platform-darwin .window-drag-region {
+            position: fixed;
+            inset: 0 88px auto 0;
+            z-index: 50;
+            display: block;
+            height: 44px;
+            -webkit-app-region: drag;
+        }
+
+        .electron-shell.platform-darwin button,
+        .electron-shell.platform-darwin a,
+        .electron-shell.platform-darwin input,
+        .electron-shell.platform-darwin label,
+        .electron-shell.platform-darwin select,
+        .electron-shell.platform-darwin textarea,
+        .electron-shell.platform-darwin .mode-card,
+        .electron-shell.platform-darwin .upload-zone,
+        .electron-shell.platform-darwin .preview-panel,
+        .electron-shell.platform-darwin .settings-button,
+        .electron-shell.platform-darwin .settings-modal {
+            -webkit-app-region: no-drag;
+        }
+
+        .settings-button {
+            position: fixed;
+            top: 54px;
+            right: 22px;
+            z-index: 80;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border: 1px solid rgba(0, 0, 0, 0.10);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            color: #111;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            pointer-events: auto;
+            -webkit-app-region: no-drag;
+        }
+
+        .electron-shell .settings-button {
+            display: inline-flex;
+        }
+
+        .settings-button:hover {
+            border-color: rgba(0, 0, 0, 0.22);
+            background: #fff;
+        }
+
+        .settings-button svg {
+            width: 19px;
+            height: 19px;
+            pointer-events: none;
+        }
+
+        .settings-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 120;
+            display: none;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 104px 24px 24px;
+            background: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(6px);
+        }
+
+        .settings-overlay.active {
+            display: flex;
+        }
+
+        .settings-modal {
+            width: min(440px, calc(100vw - 32px));
+            max-height: calc(100vh - 96px);
+            overflow: auto;
+            border: 1px solid rgba(0, 0, 0, 0.10);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+            color: #111;
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 18px 10px;
+        }
+
+        .settings-header strong {
+            font-size: 18px;
+            font-weight: 780;
+        }
+
+        .settings-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #e5e5e5;
+            border-radius: 999px;
+            background: #fff;
+            color: #111;
+            cursor: pointer;
+        }
+
+        .settings-body {
+            display: grid;
+            gap: 8px;
+            padding: 0 18px 18px;
+        }
+
+        .settings-section {
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            border: 1px solid #e7e7e7;
+            border-radius: 8px;
+            background: #fff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .settings-section.highlight {
+            border-color: #050505;
+            box-shadow: 0 0 0 3px rgba(206, 255, 102, 0.72);
+        }
+
+        .settings-section label,
+        .settings-row {
+            display: grid;
+            gap: 6px;
+        }
+
+        .settings-section strong {
+            font-size: 13px;
+            font-weight: 760;
+        }
+
+        .settings-section small {
+            color: #8a8a8a;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .settings-section input,
+        .settings-section select {
+            width: 100%;
+            min-height: 40px;
+            border: 1px solid #dedede;
+            border-radius: 999px;
+            background: #fff;
+            color: #111;
+            padding: 0 14px;
+            outline: none;
+            font: inherit;
+        }
+
+        .settings-section input:focus,
+        .settings-section select:focus {
+            border-color: #050505;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .settings-update-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 28px;
+            color: #555;
+            font-size: 12px;
+        }
+
+        .settings-update-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #9ca3af;
+        }
+
+        .settings-update-status.available .settings-update-dot,
+        .settings-update-status.downloaded .settings-update-dot {
+            background: #111;
+        }
+
+        .settings-update-status.error .settings-update-dot {
+            background: #ef4444;
+        }
+
+        .settings-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-action {
+            min-height: 36px;
+            padding: 0 14px;
+            border: 0;
+            border-radius: 999px;
+            background: #111;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        .settings-action.secondary {
+            border: 1px solid rgba(0, 0, 0, 0.10);
+            background: #fff;
+            color: #111;
+        }
+
+        .settings-action:disabled {
+            cursor: default;
+            opacity: 0.55;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: minmax(0, 1fr);
+            gap: 0;
+            width: 100%;
+            max-width: none;
+            height: 100vh;
+            padding: 0;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .container.preview-mode {
+            max-width: none;
+        }
+
+        .hero-shell {
+            display: block;
+            grid-column: 1;
+            grid-row: 1;
+            min-height: 0;
+            height: 100vh;
+            margin: 0;
+            padding: 0 40px 64px;
+            overflow: auto;
+            border-radius: 0;
+            background: #fff;
+            text-align: left;
+        }
+
+        .electron-shell.platform-darwin .hero-shell {
+            padding-top: 0;
+        }
+
+        .hero-shell::before {
+            content: none;
+        }
+
+        .workbench-nav {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 72px;
+            color: #050505;
+            font-size: 11px;
+            font-weight: 560;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            -webkit-app-region: drag;
+        }
+
+        .electron-shell.platform-darwin .workbench-nav {
+            padding-left: 0;
+        }
+
+        .workbench-mark {
+            width: 19px;
+            height: 24px;
+            background: #050505;
+            transform: skewX(-10deg);
+        }
+
+        .workbench-heading {
+            width: min(960px, 100%);
+            margin: 70px auto 36px;
+        }
+
+        .workbench-heading h1 {
+            margin: 0;
+            color: #050505;
+            font-size: clamp(34px, 3vw, 42px);
+            line-height: 1.08;
+            font-weight: 760;
+            letter-spacing: 0;
+            text-align: left;
+        }
+
+        .workbench-heading .muted {
+            color: #c7c7c7;
+        }
+
+        .hero-shell::after {
+            content: none;
+        }
+
+        .hero-copy,
+        .light-wave,
+        .hero-wave-canvas,
+        .process-section,
+        .proof-section,
+        .features,
+        .boundary-note,
+        footer {
+            display: none !important;
+        }
+
+        .hero-workbench {
+            display: grid;
+            grid-template-columns: minmax(0, 960px);
+            grid-auto-rows: auto;
+            align-content: start;
+            align-items: start;
+            gap: 38px;
+            max-width: 960px;
+            min-height: 0;
+            margin: 0 auto;
+            padding: 0;
+            overflow: visible;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #0a0a0a;
+            box-shadow: none;
+            backdrop-filter: none;
+            animation: none;
+        }
+
+        .hero-workbench::after,
+        .mode-card::after,
+        .upload-zone::before {
+            content: none;
+        }
+
+        .options-panel,
+        .upload-zone,
+        .file-list,
+        .status-panel,
+        .result-panel,
+        .error-panel {
+            grid-column: 1;
+            max-width: 960px;
+        }
+
+        .mode-card small {
+            color: #b8b8b8;
+        }
+
+        .options-panel {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .mode-card {
+            min-height: 104px;
+            padding: 26px 24px;
+            border: 1px solid #e3e3e3;
+            border-radius: 4px;
+            background: #fff;
+            color: #111;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .mode-card:hover {
+            border-color: #0a0a0a;
+            background: #fff;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .mode-card.active {
+            border-color: #050505;
+            background: #fff;
+            box-shadow: inset 0 0 0 1px #050505;
+        }
+
+        .mode-card strong {
+            color: #050505;
+            font-size: 16px;
+            line-height: 1.2;
+            font-weight: 740;
+        }
+
+        .mode-card .tag,
+        .mode-card.layer .tag {
+            display: none;
+        }
+
+        .option-badge.off,
+        .option-badge.on {
+            display: none;
+        }
+
+        #qwenLayerControl {
+            border-color: #e3e3e3;
+            border-radius: 4px;
+            background: #fff;
+            color: #111;
+            box-shadow: none;
+        }
+
+        #qwenLayerControl strong {
+            color: #050505;
+        }
+
+        #qwenLayerControl small {
+            color: #b8b8b8;
+        }
+
+        #qwenLayerControl select {
+            min-height: 36px;
+            border-color: #e3e3e3;
+            border-radius: 999px;
+            color: #111;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        .upload-zone {
+            display: grid;
+            min-height: 320px;
+            align-content: center;
+            place-items: center;
+            margin: 0;
+            padding: 48px;
+            border: 1px solid #e3e3e3;
+            border-radius: 4px;
+            background: #fff;
+            color: #111;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover,
+        .upload-zone.attention {
+            border-color: #050505;
+            background: #fff;
+            box-shadow: inset 0 0 0 1px #050505;
+            transform: none;
+        }
+
+        .upload-zone .icon {
+            display: block;
+            width: 26px;
+            height: 26px;
+            margin: 0 auto 18px;
+            color: #050505;
+            background: no-repeat center / 24px 24px url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 16V4M12 4L7.5 8.5M12 4L16.5 8.5' stroke='%23050505' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M5 15V19H19V15' stroke='%23050505' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            border-radius: 0;
+            box-shadow: none;
+            font-size: 0;
+        }
+
+        .upload-zone .icon::before {
+            content: none;
+        }
+
+        .upload-zone .text {
+            color: #050505;
+            font-size: 16px;
+            font-weight: 720;
+        }
+
+        .upload-zone .hint {
+            margin-top: 18px;
+            color: #c4c4c4;
+            font-size: 14px;
+        }
+
+        .upload-zone-toolbar {
+            display: none;
+        }
+
+        .file-list,
+        .status-panel,
+        .result-panel,
+        .error-panel {
+            margin-top: 0;
+            padding: 18px;
+            border: 1px solid #e3e3e3;
+            border-radius: 4px;
+            background: #fff;
+            color: #111;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+
+        .file-list-header h3,
+        .status-header .task-info,
+        .status-step,
+        .result-content h3 {
+            color: #050505;
+        }
+
+        .file-list-header .count,
+        .status-panel .elapsed,
+        .status-detail,
+        .result-panel .message {
+            color: #8b8b8b;
+        }
+
+        .file-item {
+            min-height: 46px;
+            border-color: #e3e3e3;
+            border-radius: 4px;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        .file-item .file-icon {
+            color: #050505;
+            background: #f4f4f4;
+            border-radius: 3px;
+        }
+
+        .file-item .file-name {
+            color: #111;
+        }
+
+        .file-item .file-size {
+            color: #a8a8a8;
+        }
+
+        .btn,
+        .hero-workbench .btn,
+        .preview-panel .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            min-width: 102px;
+            padding: 0 24px;
+            border: 1px solid #050505;
+            border-radius: 999px;
+            color: #fff;
+            background: #050505;
+            box-shadow: none;
+            font-size: 14px;
+            font-weight: 650;
+            line-height: 1;
+            text-align: center;
+            text-decoration: none;
+            transform: none;
+        }
+
+        .btn:hover,
+        .hero-workbench .btn:hover,
+        .preview-panel .btn:hover {
+            color: #fff;
+            background: #222;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn-secondary,
+        .hero-workbench .btn-secondary,
+        .preview-panel .btn-secondary {
+            border-color: #e3e3e3;
+            color: #111;
+            background: #fff;
+        }
+
+        .btn-secondary:hover,
+        .hero-workbench .btn-secondary:hover,
+        .preview-panel .btn-secondary:hover {
+            color: #050505;
+            background: #f7f7f7;
+        }
+
+        .status-panel .status-mode,
+        .status-panel .status-mode.normal {
+            color: #050505;
+            background: #f2f2f2;
+        }
+
+        .processing-flow {
+            justify-content: flex-start;
+            margin: 8px 0 22px;
+        }
+
+        .flow-step {
+            color: #94a3b8;
+        }
+
+        .flow-step small {
+            color: #94a3b8;
+        }
+
+        .flow-circle {
+            border-color: #d6dee9;
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+        .flow-step.is-complete,
+        .flow-step.is-active {
+            color: #050505;
+        }
+
+        .flow-step.is-active .flow-circle,
+        .flow-step.is-complete .flow-circle {
+            border-color: #050505;
+            background: #050505;
+            color: #fff;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .flow-step.is-active small,
+        .flow-step.is-complete small {
+            color: #8b8b8b;
+        }
+
+        .flow-line,
+        .flow-line.is-complete,
+        .flow-line.is-active {
+            background: #e3e3e3;
+            box-shadow: none;
+        }
+
+        .flow-repeat {
+            color: #8b8b8b;
+        }
+
+        .status-live-card,
+        .feed-item,
+        .result-stats div {
+            border-color: #e3e3e3;
+            border-radius: 4px;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        .live-state {
+            color: #050505;
+        }
+
+        .live-dot::before,
+        .live-dot span {
+            background: #050505;
+        }
+
+        .step-feed {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .feed-item {
+            color: #8b8b8b;
+        }
+
+        .feed-item.is-active {
+            color: #050505;
+            border-color: #050505;
+            background: #fff;
+            transform: none;
+        }
+
+        .feed-item.is-complete {
+            color: #555;
+            border-color: #e3e3e3;
+            background: #fafafa;
+        }
+
+        .result-panel {
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .result-panel::before,
+        .result-visual {
+            display: none;
+        }
+
+        .result-shell {
+            display: block;
+            min-height: 0;
+        }
+
+        .result-content {
+            padding: 0;
+            gap: 12px;
+        }
+
+        .result-kicker {
+            color: #050505;
+            background: #f2f2f2;
+            border-radius: 999px;
+        }
+
+        .result-stats strong {
+            color: #050505;
+        }
+
+        .result-stats span {
+            color: #8b8b8b;
+        }
+
+        .container.preview-mode .hero-shell {
+            display: none;
+        }
+
+        .preview-panel.active {
+            display: block;
+            grid-column: 1;
+            grid-row: 1;
+            height: 100vh;
+            margin: 0;
+            padding: 18px;
+            overflow: auto;
+            border: 0;
+            border-radius: 0;
+            background: #fff;
+            color: #111;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+
+        .preview-header,
+        .preview-left,
+        .preview-right,
+        .preview-actions {
+            max-width: 1180px;
+        }
+
+        .preview-header h2 {
+            color: #111827;
+        }
+
+        .preview-hint {
+            color: #64748b;
+        }
+
+        .preview-element-list,
+        .preview-canvas-wrap {
+            border-color: #e3e3e3;
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+
+        .preview-element-item {
+            color: #334155;
+        }
+
+        .preview-element-item:hover,
+        .preview-element-item.hovered,
+        .preview-element-item.selected {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        @media (max-width: 920px) {
+            html,
+            body {
+                overflow: auto;
+            }
+
+            .container {
+                display: block;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .hero-shell,
+            .preview-panel.active {
+                height: auto;
+                min-height: 100vh;
+                padding: 0 18px 36px;
+            }
+
+            .workbench-nav {
+                min-height: 62px;
+                font-size: 10px;
+            }
+
+            .workbench-heading {
+                margin: 44px auto 24px;
+            }
+
+            .workbench-heading h1 {
+                font-size: 34px;
+            }
+
+            .hero-workbench {
+                grid-template-columns: 1fr;
+                min-height: 0;
+            }
+
+            .mode-grid,
+            .step-feed,
+            .preview-body {
+                grid-template-columns: 1fr;
+            }
+
+            .processing-flow {
+                overflow-x: auto;
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="window-drag-region" aria-hidden="true"></div>
+    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" onclick="openSettings()">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+        </svg>
+    </button>
+    <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
+        <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+            <div class="settings-header">
+                <strong id="settingsTitle">设置</strong>
+                <button class="settings-close" id="settingsClose" type="button" aria-label="关闭设置">×</button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-section" id="inpaintControl">
+                    <label>
+                        <strong>底图清理算法</strong>
+                        <small>LaMa 更自然；本地均值更轻量，适合干净背景。</small>
+                        <select id="inpaintBackend" aria-label="底图清理算法">
+                            <option value="lama" selected>LaMa</option>
+                            <option value="local_mean">本地均值</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="settings-section" id="qwenApiControl">
+                    <label>
+                        <strong>fal.ai API Key</strong>
+                        <small>用于 AI 智能分层；会保存在这台电脑。</small>
+                        <input id="qwenApiKey" type="password" autocomplete="off" placeholder="fal key" aria-label="fal.ai API Key">
+                    </label>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-row">
+                        <strong>检查更新</strong>
+                        <div class="settings-update-status" id="updateStatus" aria-live="polite">
+                            <span class="settings-update-dot" aria-hidden="true"></span>
+                            <span id="updateText">检查更新</span>
+                        </div>
+                        <div class="settings-actions">
+                            <button class="settings-action" id="updateButton" type="button">检查更新</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-row">
+                        <strong>版本</strong>
+                        <small id="appVersionText">DeckLens</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="container">
+        <section class="hero-shell">
+            <header class="workbench-nav" aria-label="DeckLens workspace">
+                <span class="workbench-mark" aria-hidden="true"></span>
+            </header>
+
+            <div class="light-wave" aria-hidden="true"></div>
+            <canvas class="hero-wave-canvas" id="heroWaveCanvas" aria-hidden="true"></canvas>
+            <div class="hero-copy">
+                <span class="eyebrow">图片化页面重建工具</span>
+                <div class="trust-strip" aria-label="产品能力">
+                    <div><strong>本地</strong><span>文件处理</span></div>
+                    <div><strong>多页</strong><span>合并导出</span></div>
+                    <div><strong>可改</strong><span>文字内容</span></div>
+                    <div><strong>可整</strong><span>页面元素</span></div>
+                </div>
+                <h1>
+                    <span class="hero-title-line">把图片化页面，变回</span>
+                    <span class="hero-title-line gradient-word-wrap" aria-live="polite">
+                        <span class="gradient-text gradient-text-glow" id="heroWordGlow" aria-hidden="true">可编辑 PPTX。</span>
+                        <span class="gradient-text" id="heroWord">可编辑 PPTX。</span><span class="typing-caret" aria-hidden="true"></span>
+                    </span>
+                </h1>
+                <p class="subtitle">
+                    导入 AI 生成图或图片化 PPT，DeckLens 会把页面恢复成更容易继续修改的 PPTX：文字可改，元素可整理，多页可合并。
+                </p>
+                <div class="hero-chips" aria-label="核心能力">
+                    <span>本地运行</span>
+                    <span>批量合并</span>
+                    <span>可编辑文字</span>
+                    <span>元素分层</span>
+                    <span>交互式校对</span>
+                </div>
+                <div class="hero-actions">
+                    <button class="btn" type="button" onclick="heroStart('none')">开始转换</button>
+                    <button class="btn btn-secondary" type="button" onclick="heroStart('sam')">开启元素分层</button>
+                </div>
+                <div class="tech-strip" aria-label="输出结果">
+                    <span>可编辑文字</span>
+                    <span>可整理图层</span>
+                    <span>原版观感</span>
+                    <span>批量成稿</span>
+                    <span>本地处理</span>
+                </div>
+            </div>
+
+            <div class="workbench-heading">
+                <h1>选择处理模式. <span class="muted">准备文档解析与重建。</span></h1>
+            </div>
+
+            <section class="hero-workbench" id="restore" aria-label="DeckLens 导入工作台">
+                <div class="options-panel">
+                    <div class="mode-grid" id="layers">
+	                        <div class="mode-card active" id="standardModeCard" onclick="document.getElementById('decomposeToggle').checked = false; document.getElementById('decomposeToggle').dispatchEvent(new Event('change'));">
+	                            <span class="tag">快速</span>
+	                            <strong>标准还原</strong>
+	                            <small>基础排版与文本提取，适合简单文档。</small>
+	                        </div>
+	                        <label class="mode-card layer" id="decomposeLabel">
+	                            <input type="checkbox" id="decomposeToggle">
+	                            <span class="tag">可校对</span>
+	                            <strong>元素分层</strong>
+	                            <small>图文分离，保留基础层级关系。</small>
+	                            <span class="option-badge off" id="decomposeBadge">未启用</span>
+	                        </label>
+	                        <div class="mode-card layer" id="qwenModeCard" onclick="setDecomposeMode('qwen')">
+	                            <span class="tag">高质量</span>
+	                            <strong>AI 智能分层</strong>
+	                            <small>深度语义理解，重建复杂页面结构。</small>
+	                            <span class="option-badge off" id="qwenBadge">未启用</span>
+	                        </div>
+                    </div>
+                    <div class="option-card" id="qwenLayerControl" style="display:none; margin-top: 14px;">
+                        <span>
+                            <strong>Qwen 图层数</strong>
+                            <small>建议 4 层；复杂页面可提高到 6-8 层。</small>
+                        </span>
+                        <select id="qwenNumLayers" aria-label="Qwen 图层数">
+                            <option value="3">3 层</option>
+                            <option value="4" selected>4 层</option>
+                            <option value="5">5 层</option>
+                            <option value="6">6 层</option>
+                            <option value="7">7 层</option>
+                            <option value="8">8 层</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 上传区域 -->
+                <div class="upload-zone" id="uploadZone">
+                    <div class="icon" aria-hidden="true"></div>
+                    <div class="text">拖拽文件到这里，或点击选择文件</div>
+                    <div class="hint">支持 PNG / JPG，PDF 会按页面图片导入，可多选，总大小最大 100MB</div>
+                    <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.pdf" multiple>
+                    <div class="upload-zone-toolbar" aria-hidden="true">
+                        <span>选择文件</span>
+                        <span>多页合并</span>
+                        <span>本地处理</span>
+                        <strong>开始重建</strong>
+                    </div>
+                </div>
+                <!-- 文件列表 -->
+                <div class="file-list" id="fileList">
+                    <div class="file-list-header">
+                        <h3>已选文件</h3>
+                        <span class="count" id="fileCount"></span>
+                    </div>
+                    <div id="fileItems"></div>
+                    <div class="file-actions">
+                        <button class="btn btn-sm" id="startBtn" onclick="startConvert()">开始转换</button>
+                        <button class="btn btn-sm btn-secondary" onclick="addMore()">继续添加</button>
+                        <button class="btn btn-sm btn-secondary" onclick="reset()">清空</button>
+                    </div>
+                </div>
+
+                <!-- 处理状态 -->
+                <div class="status-panel" id="statusPanel">
+                    <div class="status-header">
+                        <span class="task-info" id="taskInfo">处理中...</span>
+                        <div class="status-meta">
+                            <span class="status-mode normal" id="statusMode">标准还原</span>
+                            <span class="elapsed" id="elapsed">0s</span>
+                        </div>
+                    </div>
+                    <div class="processing-flow" id="processingFlow" aria-label="处理进度">
+                        <div class="flow-step" data-flow-step="0" style="--flow-color:#6366f1">
+                            <div class="flow-circle"><span>1</span></div>
+                            <strong>导入</strong>
+                            <small>文件进入本地队列</small>
+                        </div>
+                        <div class="flow-line" data-flow-line="0"></div>
+                        <div class="flow-step" data-flow-step="1" style="--flow-color:#76ffc1">
+                            <div class="flow-circle"><span>2</span></div>
+                            <strong>读取</strong>
+                            <small>理解页面内容</small>
+                        </div>
+                        <div class="flow-line" data-flow-line="1"></div>
+                        <div class="flow-step" data-flow-step="2" style="--flow-color:#ceff66">
+                            <div class="flow-circle"><span>3</span></div>
+                            <strong>重建</strong>
+                            <small>恢复可编辑层级</small>
+                        </div>
+                        <div class="flow-line" data-flow-line="2"></div>
+                        <div class="flow-step" data-flow-step="3" style="--flow-color:#76ffc1">
+                            <div class="flow-circle"><span>4</span></div>
+                            <strong>生成</strong>
+                            <small>输出 PPTX</small>
+                        </div>
+                        <div class="flow-repeat" aria-hidden="true">
+                            <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
+                                <path d="M15 5H1M5 1L1 5L5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <span id="flowHint">多页会自动循环处理</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar" aria-hidden="true">
+                        <div class="fill" id="progressFill"></div>
+                    </div>
+                    <div class="status-live-card">
+                        <div>
+                            <div class="status-step" id="statusStep">准备中...</div>
+                            <div class="status-detail" id="statusDetail"></div>
+                        </div>
+                        <span class="live-state" id="flowLiveState">
+                            <span class="live-dot" aria-hidden="true"><span></span></span>
+                            正在处理
+                        </span>
+                    </div>
+                    <div class="step-feed" id="stepFeed" aria-label="处理明细">
+                        <div class="feed-item" data-feed-phase="0"><strong>导入文件</strong><span>确认格式、页数和本地任务队列。</span></div>
+                        <div class="feed-item" data-feed-phase="1"><strong>读取页面</strong><span>识别文字、位置和页面结构，长图或 PDF 会逐页处理。</span></div>
+                        <div class="feed-item" data-feed-phase="2"><strong>重建层级</strong><span>清理文字底图，并按模式恢复文本框或页面元素。</span></div>
+                        <div class="feed-item" data-feed-phase="3"><strong>输出文件</strong><span>合成 PPTX，保留可继续编辑的文本和图层。</span></div>
+                    </div>
+                </div>
+
+                <!-- 成功结果 -->
+                <div class="result-panel" id="resultPanel">
+                    <div class="result-shell">
+                        <div class="result-visual" aria-hidden="true">
+                            <span class="result-check"></span>
+                            <div class="result-stack">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                        <div class="result-content">
+                            <span class="result-kicker">Export Ready</span>
+                            <h3>PPTX 已生成</h3>
+                            <p class="message" id="resultMessage">转换完成，可以下载文件。</p>
+                            <div class="result-stats" aria-label="导出摘要">
+                                <div>
+                                    <span>页数</span>
+                                    <strong id="resultSlideCount">-</strong>
+                                </div>
+                                <div>
+                                    <span>模式</span>
+                                    <strong id="resultModeName">-</strong>
+                                </div>
+                                <div>
+                                    <span>耗时</span>
+                                    <strong id="resultElapsed">-</strong>
+                                </div>
+                            </div>
+                            <div class="result-actions">
+                                <a class="btn" id="downloadBtn" href="#">下载 PPTX</a>
+                                <button class="btn btn-secondary" onclick="reset()">继续转换</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 错误 -->
+                <div class="error-panel" id="errorPanel">
+                    <div class="message" id="errorMessage"></div>
+                    <button class="btn btn-secondary" onclick="reset()" style="margin-top:16px">重试</button>
+                </div>
+
+            </section>
+        </section>
+
+        <!-- 元素预览 -->
+        <div class="preview-panel" id="previewPanel">
+            <div class="preview-header">
+                <h2>元素分割预览</h2>
+                <span class="preview-hint">点击/框选元素，Ctrl+G 合并，Delete 删除，Esc 取消选择</span>
+            </div>
+            <div class="preview-slide-nav" id="previewSlideNav"></div>
+            <div class="preview-body">
+                <!-- 左侧：元素列表 + 操作按钮 -->
+                <div class="preview-left">
+                    <div class="preview-element-list" id="previewElementList"></div>
+                    <div class="preview-left-buttons">
+                        <button class="btn btn-sm" onclick="mergeSelected()">合并选中 (Ctrl+G)</button>
+                        <button class="btn btn-sm btn-secondary" onclick="deleteSelected()">删除选中 (Del)</button>
+                        <button class="btn btn-sm btn-secondary" onclick="selectAll()">全选 (Ctrl+A)</button>
+                        <button class="btn btn-sm btn-secondary" onclick="resetPreview()">重置</button>
+                    </div>
+                </div>
+                <!-- 右侧：画布 -->
+                <div class="preview-right">
+                    <div class="preview-canvas-wrap">
+                        <canvas id="fabricCanvas"></canvas>
+                    </div>
+                    <div class="preview-floating-toolbar" id="floatingToolbar">
+                        <span class="selected-count" id="selectedCount">已选 0 个</span>
+                        <button class="btn btn-sm" onclick="mergeSelected()">合并为一组</button>
+                        <button class="btn btn-sm btn-secondary" onclick="deleteSelected()">删除选中</button>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-actions">
+                <button class="btn" onclick="confirmAndGenerate()">确认，生成 PPTX</button>
+                <button class="btn btn-secondary" onclick="skipPreview()">跳过预览，直接生成</button>
+            </div>
+        </div>
+        <div class="preview-toast" id="previewToast"></div>
+
+        <!-- 处理流程 -->
+        <section class="process-section" id="workflow">
+            <div class="section-head">
+                <span class="section-kicker">Workflow</span>
+                <h2>一次导入，三步变成可继续编辑的 PPTX。</h2>
+                <p>页面不用从零重做。DeckLens 把导入、重建、校对导出收进同一个工作流里，用户只需要决定要不要进入元素整理。</p>
+            </div>
+            <div class="process-grid">
+                <article class="process-step"><span>1</span><strong>输入页面</strong><p>导入图片、PDF 或多页素材，统一合并成一个待重建任务。</p></article>
+                <article class="process-step"><span>2</span><strong>选择还原深度</strong><p>标准还原优先改文字；元素分层会额外生成可整理的页面元素。</p></article>
+                <article class="process-step"><span>3</span><strong>校对并导出</strong><p>需要时在预览里合并、删除元素，然后生成可继续编辑的 PPTX。</p></article>
+            </div>
+        </section>
+
+        <section class="proof-section" id="proof">
+            <div class="proof-copy">
+                <div>
+                    <span class="section-kicker">Output</span>
+                    <h2>不是图片版 PPT，而是可操作的页面层。</h2>
+                    <p>DeckLens 优先保住原页面观感，再把最值得编辑的内容恢复出来：文字能改，主要元素能整理，多页能合并。</p>
+                </div>
+                <div class="proof-list">
+                    <span>文字重建为 PPTX 文本框</span>
+                    <span>关键视觉元素尽量拆成可移动图层</span>
+                    <span>复杂背景保持为稳定底图，避免碎片化编辑</span>
+                </div>
+            </div>
+            <div class="comparison-panel">
+                <article class="compare-card">
+                    <div class="mini-slide">
+                        <span class="bar"></span>
+                        <span class="line"></span>
+                        <span class="shape"></span>
+                    </div>
+                    <strong>原始图片化页面</strong>
+                    <p>看起来像 PPT，但整体不可改。</p>
+                </article>
+                <article class="compare-card">
+                    <div class="mini-slide output">
+                        <span class="bar"></span>
+                        <span class="line"></span>
+                        <span class="shape"></span>
+                    </div>
+                    <strong>DeckLens 输出</strong>
+                    <p>保留观感，并尽量恢复可编辑层级。</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- 功能说明 -->
+        <div class="features">
+            <div class="feature-card">
+                <h3>标准还原</h3>
+                <p>适合只想快速改字的页面：保留视觉底图，并恢复主要文字内容。</p>
+            </div>
+            <div class="feature-card">
+                <h3>元素分层</h3>
+                <p>适合继续改版的页面：先预览图层，再合并、删除或整理元素。</p>
+            </div>
+            <div class="feature-card">
+                <h3>批量成稿</h3>
+                <p>多张图片或 PDF 一次导入，所有页面合并输出为一套 PPTX。</p>
+            </div>
+        </div>
+
+        <div class="boundary-note">
+            边界说明：DeckLens 不承诺恢复原始源文件。复杂插画、渐变、重叠装饰会优先保留为稳定背景，避免把页面拆成大量难以编辑的碎片。
+        </div>
+
+        <footer>DeckLens · 本地运行 · 图片化页面转可编辑 PPTX</footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/fabric@6.6.1/dist/index.min.js"></script>
+    <script>
+        function initHeroTitle() {
+            const word = document.getElementById('heroWord');
+            const glow = document.getElementById('heroWordGlow');
+            if (!word || !glow) return;
+
+            word.textContent = '可编辑 PPTX。';
+            glow.textContent = '可编辑 PPTX。';
+        }
+
+        function initHoverGlow() {
+            const glowTargets = document.querySelectorAll('.hero-workbench, .upload-zone, .mode-card, .feature-card, .process-step, .compare-card');
+            glowTargets.forEach((target) => {
+                target.addEventListener('pointermove', (event) => {
+                    const rect = target.getBoundingClientRect();
+                    target.style.setProperty('--mouse-x', `${event.clientX - rect.left}px`);
+                    target.style.setProperty('--mouse-y', `${event.clientY - rect.top}px`);
+                });
+            });
+        }
+
+        function initHeroWave() {
+            return;
+            const canvas = document.getElementById('heroWaveCanvas');
+            if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            const ctx = canvas.getContext('2d');
+            const host = canvas.parentElement;
+            if (!ctx || !host) return;
+
+            let width = 0;
+            let height = 0;
+            let dpr = 1;
+            let raf = null;
+            let running = false;
+            let lastFrame = 0;
+            let t = 0;
+            const mouse = { x: -9999, y: -9999, sx: -9999, sy: -9999 };
+
+            function resize() {
+                const rect = host.getBoundingClientRect();
+                width = rect.width;
+                height = rect.height;
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = Math.max(1, Math.round(width * dpr));
+                canvas.height = Math.max(1, Math.round(height * dpr));
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                if (mouse.sx < -1000) {
+                    mouse.sx = width * 0.5;
+                    mouse.sy = height * 0.5;
+                }
+            }
+
+            function softNoise(x, y) {
+                return Math.sin(x * 1.7 + y * 2.1) * 0.5 + Math.sin(x * 4.6 - y * 1.4) * 0.25 + Math.sin(x * 9.2 + y * 3.6) * 0.12;
+            }
+
+            function point(progress, time) {
+                const xBase = width * (-0.05 + progress * 1.1);
+                const lift = (Math.exp(2 * progress) - 1) / (Math.exp(2) - 1);
+                const energy = 0.42 + progress * 0.62;
+                const ripple =
+                    Math.sin(progress * Math.PI * 8 - time * 2.4) * 0.070 * energy +
+                    Math.sin(progress * Math.PI * 17 - time * 3.8) * 0.035 * energy +
+                    softNoise(progress * 5 - time * 0.9, time * 0.4) * 0.065 * energy -
+                    Math.max(0, Math.sin(progress * Math.PI * 12 - time * 2 + 1.5)) * 0.035 * energy;
+                const yBase = height * (0.66 - (lift + ripple) * 0.48);
+
+                const dx = xBase - mouse.sx;
+                const dy = yBase - mouse.sy;
+                const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+                const pull = 34 * Math.max(0, 1 - distance / 210);
+
+                return {
+                    x: xBase + (dx / distance) * pull * 0.28,
+                    y: yBase + (dy / distance) * pull - pull * 0.55
+                };
+            }
+
+            function drawPath(time, steps = 160) {
+                ctx.beginPath();
+                for (let i = 0; i <= steps; i += 1) {
+                    const p = point(i / steps, time);
+                    if (i === 0) ctx.moveTo(p.x, p.y);
+                    else ctx.lineTo(p.x, p.y);
+                }
+            }
+
+            function gradient(alpha) {
+                const line = ctx.createLinearGradient(0, height, width, 0);
+                line.addColorStop(0, `rgba(98, 69, 242, ${alpha * 0.70})`);
+                line.addColorStop(0.34, `rgba(118, 255, 193, ${alpha * 0.85})`);
+                line.addColorStop(0.62, `rgba(206, 255, 102, ${alpha})`);
+                line.addColorStop(0.86, `rgba(118, 255, 193, ${alpha * 0.90})`);
+                line.addColorStop(1, `rgba(206, 255, 102, ${alpha * 0.70})`);
+                return line;
+            }
+
+            function draw(timestamp) {
+                if (!running) return;
+                raf = requestAnimationFrame(draw);
+                if (timestamp - lastFrame < 1000 / 30) return;
+                lastFrame = timestamp;
+
+                t += 0.028;
+                const time = t;
+                mouse.sx += (mouse.x - mouse.sx) * 0.12;
+                mouse.sy += (mouse.y - mouse.sy) * 0.12;
+
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.clearRect(0, 0, width, height);
+                ctx.globalCompositeOperation = 'lighter';
+
+                for (let i = 0; i <= 200; i += 10) {
+                    const progress = i / 200;
+                    const p = point(progress, time);
+                    const strength = 0.25 + Math.pow(progress, 0.4) * 0.75;
+                    const radius = 58 + 56 * strength;
+                    const hueA = Math.round(98 + 108 * progress);
+                    const hueB = Math.round(69 + 186 * progress);
+                    const hueC = Math.round(242 - 140 * progress);
+                    const blob = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
+                    blob.addColorStop(0, `rgba(${hueA}, ${hueB}, ${hueC}, ${0.010 * strength})`);
+                    blob.addColorStop(0.55, `rgba(${hueA}, ${hueB}, ${hueC}, ${0.004 * strength})`);
+                    blob.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = blob;
+                    ctx.fillRect(p.x - radius, p.y - radius, radius * 2, radius * 2);
+                }
+
+                ctx.save();
+                drawPath(time);
+                ctx.lineTo(width * 1.2, height + 50);
+                ctx.lineTo(-width * 0.1, height + 50);
+                ctx.closePath();
+                ctx.clip();
+                [
+                    { width: 240, alpha: 0.030, blur: 82 },
+                    { width: 60, alpha: 0.065, blur: 18 },
+                    { width: 18, alpha: 0.105, blur: 5 },
+                    { width: 8, alpha: 0.135, blur: 2 }
+                ].forEach((layer) => {
+                    drawPath(time);
+                    ctx.strokeStyle = gradient(layer.alpha);
+                    ctx.lineWidth = layer.width;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.filter = `blur(${layer.blur}px)`;
+                    ctx.stroke();
+                });
+                ctx.filter = 'none';
+                ctx.restore();
+
+                [-0.12, -0.06, 0.06, 0.10].forEach((offset) => {
+                    ctx.beginPath();
+                    for (let i = 0; i <= 260; i += 1) {
+                        const progress = i / 260;
+                        const p = point(progress, time);
+                        const y = p.y + offset * height * 0.28 + softNoise(progress * 4 + offset * 8, time * 0.2) * 18;
+                        if (i === 0) ctx.moveTo(p.x, y);
+                        else ctx.lineTo(p.x, y);
+                    }
+                    ctx.strokeStyle = `rgba(118, 255, 193, ${0.014 * (1 - Math.abs(offset) * 4)})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                });
+
+                [
+                    { width: 18, alpha: 0.012 },
+                    { width: 8, alpha: 0.030 },
+                    { width: 3, alpha: 0.080 },
+                    { width: 1.5, alpha: 0.250 },
+                    { width: 0.8, alpha: 0.500 }
+                ].forEach((layer) => {
+                    drawPath(time);
+                    ctx.strokeStyle = gradient(layer.alpha);
+                    ctx.lineWidth = layer.width;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.stroke();
+                });
+
+                if (mouse.sx > -1000) {
+                    const cursorGlow = ctx.createRadialGradient(mouse.sx, mouse.sy, 0, mouse.sx, mouse.sy, 140);
+                    cursorGlow.addColorStop(0, 'rgba(118, 255, 193, 0.045)');
+                    cursorGlow.addColorStop(0.5, 'rgba(98, 69, 242, 0.018)');
+                    cursorGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = cursorGlow;
+                    ctx.fillRect(mouse.sx - 140, mouse.sy - 140, 280, 280);
+                }
+            }
+
+            function start() {
+                if (running) return;
+                running = true;
+                lastFrame = 0;
+                raf = requestAnimationFrame(draw);
+            }
+
+            function stop() {
+                running = false;
+                if (raf) cancelAnimationFrame(raf);
+                raf = null;
+            }
+
+            resize();
+            host.addEventListener('pointermove', (event) => {
+                const rect = host.getBoundingClientRect();
+                mouse.x = event.clientX - rect.left;
+                mouse.y = event.clientY - rect.top;
+            });
+            window.addEventListener('resize', resize);
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) start();
+                    else stop();
+                });
+            }, { rootMargin: '200px' });
+            observer.observe(canvas);
+        }
+
+        const SETTINGS_STORAGE = {
+            apiKey: 'decklens.falApiKey',
+            inpaintBackend: 'decklens.inpaintBackend',
+            firstRunSeen: 'decklens.settingsFirstRunSeen'
+        };
+
+        function initSettingsPanel() {
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsOverlay = document.getElementById('settingsOverlay');
+            const settingsClose = document.getElementById('settingsClose');
+            const updateStatus = document.getElementById('updateStatus');
+            const text = document.getElementById('updateText');
+            const button = document.getElementById('updateButton');
+            const versionText = document.getElementById('appVersionText');
+            const updates = window.decklensRuntime?.updates;
+
+            if (!settingsButton || !settingsOverlay || !settingsClose) {
+                return;
+            }
+
+            qwenApiKey.value = localStorage.getItem(SETTINGS_STORAGE.apiKey) || '';
+            const savedBackend = localStorage.getItem(SETTINGS_STORAGE.inpaintBackend);
+            if (savedBackend && Array.from(inpaintBackend.options).some((option) => option.value === savedBackend)) {
+                inpaintBackend.value = savedBackend;
+            }
+
+            qwenApiKey.addEventListener('input', () => {
+                const value = qwenApiKey.value.trim();
+                if (value) localStorage.setItem(SETTINGS_STORAGE.apiKey, value);
+                else localStorage.removeItem(SETTINGS_STORAGE.apiKey);
+            });
+            inpaintBackend.addEventListener('change', () => {
+                localStorage.setItem(SETTINGS_STORAGE.inpaintBackend, inpaintBackend.value);
+            });
+
+            let currentStatus = { status: 'idle' };
+
+            function render(status) {
+                currentStatus = status || { status: 'idle' };
+                const state = currentStatus.status || 'idle';
+                if (updateStatus) updateStatus.className = `settings-update-status ${state}`;
+                text.textContent = currentStatus.message || '检查更新';
+                button.disabled = state === 'checking' || state === 'downloading';
+                button.classList.toggle('secondary', state !== 'available' && state !== 'downloaded');
+
+                if (state === 'available') {
+                    button.textContent = '下载';
+                } else if (state === 'downloaded') {
+                    button.textContent = '重启安装';
+                } else if (state === 'downloading') {
+                    const percent = Math.max(0, Math.min(100, Math.round(currentStatus.progress?.percent || 0)));
+                    button.textContent = `${percent}%`;
+                } else if (state === 'checking') {
+                    button.textContent = '检查中';
+                } else {
+                    button.textContent = '检查更新';
+                }
+
+                if (versionText) {
+                    const current = currentStatus.version || '0.2.0';
+                    const available = currentStatus.availableVersion ? ` · 可更新至 ${currentStatus.availableVersion}` : '';
+                    versionText.textContent = `DeckLens ${current}${available}`;
+                }
+            }
+
+            async function loadStatus() {
+                if (!updates) {
+                    render({ status: 'disabled', message: '当前环境不支持自动更新', version: '0.2.0' });
+                    button.disabled = true;
+                    return;
+                }
+                try {
+                    render(await updates.getStatus());
+                } catch (error) {
+                    render({ status: 'error', message: '读取更新状态失败', error: error.message });
+                }
+            }
+
+            function wait(ms) {
+                return new Promise((resolve) => window.setTimeout(resolve, ms));
+            }
+
+            button.addEventListener('click', async () => {
+                if (!updates) return;
+                try {
+                    if (currentStatus.status === 'available') {
+                        render({ ...currentStatus, status: 'downloading', message: '正在下载更新...', progress: null });
+                        render(await updates.download());
+                    } else if (currentStatus.status === 'downloaded') {
+                        await updates.install();
+                    } else {
+                        render({ ...currentStatus, status: 'checking', message: '正在检查更新...' });
+                        const startedAt = Date.now();
+                        const result = await updates.check();
+                        await wait(Math.max(0, 500 - (Date.now() - startedAt)));
+                        render(result);
+                    }
+                } catch (error) {
+                    render({ status: 'error', message: '更新操作失败', error: error.message });
+                }
+            });
+
+            if (updates) updates.onStatus(render);
+            loadStatus();
+
+            settingsButton.addEventListener('click', () => openSettings());
+            settingsButton.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+                openSettings();
+            });
+            settingsClose.addEventListener('click', closeSettings);
+            settingsOverlay.addEventListener('click', (event) => {
+                if (event.target === settingsOverlay) closeSettings();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && settingsOverlay.classList.contains('active')) {
+                    closeSettings();
+                }
+            });
+
+            if (window.decklensRuntime && !localStorage.getItem(SETTINGS_STORAGE.firstRunSeen) && !qwenApiKey.value.trim()) {
+                window.setTimeout(() => openSettings({ highlightApiKey: true, markFirstRunSeen: true }), 650);
+            }
+        }
+
+        initHeroTitle();
+        initHoverGlow();
+        initHeroWave();
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const fileItems = document.getElementById('fileItems');
+        const fileCount = document.getElementById('fileCount');
+        const statusPanel = document.getElementById('statusPanel');
+        const resultPanel = document.getElementById('resultPanel');
+        const errorPanel = document.getElementById('errorPanel');
+        const decomposeToggle = document.getElementById('decomposeToggle');
+        const decomposeBadge = document.getElementById('decomposeBadge');
+        const standardModeCard = document.getElementById('standardModeCard');
+        const decomposeLabel = document.getElementById('decomposeLabel');
+        const qwenModeCard = document.getElementById('qwenModeCard');
+        const qwenBadge = document.getElementById('qwenBadge');
+        const qwenLayerControl = document.getElementById('qwenLayerControl');
+        const qwenApiControl = document.getElementById('qwenApiControl');
+        const qwenApiKey = document.getElementById('qwenApiKey');
+        const inpaintBackend = document.getElementById('inpaintBackend');
+
+        let selectedFiles = [];
+        let pollTimer = null;
+        let elapsedTimer = null;
+        let localStartTime = 0;
+        let latestServerElapsed = 0;
+        let decomposeMode = 'none';
+
+        function openSettings({ highlightApiKey = false, markFirstRunSeen = false } = {}) {
+            const settingsOverlay = document.getElementById('settingsOverlay');
+            if (!settingsOverlay) return;
+            settingsOverlay.classList.add('active');
+            settingsOverlay.setAttribute('aria-hidden', 'false');
+            if (markFirstRunSeen) {
+                localStorage.setItem(SETTINGS_STORAGE.firstRunSeen, '1');
+            }
+            if (highlightApiKey) {
+                qwenApiControl.classList.add('highlight');
+                qwenApiControl.scrollIntoView({ block: 'center' });
+                window.setTimeout(() => qwenApiKey.focus(), 80);
+                window.setTimeout(() => qwenApiControl.classList.remove('highlight'), 2200);
+            }
+        }
+
+        function closeSettings() {
+            const settingsOverlay = document.getElementById('settingsOverlay');
+            if (!settingsOverlay) return;
+            settingsOverlay.classList.remove('active');
+            settingsOverlay.setAttribute('aria-hidden', 'true');
+        }
+
+        initSettingsPanel();
+
+        // 分层开关状态同步
+        function setDecomposeMode(mode) {
+            decomposeMode = mode;
+            decomposeToggle.checked = mode === 'sam';
+            if (mode === 'sam') {
+                decomposeBadge.textContent = '已启用';
+                decomposeBadge.className = 'option-badge on';
+                standardModeCard.classList.remove('active');
+                decomposeLabel.classList.add('active');
+                qwenModeCard.classList.remove('active');
+                qwenBadge.textContent = '未启用';
+                qwenBadge.className = 'option-badge off';
+                qwenLayerControl.style.display = 'none';
+            } else if (mode === 'qwen') {
+                decomposeBadge.textContent = '未启用';
+                decomposeBadge.className = 'option-badge off';
+                standardModeCard.classList.remove('active');
+                decomposeLabel.classList.remove('active');
+                qwenModeCard.classList.add('active');
+                qwenBadge.textContent = '已启用';
+                qwenBadge.className = 'option-badge on';
+                qwenLayerControl.style.display = 'flex';
+                if (!qwenApiKey.value.trim()) {
+                    openSettings({ highlightApiKey: true });
+                }
+            } else {
+                decomposeBadge.textContent = '未启用';
+                decomposeBadge.className = 'option-badge off';
+                standardModeCard.classList.add('active');
+                decomposeLabel.classList.remove('active');
+                qwenModeCard.classList.remove('active');
+                qwenBadge.textContent = '未启用';
+                qwenBadge.className = 'option-badge off';
+                qwenLayerControl.style.display = 'none';
+            }
+        }
+
+        decomposeToggle.addEventListener('change', () => {
+            setDecomposeMode(decomposeToggle.checked ? 'sam' : 'none');
+        });
+
+        function focusUploadWorkbench() {
+            document.getElementById('restore')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            uploadZone.classList.add('attention');
+            window.setTimeout(() => uploadZone.classList.remove('attention'), 1300);
+        }
+
+        function heroStart(mode) {
+            setDecomposeMode(mode);
+            focusUploadWorkbench();
+            if (selectedFiles.length > 0) {
+                startConvert();
+                return;
+            }
+            fileInput.click();
+        }
+
+        // 上传事件
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        function isFileDrag(event) {
+            return Array.from(event.dataTransfer?.types || []).includes('Files');
+        }
+
+        function setUploadDragState(active) {
+            uploadZone.classList.toggle('dragover', active);
+        }
+
+        function isOutsideViewport(event) {
+            return event.clientX <= 0
+                || event.clientY <= 0
+                || event.clientX >= window.innerWidth
+                || event.clientY >= window.innerHeight;
+        }
+
+        document.addEventListener('dragenter', (e) => {
+            if (!isFileDrag(e)) return;
+            e.preventDefault();
+            setUploadDragState(true);
+        });
+
+        document.addEventListener('dragover', (e) => {
+            if (!isFileDrag(e)) return;
+            e.preventDefault();
+            setUploadDragState(true);
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            if (!isFileDrag(e)) return;
+            if (isOutsideViewport(e)) {
+                setUploadDragState(false);
+            }
+        });
+
+        document.addEventListener('drop', (e) => {
+            if (!isFileDrag(e)) return;
+            e.preventDefault();
+            setUploadDragState(false);
+            const files = Array.from(e.dataTransfer.files);
+            addFiles(files);
+        });
+
+        window.addEventListener('blur', () => setUploadDragState(false));
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) setUploadDragState(false);
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                addFiles(Array.from(fileInput.files));
+                fileInput.value = '';
+            }
+        });
+
+        function addFiles(files) {
+            const allowed = ['.png', '.jpg', '.jpeg', '.pdf'];
+            for (const f of files) {
+                const ext = '.' + f.name.split('.').pop().toLowerCase();
+                if (allowed.includes(ext)) {
+                    selectedFiles.push(f);
+                }
+            }
+            renderFileList();
+        }
+
+        function addMore() {
+            fileInput.click();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+        }
+
+        function renderFileList() {
+            if (selectedFiles.length === 0) {
+                fileList.classList.remove('active');
+                uploadZone.style.display = '';
+                return;
+            }
+
+            uploadZone.style.display = 'none';
+            fileList.classList.add('active');
+            fileCount.textContent = `${selectedFiles.length} 个文件`;
+
+            fileItems.innerHTML = selectedFiles.map((f, i) => {
+                const ext = f.name.split('.').pop().toLowerCase();
+                const icon = ext === 'pdf' ? 'PDF' : 'IMG';
+                const size = formatSize(f.size);
+                return `<div class="file-item">
+                    <span class="file-icon">${icon}</span>
+                    <span class="file-name">${f.name}</span>
+                    <span class="file-size">${size}</span>
+                    <span class="file-remove" onclick="removeFile(${i})">×</span>
+                </div>`;
+            }).join('');
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        async function startConvert() {
+            if (selectedFiles.length === 0) return;
+
+            // 显示状态面板
+            fileList.classList.remove('active');
+            statusPanel.classList.add('active');
+            resultPanel.classList.remove('active');
+            errorPanel.classList.remove('active');
+
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = '2%';
+
+            const decompose = decomposeMode !== 'none';
+            const modeEl = document.getElementById('statusMode');
+            if (decomposeMode === 'qwen') {
+                modeEl.textContent = 'AI 智能分层';
+                modeEl.className = 'status-mode';
+            } else if (decompose) {
+                modeEl.textContent = '元素分层';
+                modeEl.className = 'status-mode';
+            } else {
+                modeEl.textContent = '标准还原';
+                modeEl.className = 'status-mode normal';
+            }
+
+            const cleanupName = inpaintBackend.options[inpaintBackend.selectedIndex]?.text || 'LaMa';
+            document.getElementById('taskInfo').textContent = `${selectedFiles.length} 个文件 · ${cleanupName}`;
+            document.getElementById('statusStep').textContent = '正在导入文件...';
+            document.getElementById('statusDetail').textContent = '';
+            document.getElementById('elapsed').textContent = '0s';
+            startElapsedTimer();
+            updateProcessingFlow(0, '正在导入文件...', { total_slides: selectedFiles.length });
+
+            const formData = new FormData();
+            for (const f of selectedFiles) {
+                formData.append('files', f);
+            }
+            formData.append('decompose', decompose ? 'true' : 'false');
+            formData.append('decompose_mode', decomposeMode);
+            formData.append('inpaint_backend', inpaintBackend.value);
+            formData.append('qwen_num_layers', document.getElementById('qwenNumLayers').value);
+            formData.append('qwen_api_key', qwenApiKey.value.trim());
+
+            try {
+                const response = await fetch('/api/convert', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.error || '导入失败');
+                    return;
+                }
+
+                // 开始轮询进度
+                startPolling(data.task_id);
+
+            } catch (err) {
+                showError('网络错误: ' + err.message);
+            }
+        }
+
+        function startPolling(taskId) {
+            if (pollTimer) clearInterval(pollTimer);
+
+            pollTimer = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/status/${taskId}`);
+                    const data = await res.json();
+
+                    updateProgress(data);
+
+                    if (data.status === 'done') {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                        stopElapsedTimer();
+                        showResult(data);
+                    } else if (data.status === 'preview') {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                        stopElapsedTimer();
+                        showPreview(data);
+                    } else if (data.status === 'error') {
+                        clearInterval(pollTimer);
+                        pollTimer = null;
+                        stopElapsedTimer();
+                        showError(data.error || data.message);
+                    }
+                } catch (e) {
+                    // 网络抖动，继续轮询
+                }
+            }, 800);
+        }
+
+        function getProcessingPhase(percent, stepText) {
+            const step = stepText || '';
+            if (step.includes('导入') || step.includes('上传')) return 0;
+            if (step.includes('读取') || step.includes('准备')) return 1;
+            if (step.includes('生成 PPTX') || step.includes('导出') || percent >= 82) return 3;
+            if (
+                step.includes('页面') ||
+                step.includes('样式') ||
+                step.includes('文字') ||
+                step.includes('底图') ||
+                step.includes('清理') ||
+                step.includes('元素') ||
+                step.includes('分层') ||
+                step.includes('重建')
+            ) return 2;
+            if (percent < 14) return 0;
+            if (percent < 34) return 1;
+            if (percent < 82) return 2;
+            return 3;
+        }
+
+        function updateProcessingFlow(percent, stepText, data = {}) {
+            const phase = getProcessingPhase(percent, stepText);
+            const steps = document.querySelectorAll('[data-flow-step]');
+            const lines = document.querySelectorAll('[data-flow-line]');
+            const feedItems = document.querySelectorAll('[data-feed-phase]');
+            steps.forEach((step, index) => {
+                step.classList.toggle('is-complete', index < phase);
+                step.classList.toggle('is-active', index === phase);
+            });
+            lines.forEach((line, index) => {
+                line.classList.toggle('is-complete', index < phase);
+                line.classList.toggle('is-active', index === phase - 1);
+            });
+            feedItems.forEach((item) => {
+                const index = Number(item.dataset.feedPhase);
+                item.classList.toggle('is-complete', index < phase);
+                item.classList.toggle('is-active', index === phase);
+            });
+
+            const liveState = document.getElementById('flowLiveState');
+            if (liveState) {
+                const stateLabel = phase === 3 ? '正在生成' : phase === 2 ? '正在重建' : phase === 1 ? '正在读取' : '正在导入';
+                liveState.lastChild.textContent = stateLabel;
+            }
+
+            const hint = document.getElementById('flowHint');
+            if (hint) {
+                const total = data.total_slides || selectedFiles.length || 1;
+                const current = Math.max(1, Math.min(data.current_slide || 1, total));
+                hint.textContent = total > 1 ? `第 ${current}/${total} 页，完成后自动进入下一页` : '完成后自动进入下一步';
+            }
+        }
+
+        function updateProgress(data) {
+            const progressFill = document.getElementById('progressFill');
+            const total = data.total_slides || 1;
+            const current = data.current_slide || 0;
+            latestServerElapsed = Math.max(latestServerElapsed, Number(data.elapsed || 0));
+
+            // 进度条：基于 slide 进度，每个 slide 内的步骤用子进度
+            let percent = Math.max(2, Math.round((current / total) * 100));
+            // 如果还在处理中但已经有 slide 进度，给一个更细的估算
+            if (current > 0 && current <= total) {
+                // 根据当前步骤给额外的子进度
+                const step = data.current_step || '';
+                let subProgress = 0;
+                if (step.includes('读取') || step.includes('识别')) subProgress = 0.1;
+                else if (step.includes('样式') || step.includes('文字')) subProgress = 0.3;
+                else if (step.includes('底图') || step.includes('清理')) subProgress = 0.5;
+                else if (step.includes('元素') || step.includes('分层')) subProgress = 0.7;
+                else if (step.includes('完成')) subProgress = 1.0;
+
+                percent = Math.round(((current - 1 + subProgress) / total) * 100);
+                percent = Math.max(2, Math.min(98, percent));
+            }
+
+            progressFill.style.width = percent + '%';
+            updateProcessingFlow(percent, data.current_step || '', data);
+
+            // 更新文字
+            if (data.total_slides > 0) {
+                document.getElementById('taskInfo').textContent =
+                    `第 ${data.current_slide}/${data.total_slides} 页`;
+            }
+
+            document.getElementById('statusStep').textContent = data.current_step || '处理中...';
+            updateElapsedLabel();
+
+            // 详细信息
+            const detail = data.message || '';
+            document.getElementById('statusDetail').textContent = detail;
+        }
+
+        function startElapsedTimer() {
+            stopElapsedTimer();
+            localStartTime = Date.now();
+            latestServerElapsed = 0;
+            updateElapsedLabel();
+            elapsedTimer = setInterval(updateElapsedLabel, 500);
+        }
+
+        function stopElapsedTimer() {
+            if (elapsedTimer) {
+                clearInterval(elapsedTimer);
+                elapsedTimer = null;
+            }
+        }
+
+        function updateElapsedLabel() {
+            const localElapsed = localStartTime ? (Date.now() - localStartTime) / 1000 : 0;
+            const elapsed = Math.max(localElapsed, latestServerElapsed);
+            document.getElementById('elapsed').textContent = `${Math.floor(elapsed)}s`;
+        }
+
+        function showResult(data) {
+            statusPanel.classList.remove('active');
+            resultPanel.classList.add('active');
+
+            const elapsed = Math.round(data.elapsed || 0);
+            const slides = data.total_slides || selectedFiles.length || 0;
+            const mode = data.decompose_mode === 'qwen' ? 'AI 智能分层' : data.decompose ? '元素分层' : '标准还原';
+            const slideText = slides > 0 ? `${slides} 页` : '-';
+            const elapsedText = elapsed > 0 ? `${elapsed}s` : '-';
+            document.getElementById('resultMessage').textContent =
+                `已按 ${mode} 输出为 PPTX，文字与页面层级可继续在 PowerPoint 中整理。`;
+            document.getElementById('resultSlideCount').textContent = slideText;
+            document.getElementById('resultModeName').textContent = mode;
+            document.getElementById('resultElapsed').textContent = elapsedText;
+            document.getElementById('downloadBtn').href = data.download_url;
+            resultPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showError(msg) {
+            statusPanel.classList.remove('active');
+            errorPanel.classList.add('active');
+            document.getElementById('errorMessage').textContent = msg;
+        }
+
+        function reset() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+            stopElapsedTimer();
+            selectedFiles = [];
+            statusPanel.classList.remove('active');
+            resultPanel.classList.remove('active');
+            errorPanel.classList.remove('active');
+            fileList.classList.remove('active');
+            document.getElementById('previewPanel').classList.remove('active');
+            cleanupPreview();
+            uploadZone.style.display = '';
+            fileInput.value = '';
+        }
+
+        // ─── 预览交互逻辑（Fabric.js） ───
+
+        let previewData = null;
+        let currentSlideIdx = 0;
+        let currentTaskId = null;
+        let selectedMasks = new Set();
+        let deletedMasks = new Set();
+        let mergeGroups = [];  // [[id1, id2], [id3, id4, id5], ...]
+        let fabricCanvas = null;
+        let fabricObjects = {};  // maskId → fabric.Path object
+        let hoveredMaskId = null;
+
+        async function showPreview(statusData) {
+            statusPanel.classList.remove('active');
+            currentTaskId = statusData.task_id;
+
+            // 获取预览数据
+            const res = await fetch(`/api/preview/${currentTaskId}`);
+            previewData = await res.json();
+
+            // 初始化状态
+            currentSlideIdx = 0;
+            selectedMasks = new Set();
+            deletedMasks = new Set();
+            mergeGroups = [];
+
+            document.getElementById('previewPanel').classList.add('active');
+            document.querySelector('.container').classList.add('preview-mode');
+            renderSlideNav();
+            renderCurrentSlide();
+            // 绑定快捷键
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        function renderSlideNav() {
+            const nav = document.getElementById('previewSlideNav');
+            if (previewData.total_slides <= 1) {
+                nav.innerHTML = '';
+                return;
+            }
+            nav.innerHTML = previewData.slides.map((s, i) =>
+                `<div class="slide-tab ${i === currentSlideIdx ? 'active' : ''}" onclick="switchSlide(${i})">第 ${i+1} 页</div>`
+            ).join('');
+        }
+
+        function switchSlide(idx) {
+            currentSlideIdx = idx;
+            selectedMasks = new Set();
+            renderSlideNav();
+            renderCurrentSlide();
+        }
+
+        function renderCurrentSlide() {
+            const slide = previewData.slides[currentSlideIdx];
+            const imgUrl = `/api/preview_image/${currentTaskId}/${slide.viz_image}`;
+
+            // 加载背景图，然后初始化 Fabric canvas
+            const img = new Image();
+            img.onload = () => {
+                initFabricCanvas(img, slide);
+            };
+            img.src = imgUrl;
+            renderElementList();
+        }
+
+        function initFabricCanvas(bgImage, slide) {
+            // 销毁旧 canvas
+            if (fabricCanvas) {
+                fabricCanvas.dispose();
+            }
+
+            const canvasEl = document.getElementById('fabricCanvas');
+            const wrapEl = canvasEl.parentElement;
+            const displayWidth = wrapEl.clientWidth;
+            const scale = displayWidth / bgImage.naturalWidth;
+            const displayHeight = bgImage.naturalHeight * scale;
+
+            canvasEl.width = displayWidth;
+            canvasEl.height = displayHeight;
+
+            fabricCanvas = new fabric.Canvas('fabricCanvas', {
+                width: displayWidth,
+                height: displayHeight,
+                selection: true,  // 启用框选
+                hoverCursor: 'pointer',
+                selectionColor: 'rgba(74, 158, 255, 0.1)',
+                selectionBorderColor: '#4a9eff',
+                selectionLineWidth: 1,
+                targetFindTolerance: 6,
+                preserveObjectStacking: true,
+            });
+
+            // 添加背景图
+            const fabricBg = new fabric.FabricImage(bgImage, {
+                left: 0,
+                top: 0,
+                scaleX: scale,
+                scaleY: scale,
+                selectable: false,
+                evented: false,
+            });
+            fabricCanvas.add(fabricBg);
+
+            // 添加 mask polygon 对象
+            fabricObjects = {};
+            for (const mask of slide.masks) {
+                if (!mask.polygons || mask.polygons.length === 0) continue;
+
+                const pathData = polygonsToSVGPath(mask.polygons, scale);
+                const [r, g, b] = mask.color;
+                const colorHex = rgbToHex(r, g, b);
+
+                const path = new fabric.Path(pathData, {
+                    fill: colorHex + '33',  // 20% alpha 默认
+                    stroke: 'transparent',
+                    strokeWidth: 0,
+                    selectable: true,       // 可被框选
+                    evented: true,
+                    lockMovementX: true,    // 不可拖动
+                    lockMovementY: true,
+                    lockScalingX: true,
+                    lockScalingY: true,
+                    lockRotation: true,
+                    hasControls: false,     // 不显示控制点
+                    hasBorders: false,      // 不显示边框（我们自己管理高亮）
+                    maskId: mask.id,
+                    maskColor: colorHex,
+                    hoverCursor: 'pointer',
+                });
+
+                fabricCanvas.add(path);
+                fabricObjects[mask.id] = path;
+            }
+
+            // 事件绑定
+            fabricCanvas.on('mouse:over', onMouseOver);
+            fabricCanvas.on('mouse:out', onMouseOut);
+            fabricCanvas.on('mouse:down', onMouseDown);
+
+            // 框选结束：把框中的对象加入选择集
+            fabricCanvas.on('selection:created', onSelectionCreated);
+            fabricCanvas.on('selection:updated', onSelectionCreated);
+
+            fabricCanvas.renderAll();
+            updateVisualStates();
+        }
+
+        function polygonsToSVGPath(polygons, scale) {
+            let d = '';
+            for (const poly of polygons) {
+                if (poly.length < 3) continue;
+                d += `M ${poly[0][0] * scale} ${poly[0][1] * scale} `;
+                for (let i = 1; i < poly.length; i++) {
+                    d += `L ${poly[i][0] * scale} ${poly[i][1] * scale} `;
+                }
+                d += 'Z ';
+            }
+            return d;
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ─── Fabric.js 事件处理 ───
+
+        function onMouseOver(e) {
+            if (!e.target || e.target.maskId === undefined) return;
+            const id = e.target.maskId;
+            if (deletedMasks.has(id)) return;
+            if (selectedMasks.has(id)) return;  // 已选中的不需要 hover 效果
+
+            hoveredMaskId = id;
+            // Hover 态：蓝色虚线边框
+            e.target.set({
+                fill: e.target.maskColor + '15',
+                stroke: '#4a9eff',
+                strokeWidth: 1.5,
+                strokeDashArray: [6, 4],
+            });
+            fabricCanvas.renderAll();
+
+            // 高亮列表项
+            highlightListItem(id, true);
+        }
+
+        function onMouseOut(e) {
+            if (!e.target || e.target.maskId === undefined) return;
+            const id = e.target.maskId;
+            hoveredMaskId = null;
+
+            // 恢复状态
+            updateSingleMaskVisual(id);
+            fabricCanvas.renderAll();
+
+            // 取消列表高亮
+            highlightListItem(id, false);
+        }
+
+        function onSelectionCreated(e) {
+            // 框选结束：把框中的所有 mask 对象加入选择集
+            const active = fabricCanvas.getActiveObject();
+            let selected = e.selected || [];
+            if ((!selected || selected.length === 0) && active) {
+                selected = String(active.type || '').toLowerCase() === 'activeselection' ? active.getObjects() : [active];
+            }
+            const maskIds = selected
+                .map(obj => obj.maskId)
+                .filter(id => id !== undefined && !deletedMasks.has(id));
+
+            // 清除 Fabric.js 自带的 activeSelection（我们自己管理选中态）
+            fabricCanvas.discardActiveObject();
+            if (maskIds.length <= 1) {
+                updateVisualStates();
+                renderElementList();
+                updateFloatingToolbar();
+                return;
+            }
+            addMasksToSelection(maskIds);
+            updateVisualStates();
+            renderElementList();
+            updateFloatingToolbar();
+        }
+
+        // ─── 视觉状态管理 ───
+
+        function updateVisualStates() {
+            for (const [id, path] of Object.entries(fabricObjects)) {
+                updateSingleMaskVisual(parseInt(id));
+            }
+            if (fabricCanvas) fabricCanvas.renderAll();
+        }
+
+        function updateSingleMaskVisual(id) {
+            const path = fabricObjects[id];
+            if (!path) return;
+
+            if (deletedMasks.has(id)) {
+                // 已删除：红色虚线 + 低透明度
+                path.set({
+                    fill: '#ff000015',
+                    stroke: '#f44',
+                    strokeWidth: 1.5,
+                    strokeDashArray: [6, 4],
+                    opacity: 0.4,
+                    hasControls: false,
+                    hasBorders: false,
+                });
+            } else if (selectedMasks.has(id)) {
+                // 选中态：蓝色实线边框 + 四角控制点 + 淡红色蒙版
+                path.set({
+                    fill: 'rgba(220, 60, 60, 0.25)',  // 淡红色蒙版
+                    stroke: '#4a9eff',                 // 蓝色实线边框
+                    strokeWidth: 2,
+                    strokeDashArray: null,
+                    opacity: 1,
+                    hasControls: true,                  // 四角控制点
+                    hasBorders: true,
+                    borderColor: '#4a9eff',
+                    cornerColor: '#4a9eff',
+                    cornerSize: 8,
+                    cornerStyle: 'rect',
+                    transparentCorners: false,
+                });
+            } else if (hoveredMaskId === id) {
+                // Hover 态：蓝色虚线边框 + 极淡填充
+                path.set({
+                    fill: path.maskColor + '15',
+                    stroke: '#4a9eff',
+                    strokeWidth: 1.5,
+                    strokeDashArray: [6, 4],
+                    opacity: 1,
+                    hasControls: false,
+                    hasBorders: false,
+                });
+            } else {
+                // 检查是否在合并组中
+                const group = mergeGroups.find(g => g.includes(id));
+                if (group) {
+                    // 合并组标识：绿色虚线边框
+                    const groupIdx = mergeGroups.indexOf(group);
+                    path.set({
+                        fill: '#00ff0012',
+                        stroke: '#4caf50',
+                        strokeWidth: 1.5,
+                        strokeDashArray: [4, 3],
+                        opacity: 0.7,
+                        hasControls: false,
+                        hasBorders: false,
+                    });
+                } else {
+                    // 默认态：淡色填充，无边框
+                    path.set({
+                        fill: path.maskColor + '25',
+                        stroke: 'transparent',
+                        strokeWidth: 0,
+                        strokeDashArray: null,
+                        opacity: 1,
+                        hasControls: false,
+                        hasBorders: false,
+                    });
+                }
+            }
+        }
+
+        function updateFloatingToolbar() {
+            const toolbar = document.getElementById('floatingToolbar');
+            const count = selectedMasks.size;
+            if (count >= 2) {
+                toolbar.classList.add('active');
+                document.getElementById('selectedCount').textContent = `已选 ${count} 个元素`;
+            } else {
+                toolbar.classList.remove('active');
+            }
+        }
+
+        // ─── 列表渲染与联动 ───
+
+        function renderElementList() {
+            const slide = previewData.slides[currentSlideIdx];
+            const list = document.getElementById('previewElementList');
+
+            // 分组：未打组的在上面，已合并组在下面
+            const ungrouped = slide.masks.filter(m => {
+                return !mergeGroups.some(g => g.includes(m.id)) && !deletedMasks.has(m.id);
+            });
+            const grouped = slide.masks.filter(m => {
+                return mergeGroups.some(g => g.includes(m.id));
+            });
+            const deleted = slide.masks.filter(m => deletedMasks.has(m.id));
+
+            let html = '';
+
+            // 未打组元素
+            if (ungrouped.length > 0) {
+                html += `<div class="preview-list-section-label">未编组 (${ungrouped.length})</div>`;
+                html += ungrouped.map(m => renderListItem(m)).join('');
+            }
+
+            // 已合并组
+            if (grouped.length > 0) {
+                html += `<div class="preview-list-section-label">已合并</div>`;
+                // 按组显示
+                for (let gi = 0; gi < mergeGroups.length; gi++) {
+                    const group = mergeGroups[gi];
+                    const groupMasks = slide.masks.filter(m => group.includes(m.id));
+                    html += `<div class="preview-list-section-label" style="color:#6f6;padding-left:16px">组 ${gi+1} (${group.length}个)</div>`;
+                    html += groupMasks.map(m => renderListItem(m)).join('');
+                }
+            }
+
+            // 已删除
+            if (deleted.length > 0) {
+                html += `<div class="preview-list-section-label">已删除</div>`;
+                html += deleted.map(m => renderListItem(m)).join('');
+            }
+
+            list.innerHTML = html;
+            updateFloatingToolbar();
+        }
+
+        function renderListItem(m) {
+            let cls = 'preview-element-item';
+            if (selectedMasks.has(m.id)) cls += ' selected';
+            if (deletedMasks.has(m.id)) cls += ' deleted';
+            const group = mergeGroups.find(g => g.includes(m.id));
+            if (group) cls += ' merged';
+
+            const [r, g, b] = m.color;
+            const groupLabel = group ? ` [组${mergeGroups.indexOf(group)+1}]` : '';
+            return `<div class="${cls}" data-mask-id="${m.id}"
+                onclick="toggleMaskFromList(${m.id})"
+                onmouseenter="hoverListItem(${m.id}, true)"
+                onmouseleave="hoverListItem(${m.id}, false)">
+                <span class="color-dot" style="background:rgb(${r},${g},${b})"></span>
+                <span>#${m.id}</span>
+                <span style="color:#666">${m.area_pct}%</span>
+                ${groupLabel ? `<span style="color:#6f6;font-size:11px">${groupLabel}</span>` : ''}
+            </div>`;
+        }
+
+        function toggleMaskFromList(id) {
+            toggleMaskSelection(id);
+        }
+
+        function toggleMaskSelection(id) {
+            if (deletedMasks.has(id)) return;
+            if (selectedMasks.has(id)) {
+                selectedMasks.delete(id);
+            } else {
+                selectedMasks.add(id);
+            }
+            updateVisualStates();
+            renderElementList();
+            updateFloatingToolbar();
+        }
+
+        function addMasksToSelection(ids) {
+            for (const id of ids) {
+                if (!deletedMasks.has(id)) {
+                    selectedMasks.add(id);
+                }
+            }
+        }
+
+        function hoverListItem(id, isEnter) {
+            if (deletedMasks.has(id)) return;
+            if (selectedMasks.has(id)) return;  // 已选中的不需要 hover 效果
+            const path = fabricObjects[id];
+            if (!path) return;
+
+            if (isEnter) {
+                hoveredMaskId = id;
+                path.set({
+                    fill: path.maskColor + '15',
+                    stroke: '#4a9eff',
+                    strokeWidth: 1.5,
+                    strokeDashArray: [6, 4],
+                });
+            } else {
+                hoveredMaskId = null;
+                updateSingleMaskVisual(id);
+            }
+            fabricCanvas.renderAll();
+        }
+
+        function highlightListItem(id, highlight) {
+            const item = document.querySelector(`[data-mask-id="${id}"]`);
+            if (item) {
+                if (highlight) {
+                    item.classList.add('hovered');
+                } else {
+                    item.classList.remove('hovered');
+                }
+            }
+        }
+
+        // ─── 操作按钮 ───
+
+        function mergeSelected() {
+            if (selectedMasks.size < 2) return;
+            const count = selectedMasks.size;
+            const group = [...selectedMasks];
+            mergeGroups = mergeGroups.map(g => g.filter(id => !selectedMasks.has(id))).filter(g => g.length > 1);
+            mergeGroups.push(group);
+            selectedMasks.clear();
+            updateVisualStates();
+            renderElementList();
+            showToast(`已合并 ${count} 个元素为组 ${mergeGroups.length}`);
+        }
+
+        function deleteSelected() {
+            if (selectedMasks.size === 0) return;
+            const count = selectedMasks.size;
+            for (const id of selectedMasks) {
+                deletedMasks.add(id);
+            }
+            selectedMasks.clear();
+            updateVisualStates();
+            renderElementList();
+            showToast(`已删除 ${count} 个元素`);
+        }
+
+        function selectAll() {
+            const slide = previewData.slides[currentSlideIdx];
+            selectedMasks = new Set(slide.masks.map(m => m.id).filter(id => !deletedMasks.has(id)));
+            updateVisualStates();
+            renderElementList();
+        }
+
+        function clearSelection() {
+            selectedMasks.clear();
+            updateVisualStates();
+            renderElementList();
+        }
+
+        function resetPreview() {
+            selectedMasks.clear();
+            deletedMasks.clear();
+            mergeGroups = [];
+            updateVisualStates();
+            renderElementList();
+        }
+
+        async function confirmAndGenerate() {
+            const slide = previewData.slides[currentSlideIdx];
+            const allIds = new Set(slide.masks.map(m => m.id));
+            const mergedIds = new Set(mergeGroups.flat());
+
+            const keep = [...allIds].filter(id => !deletedMasks.has(id) && !mergedIds.has(id));
+
+            const decision = {
+                slides: [{
+                    slide_index: currentSlideIdx,
+                    keep: keep,
+                    merge: mergeGroups,
+                    delete: [...deletedMasks],
+                }]
+            };
+
+            for (let i = 0; i < previewData.total_slides; i++) {
+                if (i === currentSlideIdx) continue;
+                const s = previewData.slides[i];
+                decision.slides.push({
+                    slide_index: i,
+                    keep: s.masks.map(m => m.id),
+                    merge: [],
+                    delete: [],
+                });
+            }
+
+            document.getElementById('previewPanel').classList.remove('active');
+            cleanupPreview();
+            statusPanel.classList.add('active');
+            document.getElementById('statusStep').textContent = '正在生成 PPTX...';
+            document.getElementById('progressFill').style.width = '80%';
+            startElapsedTimer();
+            updateProcessingFlow(86, '正在生成 PPTX...', previewData || {});
+
+            const res = await fetch(`/api/confirm/${currentTaskId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(decision),
+            });
+
+            startPolling(currentTaskId);
+        }
+
+        async function skipPreview() {
+            mergeGroups = [];
+            deletedMasks.clear();
+            await confirmAndGenerate();
+        }
+
+        // ─── 快捷键 ───
+
+        function handleKeydown(e) {
+            // 不在预览模式时不处理
+            if (!document.getElementById('previewPanel').classList.contains('active')) return;
+            // 如果焦点在 input 等元素上，不拦截
+            if (document.activeElement !== document.body) return;
+
+            const key = e.key;
+            const ctrl = e.ctrlKey || e.metaKey;
+
+            if (key === 'Escape') {
+                e.preventDefault();
+                clearSelection();
+                showToast('已取消选择');
+            } else if (key === 'Delete' || key === 'Backspace') {
+                e.preventDefault();
+                if (selectedMasks.size > 0) {
+                    const count = selectedMasks.size;
+                    deleteSelected();
+                    showToast(`已删除 ${count} 个元素`);
+                }
+            } else if (ctrl && (key === 'a' || key === 'A')) {
+                e.preventDefault();
+                selectAll();
+                showToast(`已全选 ${selectedMasks.size} 个元素`);
+            } else if (ctrl && (key === 'g' || key === 'G')) {
+                e.preventDefault();
+                if (selectedMasks.size >= 2) {
+                    const count = selectedMasks.size;
+                    mergeSelected();
+                    showToast(`已合并 ${count} 个元素为一组`);
+                }
+            }
+        }
+
+        // ─── 点击空白取消选择 ───
+
+        function onMouseDown(e) {
+            if (!e.target || e.target.maskId === undefined) {
+                // 点击了空白区域（背景图或无对象区域）
+                if (selectedMasks.size > 0) {
+                    clearSelection();
+                }
+                return;
+            }
+            const id = e.target.maskId;
+            if (deletedMasks.has(id)) return;
+            fabricCanvas.discardActiveObject();
+            toggleMaskSelection(id);
+        }
+
+        // ─── Toast 提示 ───
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const el = document.getElementById('previewToast');
+            el.textContent = msg;
+            el.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                el.classList.remove('show');
+            }, 2000);
+        }
+
+        // ─── 清理 ───
+
+        function cleanupPreview() {
+            document.querySelector('.container').classList.remove('preview-mode');
+            document.removeEventListener('keydown', handleKeydown);
+        }
+    </script>
+</body>
+</html>
