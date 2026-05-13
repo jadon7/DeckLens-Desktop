@@ -23,6 +23,9 @@ chance of exposing unrelated material.
 - Add a GitHub Actions Windows build workflow that produces unsigned installer
   artifacts suitable for later SignPath integration.
 - Document the SignPath Foundation preparation path in `docs/SIGNPATH.md`.
+- Publish a `Code signing policy` page that includes the SignPath attribution,
+  team roles, build provenance, and privacy policy expected by SignPath
+  Foundation terms.
 
 ## Consequences
 
@@ -31,6 +34,8 @@ chance of exposing unrelated material.
   SignPath-backed signing is available.
 - SignPath signing still requires project approval and follow-up CI secret or
   integration configuration after approval.
+- The public repository homepage links directly to the code signing policy for
+  reviewers and users.
 
 ## Checklist
 

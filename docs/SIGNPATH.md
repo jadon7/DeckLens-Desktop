@@ -29,6 +29,7 @@ electron-builder output and the artifact upload/release publishing step.
 Use the public repository URL and point reviewers to:
 
 - `LICENSE`
+- `docs/CODE_SIGNING_POLICY.md`
 - `.github/workflows/windows-build.yml`
 - `README.md`
 - this document

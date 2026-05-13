@@ -13,6 +13,12 @@ DeckLens converts image-like presentation pages into editable PowerPoint decks. 
 - Optionally split visual elements into editable picture layers.
 - Export all pages as one `.pptx` file.
 
+## Code Signing Policy
+
+DeckLens Desktop prepares Windows releases for SignPath Foundation review.
+The project code signing policy is documented in
+[docs/CODE_SIGNING_POLICY.md](docs/CODE_SIGNING_POLICY.md).
+
 ## Current Modes
 
 | Mode | Behavior | Notes |
