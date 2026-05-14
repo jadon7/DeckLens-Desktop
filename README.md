@@ -72,6 +72,10 @@ Build unpacked app:
 npm run electron:pack
 ```
 
+Use this unpacked build for day-to-day validation. It avoids notarized installer
+generation and keeps UI/flow checks fast. Signed installer builds are reserved
+for release publishing.
+
 Smoke-check a packaged macOS build:
 
 ```bash
@@ -111,6 +115,20 @@ names are versioned.
 Cloudflare update infrastructure is defined in `wrangler.toml` and
 `cloudflare/update-worker.js`. The Worker serves files from the
 `decklens-updates` R2 bucket on `updates.dsxzai.com`.
+
+## Website
+
+The product website lives in `site/` and is deployed to
+<https://deck.dsxzai.com/> with Cloudflare Pages:
+
+```bash
+npm run site:deploy
+```
+
+The GitHub repository Website/Homepage should point to
+`https://deck.dsxzai.com/`. The update feed remains separate at
+`https://updates.dsxzai.com/` and is only for Electron auto-update metadata and
+release artifacts.
 
 The desktop UI supports Chinese and English. On first launch it follows the
 system language, and users can override the language from the settings panel.

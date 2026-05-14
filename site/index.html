@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DeckLens - 图片化页面转可编辑 PPTX</title>
+    <meta name="description" content="DeckLens 是一个桌面工具，用于把图片化 PPT、AI 生成页面和截图还原成可继续编辑的 PowerPoint 文件。">
+    <meta property="og:title" content="DeckLens">
+    <meta property="og:description" content="把图片化页面变回可编辑 PPTX。">
+    <meta property="og:image" content="/assets/decklens-desktop.jpg">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="/assets/decklens-logo.svg" type="image/svg+xml">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #050505;
+        --muted: #626262;
+        --soft: #f4f5f2;
+        --line: rgba(5, 5, 5, 0.12);
+        --accent: #cfff52;
+        --accent-2: #69efb2;
+        --max: 1120px;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .nav {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        padding: 18px 22px;
+        pointer-events: none;
+      }
+
+      .nav-inner {
+        width: min(var(--max), 100%);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 10px 12px 10px 14px;
+        border: 1px solid rgba(5, 5, 5, 0.10);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.80);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 16px 50px rgba(0, 0, 0, 0.08);
+        pointer-events: auto;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 820;
+        letter-spacing: 0;
+      }
+
+      .brand-mark {
+        width: 13px;
+        height: 18px;
+        display: inline-block;
+        background: #050505;
+        transform: skewX(-10deg);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        color: #3f3f3f;
+      }
+
+      .nav-links a {
+        padding: 8px 12px;
+        border-radius: 999px;
+      }
+
+      .nav-links a:hover {
+        background: rgba(5, 5, 5, 0.06);
+      }
+
+      .hero {
+        min-height: 88vh;
+        display: grid;
+        align-items: end;
+        position: relative;
+        overflow: hidden;
+        padding: 132px 22px 64px;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.86) 38%, rgba(255, 255, 255, 0.18) 100%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.94)),
+          url("/assets/decklens-desktop.jpg") center right / cover no-repeat;
+      }
+
+      .hero-inner {
+        width: min(var(--max), 100%);
+        margin: 0 auto;
+        display: grid;
+        gap: 28px;
+      }
+
+      .eyebrow {
+        width: fit-content;
+        padding: 7px 10px;
+        border: 1px solid rgba(5, 5, 5, 0.10);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: #3c3c3c;
+        font-size: 13px;
+        font-weight: 660;
+      }
+
+      h1 {
+        max-width: 790px;
+        margin: 0;
+        font-size: clamp(54px, 8vw, 112px);
+        line-height: 0.92;
+        letter-spacing: 0;
+      }
+
+      .hero-copy {
+        max-width: 610px;
+        margin: 0;
+        color: #292929;
+        font-size: clamp(18px, 2vw, 24px);
+        line-height: 1.45;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 999px;
+        border: 1px solid #050505;
+        background: #050505;
+        color: #fff;
+        font-weight: 740;
+      }
+
+      .button.secondary {
+        background: rgba(255, 255, 255, 0.74);
+        color: #050505;
+      }
+
+      .hero-metrics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: #3c3c3c;
+        font-size: 13px;
+      }
+
+      .hero-metrics span {
+        padding: 8px 10px;
+        border: 1px solid rgba(5, 5, 5, 0.10);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.64);
+      }
+
+      main {
+        display: grid;
+      }
+
+      section {
+        padding: 78px 22px;
+      }
+
+      .section-inner {
+        width: min(var(--max), 100%);
+        margin: 0 auto;
+      }
+
+      .section-head {
+        display: grid;
+        gap: 12px;
+        max-width: 720px;
+        margin-bottom: 34px;
+      }
+
+      .section-kicker {
+        color: #636363;
+        font-size: 13px;
+        font-weight: 760;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(32px, 5vw, 58px);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .section-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.55;
+      }
+
+      .capability-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .capability {
+        min-height: 210px;
+        display: grid;
+        align-content: space-between;
+        gap: 26px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .capability strong {
+        font-size: 24px;
+        line-height: 1.05;
+      }
+
+      .capability p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .flow-section {
+        background: var(--soft);
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1px;
+        border: 1px solid var(--line);
+        background: var(--line);
+      }
+
+      .flow-step {
+        min-height: 220px;
+        display: grid;
+        align-content: space-between;
+        gap: 22px;
+        padding: 22px;
+        background: #fff;
+      }
+
+      .flow-step span {
+        width: 34px;
+        height: 34px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #050505;
+        color: #fff;
+        font-weight: 780;
+      }
+
+      .flow-step strong {
+        font-size: 22px;
+      }
+
+      .flow-step p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .modes {
+        display: grid;
+        gap: 14px;
+      }
+
+      .mode-row {
+        display: grid;
+        grid-template-columns: 0.8fr 1.4fr 0.8fr;
+        gap: 18px;
+        align-items: center;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .mode-row strong {
+        font-size: 24px;
+      }
+
+      .mode-row p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .pill {
+        justify-self: start;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: var(--accent);
+        font-size: 13px;
+        font-weight: 740;
+      }
+
+      .download {
+        min-height: 440px;
+        display: grid;
+        align-items: center;
+        background:
+          linear-gradient(90deg, rgba(5, 5, 5, 0.94), rgba(5, 5, 5, 0.80)),
+          url("/assets/decklens-desktop.jpg") center / cover no-repeat;
+        color: #fff;
+      }
+
+      .download .section-head p {
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .download .button {
+        border-color: #fff;
+        background: #fff;
+        color: #050505;
+      }
+
+      .download .button.secondary {
+        background: transparent;
+        color: #fff;
+      }
+
+      footer {
+        padding: 28px 22px;
+        border-top: 1px solid var(--line);
+        color: #686868;
+        font-size: 13px;
+      }
+
+      .footer-inner {
+        width: min(var(--max), 100%);
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 820px) {
+        .nav-inner {
+          border-radius: 18px;
+        }
+
+        .nav-links {
+          display: none;
+        }
+
+        .hero {
+          min-height: 86vh;
+          padding-top: 112px;
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.58) 62%, rgba(255, 255, 255, 0.96)),
+            url("/assets/decklens-desktop.jpg") center / cover no-repeat;
+        }
+
+        .capability-grid,
+        .flow,
+        .mode-row {
+          grid-template-columns: 1fr;
+        }
+
+        section {
+          padding: 58px 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav" aria-label="主导航">
+      <div class="nav-inner">
+        <a class="brand" href="#top" aria-label="DeckLens home"><span class="brand-mark" aria-hidden="true"></span>DeckLens</a>
+        <div class="nav-links">
+          <a href="#capabilities">能力</a>
+          <a href="#workflow">流程</a>
+          <a href="#modes">模式</a>
+          <a href="https://github.com/jadon7/DeckLens-Desktop">GitHub</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="hero-inner">
+        <span class="eyebrow">Desktop app for editable decks</span>
+        <h1>DeckLens</h1>
+        <p class="hero-copy">把图片化 PPT、AI 生成页面和截图，还原成可继续编辑的 PowerPoint。保留原版观感，同时恢复文本框和可整理的页面元素。</p>
+        <div class="actions">
+          <a class="button" href="https://github.com/jadon7/DeckLens-Desktop">查看源码</a>
+          <a class="button secondary" href="#workflow">了解流程</a>
+        </div>
+        <div class="hero-metrics" aria-label="核心能力">
+          <span>本地桌面工作流</span>
+          <span>标准还原 / 元素分层 / AI 智能分层</span>
+          <span>Cloudflare 自动更新源</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="capabilities">
+        <div class="section-inner">
+          <div class="section-head">
+            <span class="section-kicker">Capabilities</span>
+            <h2>面向后续编辑，而不是只导出一张图片。</h2>
+            <p>DeckLens 的目标是把最值得继续修改的部分恢复出来：文本可改，关键元素可整理，复杂背景保持稳定。</p>
+          </div>
+          <div class="capability-grid">
+            <article class="capability">
+              <strong>文字恢复为 PPTX 文本框</strong>
+              <p>识别页面文字、位置和样式，把需要改动的内容恢复成 PowerPoint 里可编辑的文本对象。</p>
+            </article>
+            <article class="capability">
+              <strong>底图清理保持原版观感</strong>
+              <p>使用本地清理算法去掉旧文字区域，尽量保持背景连续，避免把复杂页面拆得过碎。</p>
+            </article>
+            <article class="capability">
+              <strong>元素分层可人工校对</strong>
+              <p>图文分离后进入预览面板，可选择、合并或删除图层，再生成最终 PPTX。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="flow-section" id="workflow">
+        <div class="section-inner">
+          <div class="section-head">
+            <span class="section-kicker">Workflow</span>
+            <h2>一次导入，四步完成。</h2>
+            <p>桌面端把上传、识别、重建、导出放进一个紧凑流程，适合反复处理多页素材。</p>
+          </div>
+          <div class="flow">
+            <article class="flow-step"><span>1</span><strong>导入</strong><p>选择 PNG、JPG 或把 PDF 页面按图片导入。</p></article>
+            <article class="flow-step"><span>2</span><strong>读取</strong><p>识别文本、位置、页面结构和基础样式。</p></article>
+            <article class="flow-step"><span>3</span><strong>重建</strong><p>清理底图，并按模式恢复文本或页面元素。</p></article>
+            <article class="flow-step"><span>4</span><strong>导出</strong><p>生成可继续编辑的 PPTX，多页素材合并成一套文件。</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="modes">
+        <div class="section-inner">
+          <div class="section-head">
+            <span class="section-kicker">Modes</span>
+            <h2>按页面复杂度选择恢复深度。</h2>
+          </div>
+          <div class="modes">
+            <article class="mode-row"><strong>标准还原</strong><p>适合只需要快速改字的页面。优先恢复文字，背景保持为清理后的稳定底图。</p><span class="pill">Fast default</span></article>
+            <article class="mode-row"><strong>元素分层</strong><p>适合需要继续改版的页面。先拆出主要元素，再在预览里合并、删除或整理。</p><span class="pill">Reviewable</span></article>
+            <article class="mode-row"><strong>AI 智能分层</strong><p>适合结构更复杂的视觉页面。可配置自己的 fal.ai API Key 接入 Qwen-Image-Layered。</p><span class="pill">Configurable</span></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="download">
+        <div class="section-inner">
+          <div class="section-head">
+            <span class="section-kicker">Open Source</span>
+            <h2>桌面客户端仓库已经公开。</h2>
+            <p>当前仓库只保留桌面客户端、打包后端、自动更新和签名发布相关内容。安装包发布后，App 会通过独立的 Cloudflare 更新源检查版本。</p>
+          </div>
+          <div class="actions">
+            <a class="button" href="https://github.com/jadon7/DeckLens-Desktop">打开 GitHub</a>
+            <a class="button secondary" href="https://updates.dsxzai.com/">更新源状态</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <span>DeckLens · 图片化页面转可编辑 PPTX</span>
+        <span>Website: deck.dsxzai.com · Updates: updates.dsxzai.com</span>
+      </div>
+    </footer>
+  </body>
+</html>
