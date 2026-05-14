@@ -35,6 +35,38 @@
             background: #e5e5e5;
             z-index: -1;
         }
+        .site-logo-icon {
+            display: block;
+            width: 24px;
+            height: 24px;
+            max-width: 24px;
+            max-height: 24px;
+            object-fit: contain;
+            border-radius: 6px;
+            flex: 0 0 auto;
+        }
+        .site-logo-icon.footer {
+            width: 28px;
+            height: 28px;
+            max-width: 28px;
+            max-height: 28px;
+        }
+        .hero-social-links {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 18px;
+            color: #666666;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .hero-social-links a {
+            transition: color 0.16s ease;
+        }
+        .hero-social-links a:hover {
+            color: #111111;
+        }
     </style>
 
   <style type="text/css">
@@ -1041,7 +1073,7 @@ video {
         <div class="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between" vid="10">
             <div class="flex items-center gap-8" vid="11">
                 <div class="flex items-center gap-2 font-bold text-xl tracking-tight" vid="12">
-                    <img src="/assets/app-icon.png" alt="" class="w-7 h-7 rounded-md" vid="13">
+                    <img src="/assets/app-icon.png" alt="" class="site-logo-icon" vid="13">
                     <span vid="14">DeckLens</span>
                 </div>
                 <div class="hidden md:flex items-center gap-6 text-sm font-medium text-secondary" vid="15">
@@ -1075,6 +1107,11 @@ video {
                 <a class="bg-transparent border border-zinc-200 text-[#111111] px-8 py-3 rounded-sm font-medium hover:bg-zinc-50 transition-all flex items-center gap-2" vid="30" href="https://github.com/jadon7/DeckLens-Desktop" target="_blank" rel="noopener noreferrer"><i class="ph ph-github-logo" vid="31"></i>
                     GitHub
                 </a>
+            </div>
+            <div class="hero-social-links" aria-label="社交媒体链接">
+                <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noopener noreferrer">抖音</a>
+                <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&xsec_source=pc_search" target="_blank" rel="noopener noreferrer">小红书</a>
+                <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noopener noreferrer">B 站</a>
             </div>
 
 
@@ -1260,7 +1297,7 @@ video {
         <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-start gap-12" vid="147">
             <div vid="148">
                 <div class="flex items-center gap-2 font-bold text-xl tracking-tight mb-4 text-[#111111]" vid="149">
-                    <img src="/assets/app-icon.png" alt="" class="w-7 h-7 rounded-md" vid="150">
+                    <img src="/assets/app-icon.png" alt="" class="site-logo-icon footer" vid="150">
                     <span vid="151">DeckLens</span>
                 </div>
                 <p class="text-secondary text-sm max-w-sm mb-6" vid="152">

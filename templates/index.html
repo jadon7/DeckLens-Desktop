@@ -4265,12 +4265,12 @@
                     <span data-i18n="hero.chip.local">本地运行</span>
                     <span data-i18n="hero.chip.batch">批量合并</span>
                     <span data-i18n="hero.chip.text">可编辑文字</span>
-                    <span data-i18n="hero.chip.layers">元素分层</span>
+                    <span data-i18n="hero.chip.layers">进阶分层</span>
                     <span data-i18n="hero.chip.review">交互式校对</span>
                 </div>
                 <div class="hero-actions">
                     <button class="btn" type="button" onclick="heroStart('none')" data-i18n="hero.action.start">开始转换</button>
-                    <button class="btn btn-secondary" type="button" onclick="heroStart('sam')" data-i18n="hero.action.layers">开启元素分层</button>
+                    <button class="btn btn-secondary" type="button" onclick="heroStart('sam')" data-i18n="hero.action.layers">开启进阶分层</button>
                 </div>
                 <div class="tech-strip" aria-label="输出结果" data-i18n-aria-label="hero.output.label">
                     <span data-i18n="hero.output.text">可编辑文字</span>
@@ -4290,13 +4290,13 @@
                     <div class="mode-grid" id="layers">
 	                        <div class="mode-card active" id="standardModeCard" onclick="document.getElementById('decomposeToggle').checked = false; document.getElementById('decomposeToggle').dispatchEvent(new Event('change'));">
 	                            <span class="tag" data-i18n="mode.standard.tag">快速</span>
-	                            <strong data-i18n="mode.standard.title">标准还原</strong>
+	                            <strong data-i18n="mode.standard.title">文字提取</strong>
 	                            <small data-i18n="mode.standard.desc">基础排版与文本提取，适合简单文档。</small>
 	                        </div>
 	                        <label class="mode-card layer" id="decomposeLabel">
 	                            <input type="checkbox" id="decomposeToggle">
 	                            <span class="tag" data-i18n="mode.element.tag">可校对</span>
-	                            <strong data-i18n="mode.element.title">元素分层</strong>
+	                            <strong data-i18n="mode.element.title">进阶分层</strong>
 	                            <small data-i18n="mode.element.desc">图文分离，保留基础层级关系。</small>
 	                            <span class="option-badge off" id="decomposeBadge" data-i18n="common.disabled">未启用</span>
 	                        </label>
@@ -4355,7 +4355,7 @@
                     <div class="status-header">
                         <span class="task-info" id="taskInfo" data-i18n="status.processing">处理中...</span>
                         <div class="status-meta">
-                            <span class="status-mode normal" id="statusMode">标准还原</span>
+                            <span class="status-mode normal" id="statusMode">文字提取</span>
                             <span class="elapsed" id="elapsed">0s</span>
                         </div>
                     </div>
@@ -4499,11 +4499,11 @@
             <div class="section-head">
                 <span class="section-kicker">Workflow</span>
                 <h2 data-i18n="workflow.title">一次导入，三步变成可继续编辑的 PPTX。</h2>
-                <p data-i18n="workflow.desc">页面不用从零重做。DeckLens 把导入、重建、校对导出收进同一个工作流里，用户只需要决定要不要进入元素整理。</p>
+                <p data-i18n="workflow.desc">页面不用从零重做。DeckLens 把导入、重建、校对导出收进同一个工作流里，用户只需要决定要不要进入进阶分层。</p>
             </div>
             <div class="process-grid">
                 <article class="process-step"><span>1</span><strong data-i18n="workflow.step1.title">输入页面</strong><p data-i18n="workflow.step1.desc">导入图片、PDF 或多页素材，统一合并成一个待重建任务。</p></article>
-                <article class="process-step"><span>2</span><strong data-i18n="workflow.step2.title">选择还原深度</strong><p data-i18n="workflow.step2.desc">标准还原优先改文字；元素分层会额外生成可整理的页面元素。</p></article>
+                <article class="process-step"><span>2</span><strong data-i18n="workflow.step2.title">选择还原深度</strong><p data-i18n="workflow.step2.desc">文字提取优先改文字；进阶分层会额外生成可整理的页面元素。</p></article>
                 <article class="process-step"><span>3</span><strong data-i18n="workflow.step3.title">校对并导出</strong><p data-i18n="workflow.step3.desc">需要时在预览里合并、删除元素，然后生成可继续编辑的 PPTX。</p></article>
             </div>
         </section>
@@ -4546,11 +4546,11 @@
         <!-- 功能说明 -->
         <div class="features">
             <div class="feature-card">
-                <h3 data-i18n="mode.standard.title">标准还原</h3>
+                <h3 data-i18n="mode.standard.title">文字提取</h3>
                 <p data-i18n="feature.standard.desc">适合只想快速改字的页面：保留视觉底图，并恢复主要文字内容。</p>
             </div>
             <div class="feature-card">
-                <h3 data-i18n="mode.element.title">元素分层</h3>
+                <h3 data-i18n="mode.element.title">进阶分层</h3>
                 <p data-i18n="feature.element.desc">适合继续改版的页面：先预览图层，再合并、删除或整理元素。</p>
             </div>
             <div class="feature-card">
@@ -4638,10 +4638,10 @@
                 'hero.chip.local': '本地运行',
                 'hero.chip.batch': '批量合并',
                 'hero.chip.text': '可编辑文字',
-                'hero.chip.layers': '元素分层',
+                'hero.chip.layers': '进阶分层',
                 'hero.chip.review': '交互式校对',
                 'hero.action.start': '开始转换',
-                'hero.action.layers': '开启元素分层',
+                'hero.action.layers': '开启进阶分层',
                 'hero.output.label': '输出结果',
                 'hero.output.text': '可编辑文字',
                 'hero.output.layers': '可整理图层',
@@ -4651,10 +4651,10 @@
                 'workbench.heading': '选择处理模式. <span class="muted">准备文档解析与重建。</span>',
                 'workbench.aria': 'DeckLens 导入工作台',
                 'mode.standard.tag': '快速',
-                'mode.standard.title': '标准还原',
+                'mode.standard.title': '文字提取',
                 'mode.standard.desc': '基础排版与文本提取，适合简单文档。',
                 'mode.element.tag': '可校对',
-                'mode.element.title': '元素分层',
+                'mode.element.title': '进阶分层',
                 'mode.element.desc': '图文分离，保留基础层级关系。',
                 'mode.ai.tag': '高质量',
                 'mode.ai.title': 'AI 智能分层',
@@ -4748,11 +4748,11 @@
                 'preview.toastSelectedAll': '已全选 {count} 个元素',
                 'preview.toastMergedOneGroup': '已合并 {count} 个元素为一组',
                 'workflow.title': '一次导入，三步变成可继续编辑的 PPTX。',
-                'workflow.desc': '页面不用从零重做。DeckLens 把导入、重建、校对导出收进同一个工作流里，用户只需要决定要不要进入元素整理。',
+                'workflow.desc': '页面不用从零重做。DeckLens 把导入、重建、校对导出收进同一个工作流里，用户只需要决定要不要进入进阶分层。',
                 'workflow.step1.title': '输入页面',
                 'workflow.step1.desc': '导入图片、PDF 或多页素材，统一合并成一个待重建任务。',
                 'workflow.step2.title': '选择还原深度',
-                'workflow.step2.desc': '标准还原优先改文字；元素分层会额外生成可整理的页面元素。',
+                'workflow.step2.desc': '文字提取优先改文字；进阶分层会额外生成可整理的页面元素。',
                 'workflow.step3.title': '校对并导出',
                 'workflow.step3.desc': '需要时在预览里合并、删除元素，然后生成可继续编辑的 PPTX。',
                 'proof.title': '不是图片版 PPT，而是可操作的页面层。',
@@ -4853,10 +4853,10 @@
                 'workbench.heading': 'Choose a mode. <span class="muted">Prepare parsing and reconstruction.</span>',
                 'workbench.aria': 'DeckLens import workbench',
                 'mode.standard.tag': 'Fast',
-                'mode.standard.title': 'Standard Restore',
+                'mode.standard.title': 'Text Extraction',
                 'mode.standard.desc': 'Basic layout and text extraction for simple pages.',
                 'mode.element.tag': 'Reviewable',
-                'mode.element.title': 'Element Layers',
+                'mode.element.title': 'Advanced Layers',
                 'mode.element.desc': 'Separates graphics and text while preserving basic layer structure.',
                 'mode.ai.tag': 'High quality',
                 'mode.ai.title': 'AI Layered Restore',
@@ -4954,7 +4954,7 @@
                 'workflow.step1.title': 'Input pages',
                 'workflow.step1.desc': 'Import images, PDFs, or multi-page materials into one reconstruction job.',
                 'workflow.step2.title': 'Choose depth',
-                'workflow.step2.desc': 'Standard Restore prioritizes text edits. Element Layers also produces page elements for cleanup.',
+                'workflow.step2.desc': 'Text Extraction prioritizes text edits. Advanced Layers also produces page elements for cleanup.',
                 'workflow.step3.title': 'Review and export',
                 'workflow.step3.desc': 'Merge or delete elements in preview when needed, then export an editable PPTX.',
                 'proof.title': 'Not an image-only PPT, but an operable page layer stack.',
