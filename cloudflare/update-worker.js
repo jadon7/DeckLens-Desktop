@@ -21,11 +21,61 @@ function cacheControlFor(key) {
   return /^latest.*\.ya?ml$/i.test(key) ? CACHE_METADATA : CACHE_ARTIFACT;
 }
 
+function isArtifact(key) {
+  return /\.(dmg|zip|exe|blockmap)$/i.test(key);
+}
+
 function baseHeaders(key) {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Cache-Control": key ? cacheControlFor(key) : CACHE_METADATA
+    "Cache-Control": key ? cacheControlFor(key) : CACHE_METADATA,
+    "X-Content-Type-Options": "nosniff",
+    "Accept-Ranges": "bytes"
   };
+}
+
+function downloadMetadataKey(platform) {
+  return platform === "windows" ? "latest.yml" : "latest-mac.yml";
+}
+
+function platformFromRequest(request) {
+  const ua = request.headers.get("User-Agent") || "";
+  return /Windows/i.test(ua) ? "windows" : "mac";
+}
+
+function parseArtifactPath(metadata) {
+  const match = metadata.match(/^path:\s*(.+)$/m);
+  return match ? match[1].trim().replace(/^["']|["']$/g, "") : "";
+}
+
+async function downloadRedirect(request, env, platform) {
+  const metadataKey = downloadMetadataKey(platform);
+  const metadata = await env.DECKLENS_UPDATES.get(metadataKey);
+  if (metadata === null) {
+    return new Response(`No ${platform} release is available yet`, {
+      status: 404,
+      headers: {
+        ...baseHeaders(metadataKey),
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    });
+  }
+
+  const artifactPath = parseArtifactPath(await metadata.text());
+  if (!artifactPath) {
+    return new Response(`Release metadata is missing an artifact path: ${metadataKey}`, {
+      status: 502,
+      headers: {
+        ...baseHeaders(metadataKey),
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    });
+  }
+
+  const url = new URL(request.url);
+  url.pathname = `/${artifactPath}`;
+  url.search = "";
+  return Response.redirect(url.toString(), 302);
 }
 
 export default {
@@ -49,6 +99,18 @@ export default {
         status: 405,
         headers: baseHeaders(key)
       });
+    }
+
+    if (key === "download") {
+      return downloadRedirect(request, env, platformFromRequest(request));
+    }
+
+    if (key === "download/mac") {
+      return downloadRedirect(request, env, "mac");
+    }
+
+    if (key === "download/windows") {
+      return downloadRedirect(request, env, "windows");
     }
 
     if (!key) {
@@ -80,13 +142,20 @@ export default {
     object.writeHttpMetadata(headers);
     headers.set("Content-Type", headers.get("Content-Type") || contentTypeFor(key));
     headers.set("ETag", object.httpEtag);
+    if (isArtifact(key) && !headers.has("Content-Disposition")) {
+      headers.set("Content-Disposition", `attachment; filename="${key.split("/").pop()}"`);
+    }
 
-    if (object.range) {
+    const hasRange = object.range &&
+      Number.isFinite(object.range.offset) &&
+      Number.isFinite(object.range.end);
+
+    if (hasRange) {
       headers.set("Content-Range", `bytes ${object.range.offset}-${object.range.end - 1}/${object.size}`);
     }
 
     return new Response(request.method === "HEAD" ? null : object.body, {
-      status: object.body ? (object.range ? 206 : 200) : 304,
+      status: object.body ? (hasRange ? 206 : 200) : 304,
       headers
     });
   }

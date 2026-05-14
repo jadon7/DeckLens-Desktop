@@ -19,6 +19,12 @@ contextBridge.exposeInMainWorld('decklensRuntime', {
       return () => ipcRenderer.removeListener('update-status', listener);
     }
   },
+  pptOutputs: {
+    list: () => ipcRenderer.invoke('ppt:list'),
+    open: (fileName) => ipcRenderer.invoke('ppt:open', fileName),
+    reveal: (fileName) => ipcRenderer.invoke('ppt:reveal', fileName),
+    delete: (fileName) => ipcRenderer.invoke('ppt:delete', fileName)
+  },
   onLog: (callback) => {
     const listener = (_event, line) => callback(line);
     ipcRenderer.on('runtime-log', listener);

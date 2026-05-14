@@ -410,6 +410,7 @@
           <a href="#capabilities">能力</a>
           <a href="#workflow">流程</a>
           <a href="#modes">模式</a>
+          <a id="navDownloadLink" href="https://updates.dsxzai.com/download">下载</a>
           <a href="https://github.com/jadon7/DeckLens-Desktop">GitHub</a>
         </div>
       </div>
@@ -421,8 +422,8 @@
         <h1>DeckLens</h1>
         <p class="hero-copy">把图片化 PPT、AI 生成页面和截图，还原成可继续编辑的 PowerPoint。保留原版观感，同时恢复文本框和可整理的页面元素。</p>
         <div class="actions">
-          <a class="button" href="https://github.com/jadon7/DeckLens-Desktop">查看源码</a>
-          <a class="button secondary" href="#workflow">了解流程</a>
+          <a id="downloadLink" class="button" href="https://updates.dsxzai.com/download">下载适合此设备的版本</a>
+          <a class="button secondary" href="https://github.com/jadon7/DeckLens-Desktop">查看源码</a>
         </div>
         <div class="hero-metrics" aria-label="核心能力">
           <span>本地桌面工作流</span>
@@ -495,8 +496,8 @@
             <p>当前仓库只保留桌面客户端、打包后端、自动更新和签名发布相关内容。安装包发布后，App 会通过独立的 Cloudflare 更新源检查版本。</p>
           </div>
           <div class="actions">
-            <a class="button" href="https://github.com/jadon7/DeckLens-Desktop">打开 GitHub</a>
-            <a class="button secondary" href="https://updates.dsxzai.com/">更新源状态</a>
+            <a id="macDownloadLink" class="button" href="https://updates.dsxzai.com/download/mac">下载 macOS 版</a>
+            <a id="winDownloadLink" class="button secondary" href="https://updates.dsxzai.com/download/windows">下载 Windows 版</a>
           </div>
         </div>
       </section>
@@ -508,5 +509,24 @@
         <span>Website: deck.dsxzai.com · Updates: updates.dsxzai.com</span>
       </div>
     </footer>
+    <script>
+      (() => {
+        const platform = navigator.userAgent || navigator.platform || '';
+        const isWindows = /Windows/i.test(platform);
+        const downloadHref = isWindows
+          ? 'https://updates.dsxzai.com/download/windows'
+          : 'https://updates.dsxzai.com/download/mac';
+        const downloadText = isWindows ? '下载 Windows 版' : '下载 macOS 版';
+        const primary = document.getElementById('downloadLink');
+        const nav = document.getElementById('navDownloadLink');
+        if (primary) {
+          primary.href = downloadHref;
+          primary.textContent = downloadText;
+        }
+        if (nav) {
+          nav.href = downloadHref;
+        }
+      })();
+    </script>
   </body>
 </html>

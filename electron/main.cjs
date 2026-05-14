@@ -229,6 +229,42 @@ function venvDir() {
   return userPath('python-runtime', 'venv');
 }
 
+function outputDir() {
+  return userPath('data', 'outputs');
+}
+
+function resolveOutputPptx(fileName) {
+  if (!fileName || typeof fileName !== 'string' || path.basename(fileName) !== fileName) {
+    throw new Error('Invalid PPTX file name.');
+  }
+  const root = path.resolve(outputDir());
+  const resolved = path.resolve(root, fileName);
+  const insideOutputDir = resolved === root || resolved.startsWith(`${root}${path.sep}`);
+  if (!insideOutputDir || path.extname(resolved).toLowerCase() !== '.pptx') {
+    throw new Error('PPTX file is outside DeckLens outputs.');
+  }
+  return resolved;
+}
+
+function listGeneratedPptx() {
+  const dir = outputDir();
+  fs.mkdirSync(dir, { recursive: true });
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && !entry.name.startsWith('~$') && path.extname(entry.name).toLowerCase() === '.pptx')
+    .map((entry) => {
+      const filePath = path.join(dir, entry.name);
+      const stat = fs.statSync(filePath);
+      return {
+        id: entry.name,
+        name: entry.name,
+        size: stat.size,
+        createdAt: stat.birthtimeMs,
+        modifiedAt: stat.mtimeMs
+      };
+    })
+    .sort((a, b) => b.modifiedAt - a.modifiedAt);
+}
+
 function venvPython() {
   return process.platform === 'win32'
     ? path.join(venvDir(), 'Scripts', 'python.exe')
@@ -552,6 +588,38 @@ ipcMain.handle('updates:install', () => {
   }
   autoUpdater.quitAndInstall(false, true);
   return { ...updateState };
+});
+
+ipcMain.handle('ppt:list', () => listGeneratedPptx());
+
+ipcMain.handle('ppt:open', async (_event, fileName) => {
+  const pptxPath = resolveOutputPptx(fileName);
+  if (!fs.existsSync(pptxPath)) {
+    throw new Error('PPTX file no longer exists.');
+  }
+  const error = await shell.openPath(pptxPath);
+  if (error) {
+    throw new Error(error);
+  }
+  return { ok: true };
+});
+
+ipcMain.handle('ppt:reveal', (_event, fileName) => {
+  const pptxPath = resolveOutputPptx(fileName);
+  if (!fs.existsSync(pptxPath)) {
+    throw new Error('PPTX file no longer exists.');
+  }
+  shell.showItemInFolder(pptxPath);
+  return { ok: true };
+});
+
+ipcMain.handle('ppt:delete', (_event, fileName) => {
+  const pptxPath = resolveOutputPptx(fileName);
+  if (!fs.existsSync(pptxPath)) {
+    return { ok: true };
+  }
+  fs.rmSync(pptxPath, { force: true });
+  return { ok: true };
 });
 
 configureAutoUpdater();

@@ -12,6 +12,8 @@ DeckLens converts image-like presentation pages into editable PowerPoint decks. 
 - Recreate detected text as editable PowerPoint text boxes.
 - Optionally split visual elements into editable picture layers.
 - Export all pages as one `.pptx` file.
+- Keep generated PPTX files available from the desktop history sidebar, with
+  actions to open, reveal in the local folder, or delete the output.
 
 ## Code Signing Policy
 
@@ -84,7 +86,14 @@ test -f release/mac-arm64/DeckLens.app/Contents/Resources/backend/templates/inde
 open -n release/mac-arm64/DeckLens.app
 ```
 
-Build installers:
+Fast unsigned builds for validation:
+
+```bash
+npm run electron:dist:mac:unsigned
+npm run electron:dist:win:unsigned
+```
+
+Build signed release installers:
 
 ```bash
 npm run electron:dist:mac
@@ -114,7 +123,38 @@ names are versioned.
 
 Cloudflare update infrastructure is defined in `wrangler.toml` and
 `cloudflare/update-worker.js`. The Worker serves files from the
-`decklens-updates` R2 bucket on `updates.dsxzai.com`.
+`decklens-updates` R2 bucket on `updates.dsxzai.com`. The stable user-facing
+download routes are:
+
+- `https://updates.dsxzai.com/download`
+- `https://updates.dsxzai.com/download/mac`
+- `https://updates.dsxzai.com/download/windows`
+
+Those routes read the latest electron-builder metadata from R2 and redirect to
+the current versioned installer artifact, so the product website does not need
+to hard-code release file names.
+
+## CLI Conversion
+
+DeckLens also includes a local CLI wrapper for Agent-driven conversion:
+
+```bash
+python3 decklens_cli.py input.png --output output.pptx
+python3 decklens_cli.py input.pdf --mode element --output output.pptx
+python3 decklens_cli.py input.png input2.jpg --json --output output.pptx
+```
+
+The npm shortcut is:
+
+```bash
+npm run decklens:convert -- input.png --output output.pptx
+```
+
+Supported modes are `standard`, `element`, and `ai`. AI mode requires a fal.ai
+API key through `--fal-key` or `FAL_KEY`. The Agent skill source lives at
+`skills/decklens-convert/SKILL.md` and documents the preferred calling pattern
+for local Agents. Existing output files are preserved unless `--overwrite` is
+passed.
 
 ## Website
 

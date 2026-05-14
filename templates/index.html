@@ -2779,11 +2779,12 @@
         /* Desktop app shell override */
         html,
         body {
+            --ppt-sidebar-width: 336px;
             width: 100%;
             min-width: 0;
             min-height: 100%;
             overflow: hidden;
-            background: #fff;
+            background: #f5f5f4;
             color: #0a0a0a;
         }
 
@@ -2814,15 +2815,17 @@
         .electron-shell.platform-darwin .mode-card,
         .electron-shell.platform-darwin .upload-zone,
         .electron-shell.platform-darwin .preview-panel,
+        .electron-shell.platform-darwin .ppt-sidebar-button,
+        .electron-shell.platform-darwin .ppt-sidebar,
         .electron-shell.platform-darwin .settings-button,
         .electron-shell.platform-darwin .settings-modal {
             -webkit-app-region: no-drag;
         }
 
+        .ppt-sidebar-button,
         .settings-button {
             position: fixed;
             top: 54px;
-            right: 22px;
             z-index: 80;
             display: none;
             align-items: center;
@@ -2834,25 +2837,259 @@
             background: rgba(255, 255, 255, 0.92);
             color: #111;
             backdrop-filter: blur(16px);
-            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
             cursor: pointer;
             pointer-events: auto;
+            transition: right 0.22s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
             -webkit-app-region: no-drag;
         }
 
+        .settings-button {
+            right: 22px;
+        }
+
+        .ppt-sidebar-button {
+            right: 72px;
+        }
+
+        body.ppt-sidebar-open .settings-button {
+            right: calc(var(--ppt-sidebar-width) + 22px);
+        }
+
+        body.ppt-sidebar-open .ppt-sidebar-button {
+            right: calc(var(--ppt-sidebar-width) + 72px);
+        }
+
+        .ppt-sidebar-button[aria-expanded="true"] {
+            border-color: rgba(0, 0, 0, 0.24);
+            background: #111;
+            color: #fff;
+        }
+
+        .ppt-sidebar-button::after {
+            content: attr(data-count);
+            position: absolute;
+            right: -4px;
+            bottom: -4px;
+            display: none;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #ceff66;
+            color: #111;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 18px;
+        }
+
+        .ppt-sidebar-button.has-items::after {
+            display: block;
+        }
+
+        .electron-shell .ppt-sidebar-button,
         .electron-shell .settings-button {
             display: inline-flex;
         }
 
+        .ppt-sidebar-button:hover,
         .settings-button:hover {
             border-color: rgba(0, 0, 0, 0.22);
             background: #fff;
         }
 
+        .ppt-sidebar-button[aria-expanded="true"]:hover {
+            background: #111;
+            color: #fff;
+        }
+
+        .ppt-sidebar-button svg,
         .settings-button svg {
             width: 19px;
             height: 19px;
             pointer-events: none;
+        }
+
+        .ppt-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            width: min(var(--ppt-sidebar-width), calc(100vw - 28px));
+            height: 100vh;
+            border-left: 1px solid #dededb;
+            background: #f5f5f4;
+            color: #111;
+            transform: translateX(100%);
+            transition: transform 0.22s ease;
+            pointer-events: none;
+            -webkit-app-region: no-drag;
+        }
+
+        .ppt-sidebar.active {
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .ppt-sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 82px 14px 12px;
+            border-bottom: 1px solid #e2e2df;
+        }
+
+        .ppt-sidebar-title {
+            display: grid;
+            gap: 4px;
+        }
+
+        .ppt-sidebar-title strong {
+            font-size: 18px;
+            font-weight: 780;
+        }
+
+        .ppt-sidebar-title small {
+            color: #8a8a8a;
+            font-size: 12px;
+        }
+
+        .ppt-sidebar-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ppt-sidebar-icon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border: 1px solid #dededb;
+            border-radius: 999px;
+            background: #fdfdfc;
+            color: #111;
+            cursor: pointer;
+        }
+
+        .ppt-sidebar-icon-button:hover {
+            border-color: #cfcfcf;
+            background: #f8f8f8;
+        }
+
+        .ppt-sidebar-icon-button svg {
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .ppt-sidebar-body {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 8px;
+        }
+
+        .ppt-history-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .ppt-history-empty,
+        .ppt-history-error {
+            display: grid;
+            gap: 8px;
+            padding: 18px;
+            border: 1px dashed #d8d8d8;
+            border-radius: 8px;
+            background: #fafafa;
+            color: #777;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .ppt-history-error {
+            border-color: rgba(239, 68, 68, 0.35);
+            background: rgba(239, 68, 68, 0.06);
+            color: #991b1b;
+        }
+
+        .ppt-history-item {
+            display: grid;
+            gap: 12px;
+            padding: 10px 8px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+        }
+
+        .ppt-history-item:hover {
+            background: #ececea;
+        }
+
+        .ppt-history-main {
+            display: grid;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .ppt-history-name {
+            overflow: hidden;
+            color: #111;
+            font-size: 13px;
+            font-weight: 760;
+            line-height: 1.35;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ppt-history-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            color: #8a8a8a;
+            font-size: 11px;
+        }
+
+        .ppt-history-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .ppt-history-action {
+            min-height: 30px;
+            padding: 0 11px;
+            border: 1px solid #dededb;
+            border-radius: 999px;
+            background: #fdfdfc;
+            color: #111;
+            font-size: 12px;
+            font-weight: 650;
+            cursor: pointer;
+        }
+
+        .ppt-history-action.primary {
+            border-color: #111;
+            background: #111;
+            color: #fff;
+        }
+
+        .ppt-history-action.danger {
+            color: #b91c1c;
+        }
+
+        .ppt-history-action:hover {
+            border-color: #bdbdbd;
+            background: #f8f8f8;
+        }
+
+        .ppt-history-action.primary:hover {
+            border-color: #111;
+            background: #222;
         }
 
         .settings-overlay {
@@ -2996,6 +3233,31 @@
             gap: 8px;
         }
 
+        .settings-link-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .settings-link-row a {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 11px;
+            border: 1px solid #e2e2e2;
+            border-radius: 999px;
+            background: #fff;
+            color: #111;
+            font-size: 12px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+
+        .settings-link-row a:hover {
+            border-color: #bdbdbd;
+            background: #f8f8f8;
+        }
+
         .settings-action {
             min-height: 36px;
             padding: 0 14px;
@@ -3030,6 +3292,11 @@
             padding: 0;
             overflow: hidden;
             background: #fff;
+            transition: width 0.22s ease;
+        }
+
+        body.ppt-sidebar-open .container {
+            width: calc(100% - min(var(--ppt-sidebar-width), calc(100vw - 28px)));
         }
 
         .container.preview-mode {
@@ -3625,12 +3892,41 @@
 </head>
 <body>
     <div class="window-drag-region" aria-hidden="true"></div>
+    <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false" data-count="0">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 4.75h10a2.25 2.25 0 0 1 2.25 2.25v10A2.25 2.25 0 0 1 17 19.25H7A2.25 2.25 0 0 1 4.75 17V7A2.25 2.25 0 0 1 7 4.75Z" stroke="currentColor" stroke-width="1.8"></path>
+            <path d="M8.25 8.5h7.5M8.25 12h7.5M8.25 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        </svg>
+    </button>
     <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" onclick="openSettings()">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
             <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
         </svg>
     </button>
+    <aside class="ppt-sidebar" id="pptSidebar" aria-hidden="true">
+        <div class="ppt-sidebar-header">
+            <div class="ppt-sidebar-title">
+                <strong data-i18n="history.title">已生成 PPT</strong>
+                <small id="pptHistorySummary" data-i18n="history.summary.empty">还没有生成的 PPTX</small>
+            </div>
+            <div class="ppt-sidebar-header-actions">
+                <button class="ppt-sidebar-icon-button" id="pptHistoryRefresh" type="button" aria-label="刷新列表" data-i18n-aria-label="history.refresh">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M20 11a8 8 0 0 0-14.1-5.16M4 5v5h5M4 13a8 8 0 0 0 14.1 5.16M20 19v-5h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </button>
+                <button class="ppt-sidebar-icon-button" id="pptSidebarClose" type="button" aria-label="关闭列表" data-i18n-aria-label="history.close">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M6.75 6.75l10.5 10.5M17.25 6.75 6.75 17.25" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="ppt-sidebar-body">
+            <div class="ppt-history-list" id="pptHistoryList"></div>
+        </div>
+    </aside>
     <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
         <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
             <div class="settings-header">
@@ -3682,6 +3978,17 @@
                     <div class="settings-row">
                         <strong data-i18n="settings.version.title">版本</strong>
                         <small id="appVersionText">DeckLens</small>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-row">
+                        <strong data-i18n="settings.author.title">作者</strong>
+                        <small data-i18n="settings.author.name">大师的AI小灶</small>
+                        <div class="settings-link-row">
+                            <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noreferrer" data-i18n="settings.author.douyin">抖音</a>
+                            <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&amp;xsec_source=pc_search" target="_blank" rel="noreferrer" data-i18n="settings.author.xiaohongshu">小红书</a>
+                            <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noreferrer" data-i18n="settings.author.bilibili">B 站</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -4052,6 +4359,27 @@
                 'settings.update.error': '更新检查失败',
                 'settings.version.title': '版本',
                 'settings.version.available': ' · 可更新至 {version}',
+                'settings.author.title': '作者',
+                'settings.author.name': '大师的AI小灶',
+                'settings.author.douyin': '抖音',
+                'settings.author.xiaohongshu': '小红书',
+                'settings.author.bilibili': 'B 站',
+                'history.open': '打开 PPT 列表',
+                'history.close': '关闭列表',
+                'history.refresh': '刷新列表',
+                'history.title': '已生成 PPT',
+                'history.summary.empty': '还没有生成的 PPTX',
+                'history.summary.count': '{count} 个 PPTX 文件',
+                'history.empty.title': '暂无生成记录',
+                'history.empty.desc': '完成转换后，PPTX 会出现在这里。',
+                'history.loading': '正在读取列表...',
+                'history.error': '读取 PPT 列表失败',
+                'history.action.open': '打开',
+                'history.action.reveal': '本地目录',
+                'history.action.delete': '删除',
+                'history.confirmDelete': '确定删除这个 PPTX 文件吗？',
+                'history.deleted': '已删除',
+                'history.actionFailed': '操作失败: {message}',
                 'hero.eyebrow': '图片化页面重建工具',
                 'hero.trust.label': '产品能力',
                 'hero.trust.local.strong': '本地',
@@ -4233,6 +4561,27 @@
                 'settings.update.error': 'Update check failed',
                 'settings.version.title': 'Version',
                 'settings.version.available': ' · update to {version}',
+                'settings.author.title': 'Author',
+                'settings.author.name': '大师的AI小灶',
+                'settings.author.douyin': 'Douyin',
+                'settings.author.xiaohongshu': 'Xiaohongshu',
+                'settings.author.bilibili': 'Bilibili',
+                'history.open': 'Open PPT list',
+                'history.close': 'Close list',
+                'history.refresh': 'Refresh list',
+                'history.title': 'Generated PPTs',
+                'history.summary.empty': 'No generated PPTX yet',
+                'history.summary.count': '{count} PPTX {count, plural, one {file} other {files}}',
+                'history.empty.title': 'No generated files',
+                'history.empty.desc': 'Completed PPTX files will appear here.',
+                'history.loading': 'Loading list...',
+                'history.error': 'Could not load PPT list',
+                'history.action.open': 'Open',
+                'history.action.reveal': 'Show in folder',
+                'history.action.delete': 'Delete',
+                'history.confirmDelete': 'Delete this PPTX file?',
+                'history.deleted': 'Deleted',
+                'history.actionFailed': 'Action failed: {message}',
                 'hero.eyebrow': 'Image page reconstruction tool',
                 'hero.trust.label': 'Product capabilities',
                 'hero.trust.local.strong': 'Local',
@@ -4450,6 +4799,7 @@
             if (selectedFiles?.length) {
                 renderFileList();
             }
+            renderPptHistory(pptHistoryItems);
         }
 
         function initHeroTitle() {
@@ -4681,6 +5031,173 @@
             language: 'decklens.language'
         };
 
+        let pptHistoryItems = [];
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function formatHistorySize(bytes) {
+            const size = Number(bytes || 0);
+            if (size < 1024) return `${size} B`;
+            if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+            return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+        }
+
+        function formatHistoryTime(timestamp) {
+            if (!timestamp) return '';
+            return new Intl.DateTimeFormat(getActiveLanguage() === 'zh' ? 'zh-CN' : 'en', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(new Date(timestamp));
+        }
+
+        function updatePptHistorySummary(count) {
+            const summary = document.getElementById('pptHistorySummary');
+            const button = document.getElementById('pptSidebarButton');
+            if (summary) {
+                summary.textContent = count > 0 ? t('history.summary.count', { count }) : t('history.summary.empty');
+            }
+            if (button) {
+                button.dataset.count = count > 99 ? '99+' : String(count);
+                button.classList.toggle('has-items', count > 0);
+            }
+        }
+
+        function renderPptHistory(items = pptHistoryItems) {
+            const list = document.getElementById('pptHistoryList');
+            if (!list) return;
+            pptHistoryItems = items;
+            updatePptHistorySummary(items.length);
+            if (!window.decklensRuntime?.pptOutputs) {
+                list.innerHTML = `<div class="ppt-history-empty"><strong>${escapeHtml(t('history.empty.title'))}</strong><span>${escapeHtml(t('history.empty.desc'))}</span></div>`;
+                return;
+            }
+            if (items.length === 0) {
+                list.innerHTML = `<div class="ppt-history-empty"><strong>${escapeHtml(t('history.empty.title'))}</strong><span>${escapeHtml(t('history.empty.desc'))}</span></div>`;
+                return;
+            }
+            list.innerHTML = items.map((item, index) => `
+                <article class="ppt-history-item">
+                    <div class="ppt-history-main">
+                        <div class="ppt-history-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+                        <div class="ppt-history-meta">
+                            <span>${escapeHtml(formatHistoryTime(item.modifiedAt))}</span>
+                            <span>${escapeHtml(formatHistorySize(item.size))}</span>
+                        </div>
+                    </div>
+                    <div class="ppt-history-actions">
+                        <button class="ppt-history-action primary" type="button" data-history-action="open" data-history-index="${index}">${escapeHtml(t('history.action.open'))}</button>
+                        <button class="ppt-history-action" type="button" data-history-action="reveal" data-history-index="${index}">${escapeHtml(t('history.action.reveal'))}</button>
+                        <button class="ppt-history-action danger" type="button" data-history-action="delete" data-history-index="${index}">${escapeHtml(t('history.action.delete'))}</button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function renderPptHistoryMessage(message, isError = false) {
+            const list = document.getElementById('pptHistoryList');
+            if (!list) return;
+            list.innerHTML = `<div class="${isError ? 'ppt-history-error' : 'ppt-history-empty'}">${escapeHtml(message)}</div>`;
+        }
+
+        async function refreshPptHistory({ silent = false } = {}) {
+            const api = window.decklensRuntime?.pptOutputs;
+            if (!api) return;
+            if (!silent) {
+                renderPptHistoryMessage(t('history.loading'));
+            }
+            try {
+                const items = await api.list();
+                renderPptHistory(items || []);
+            } catch (error) {
+                renderPptHistoryMessage(t('history.error'), true);
+            }
+        }
+
+        function openPptSidebar() {
+            const sidebar = document.getElementById('pptSidebar');
+            const button = document.getElementById('pptSidebarButton');
+            if (!sidebar || !button) return;
+            closeSettings();
+            sidebar.classList.add('active');
+            sidebar.setAttribute('aria-hidden', 'false');
+            button.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('ppt-sidebar-open');
+            refreshPptHistory();
+        }
+
+        function closePptSidebar() {
+            const sidebar = document.getElementById('pptSidebar');
+            const button = document.getElementById('pptSidebarButton');
+            if (!sidebar || !button) return;
+            sidebar.classList.remove('active');
+            sidebar.setAttribute('aria-hidden', 'true');
+            button.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('ppt-sidebar-open');
+        }
+
+        function togglePptSidebar() {
+            const sidebar = document.getElementById('pptSidebar');
+            if (sidebar?.classList.contains('active')) closePptSidebar();
+            else openPptSidebar();
+        }
+
+        function initPptSidebar() {
+            const button = document.getElementById('pptSidebarButton');
+            const closeButton = document.getElementById('pptSidebarClose');
+            const refreshButton = document.getElementById('pptHistoryRefresh');
+            const list = document.getElementById('pptHistoryList');
+            const api = window.decklensRuntime?.pptOutputs;
+            if (!button || !closeButton || !refreshButton || !list) {
+                return;
+            }
+
+            button.addEventListener('click', (event) => {
+                if (event.detail === 0) togglePptSidebar();
+            });
+            button.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+                togglePptSidebar();
+            });
+            closeButton.addEventListener('click', closePptSidebar);
+            refreshButton.addEventListener('click', () => refreshPptHistory());
+            list.addEventListener('click', async (event) => {
+                const actionButton = event.target.closest('[data-history-action]');
+                if (!actionButton || !api) return;
+                const item = pptHistoryItems[Number(actionButton.dataset.historyIndex)];
+                if (!item) return;
+                const action = actionButton.dataset.historyAction;
+                try {
+                    if (action === 'open') {
+                        await api.open(item.id);
+                    } else if (action === 'reveal') {
+                        await api.reveal(item.id);
+                    } else if (action === 'delete') {
+                        if (!window.confirm(t('history.confirmDelete'))) return;
+                        await api.delete(item.id);
+                        await refreshPptHistory({ silent: true });
+                    }
+                } catch (error) {
+                    renderPptHistoryMessage(t('history.actionFailed', { message: error.message || '' }), true);
+                }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && document.getElementById('pptSidebar')?.classList.contains('active')) {
+                    closePptSidebar();
+                }
+            });
+            refreshPptHistory({ silent: true });
+        }
+
         function initSettingsPanel() {
             const settingsButton = document.getElementById('settingsButton');
             const settingsOverlay = document.getElementById('settingsOverlay');
@@ -4863,6 +5380,7 @@
         function openSettings({ highlightApiKey = false, markFirstRunSeen = false } = {}) {
             const settingsOverlay = document.getElementById('settingsOverlay');
             if (!settingsOverlay) return;
+            closePptSidebar();
             settingsOverlay.classList.add('active');
             settingsOverlay.setAttribute('aria-hidden', 'false');
             if (markFirstRunSeen) {
@@ -4883,6 +5401,7 @@
             settingsOverlay.setAttribute('aria-hidden', 'true');
         }
 
+        initPptSidebar();
         initSettingsPanel();
 
         // 分层开关状态同步
@@ -5264,20 +5783,14 @@
 
         function showResult(data) {
             statusPanel.classList.remove('active');
-            resultPanel.classList.add('active');
-
-            const elapsed = Math.round(data.elapsed || 0);
-            const slides = data.total_slides || selectedFiles.length || 0;
-            const mode = data.decompose_mode === 'qwen' ? modeLabel('qwen') : data.decompose ? modeLabel('sam') : modeLabel('none');
-            const slideText = slides > 0 ? formatPageCount(slides) : '-';
-            const elapsedText = elapsed > 0 ? `${elapsed}s` : '-';
-            document.getElementById('resultMessage').textContent =
-                t('result.generated', { mode });
-            document.getElementById('resultSlideCount').textContent = slideText;
-            document.getElementById('resultModeName').textContent = mode;
-            document.getElementById('resultElapsed').textContent = elapsedText;
-            document.getElementById('downloadBtn').href = data.download_url;
-            resultPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            resultPanel.classList.remove('active');
+            errorPanel.classList.remove('active');
+            fileList.classList.remove('active');
+            selectedFiles = [];
+            uploadZone.style.display = '';
+            fileInput.value = '';
+            refreshPptHistory({ silent: true });
+            openPptSidebar();
         }
 
         function showError(msg) {
