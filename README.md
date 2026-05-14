@@ -40,35 +40,24 @@ DeckLens now defaults to higher-quality local cleanup:
 - Page fonts: unified per slide into at most three font groups: Chinese, English, and numeric. Mixed Chinese/English/numeric text uses the Chinese font group.
 - Desktop startup: heavyweight model stacks are lazy-loaded only during conversion, and task cleanup releases OCR/optional model singletons by default.
 
-## Run Locally
+## Repository Scope
 
-```bash
-cd /Users/jadon7/Documents/SynologyDrive/code/DeckLens
-DECKLENS_DATA_DIR="$(pwd)" .venv312/bin/gunicorn \
-  --bind 127.0.0.1:8080 \
-  --workers 1 \
-  --threads 4 \
-  --timeout 900 \
-  app:app
-```
-
-Open <http://127.0.0.1:8080>.
-
-To run in a persistent tmux session:
-
-```bash
-tmux new-session -d -s decklens 'cd /Users/jadon7/Documents/SynologyDrive/code/DeckLens && DECKLENS_DATA_DIR="$(pwd)" .venv312/bin/gunicorn --bind 127.0.0.1:8080 --workers 1 --threads 4 --timeout 900 app:app'
-```
-
-Stop it with:
-
-```bash
-tmux kill-session -t decklens
-```
+This repository is scoped to the DeckLens Desktop client. It keeps the Electron
+shell, the lightweight local Flask backend that is packaged into the app,
+desktop release/update infrastructure, signing documentation, and architecture
+decision records. Historical web deployment files, local experiment scripts, and
+generated test/build artifacts are intentionally excluded from the client repo.
 
 ## Run Desktop Shell
 
-DeckLens also has an Electron desktop shell for macOS and Windows. The UI is structured as a desktop workbench with a left navigation rail, central conversion task area, and right-side task summary instead of a marketing-style web page. The installer intentionally does not bundle Python dependencies, PaddleOCR models, SAM checkpoints, or other large model assets. On first launch, the app asks the user to install the local Python runtime into the Electron user data directory. The packaged app stores the lightweight Flask backend under Electron `extraResources` as `Contents/Resources/backend` on macOS, outside `app.asar`, so first-launch runtime installation can copy templates and static assets as normal files.
+DeckLens Desktop runs on macOS and Windows. The UI is structured as a desktop
+workbench. The installer intentionally does not bundle Python dependencies,
+PaddleOCR models, SAM checkpoints, or other large model assets. On first launch,
+the app asks the user to install the local Python runtime into the Electron user
+data directory. The packaged app stores the lightweight Flask backend under
+Electron `extraResources` as `Contents/Resources/backend` on macOS, outside
+`app.asar`, so first-launch runtime installation can copy templates and static
+assets as normal files.
 
 Development run:
 
@@ -130,38 +119,19 @@ bootstrap and the main workbench stay consistent.
 
 The desktop runtime expects Python 3.11 or 3.12 to be available on the machine. On macOS it searches common Homebrew, framework, and user-local Python locations because Finder-launched apps do not inherit a normal shell `PATH`. A custom interpreter can be provided with `DECKLENS_PYTHON=/path/to/python`.
 
-## Optional High-Memory Local Mode
-
-Use this only when you explicitly want local SAM at the cost of high RAM and runtime:
-
-```bash
-DECKLENS_ENABLE_SAM=1 DECKLENS_DATA_DIR="$(pwd)" .venv312/bin/gunicorn \
-  --bind 127.0.0.1:8080 \
-  --workers 1 \
-  --threads 4 \
-  --timeout 900 \
-  app:app
-```
-
 ## Useful Checks
 
 ```bash
-.venv312/bin/python -m compileall -q app.py engine.py scripts/test_font_normalization.py scripts/test_sam_checkpoint_cache.py
-.venv312/bin/python scripts/test_startup_lightweight.py
-.venv312/bin/python scripts/test_font_normalization.py
-.venv312/bin/python scripts/test_sam_checkpoint_cache.py
-.venv312/bin/python scripts/smoke_main_flows.py
-curl --noproxy '*' -fsS http://127.0.0.1:8080/healthz
+node --check electron/main.cjs
+node --check electron/preload.cjs
+npm run electron:pack
 ```
 
 ## Documentation Map
 
-- [方案文档.md](方案文档.md): current technical architecture.
-- [开发记录.md](开发记录.md): implementation history and current version notes.
-- [DEPLOYMENT.md](DEPLOYMENT.md): Docker/Render/cloud deployment.
-- [docs/ROADMAP.md](docs/ROADMAP.md): current product and engineering backlog.
 - [docs/adr/](docs/adr/): decision records required for code/config commits.
-- [docs/Leadpages风格参考.md](docs/Leadpages风格参考.md): retained UI style reference.
+- [docs/CODE_SIGNING_POLICY.md](docs/CODE_SIGNING_POLICY.md): Windows signing policy.
+- [docs/SIGNPATH.md](docs/SIGNPATH.md): SignPath release notes.
 
 ## Commit Gate
 
