@@ -80,13 +80,13 @@
   </head>
   <body>
     <main>
-      <h1>DeckLens needs its Python runtime</h1>
-      <p>
+      <h1 data-i18n="title">DeckLens needs its Python runtime</h1>
+      <p data-i18n="body">
         The desktop installer keeps large Python dependencies and model files out of the app bundle.
         Install the local runtime the first time you use DeckLens; feature-specific models still download only when those features are enabled.
       </p>
-      <button id="install">Install runtime</button>
-      <button id="start">Start DeckLens</button>
+      <button id="install" data-i18n="install">Install runtime</button>
+      <button id="start" data-i18n="start">Start DeckLens</button>
       <div class="meta" id="meta"></div>
       <pre id="log"></pre>
     </main>
@@ -95,6 +95,43 @@
       const startButton = document.getElementById('start');
       const meta = document.getElementById('meta');
       const log = document.getElementById('log');
+      const I18N = {
+        zh: {
+          title: 'DeckLens 需要安装 Python 运行环境',
+          body: '桌面安装包会把较大的 Python 依赖和模型文件放在 App 包外。首次使用 DeckLens 时先安装本地运行环境；具体功能用到的模型仍然只会在启用时下载。',
+          install: '安装运行环境',
+          start: '启动 DeckLens',
+          runtimeInstalled: '运行环境已安装',
+          yes: '是',
+          no: '否',
+          platform: '平台',
+          dataDirectory: '数据目录'
+        },
+        en: {
+          title: 'DeckLens needs its Python runtime',
+          body: 'The desktop installer keeps large Python dependencies and model files out of the app bundle. Install the local runtime the first time you use DeckLens; feature-specific models still download only when those features are enabled.',
+          install: 'Install runtime',
+          start: 'Start DeckLens',
+          runtimeInstalled: 'Runtime installed',
+          yes: 'yes',
+          no: 'no',
+          platform: 'Platform',
+          dataDirectory: 'Data directory'
+        }
+      };
+      const activeLanguage = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+
+      function t(key) {
+        return I18N[activeLanguage][key] || I18N.en[key] || key;
+      }
+
+      function applyI18n() {
+        document.documentElement.lang = activeLanguage === 'zh' ? 'zh-CN' : 'en';
+        document.title = activeLanguage === 'zh' ? 'DeckLens 设置' : 'DeckLens Setup';
+        document.querySelectorAll('[data-i18n]').forEach((element) => {
+          element.textContent = t(element.dataset.i18n);
+        });
+      }
 
       function write(line) {
         log.textContent += `${line}\n`;
@@ -106,9 +143,9 @@
         installButton.disabled = status.installing;
         startButton.disabled = !status.installed || status.installing;
         meta.innerHTML = `
-          <span>Runtime installed: ${status.installed ? 'yes' : 'no'}</span>
-          <span>Platform: ${status.platform} / ${status.arch}</span>
-          <span>Data directory: ${status.userData}</span>
+          <span>${t('runtimeInstalled')}: ${status.installed ? t('yes') : t('no')}</span>
+          <span>${t('platform')}: ${status.platform} / ${status.arch}</span>
+          <span>${t('dataDirectory')}: ${status.userData}</span>
         `;
         if (!log.textContent && status.log.length) {
           log.textContent = `${status.log.join('\n')}\n`;
@@ -133,6 +170,7 @@
           write(error.message);
         }
       });
+      applyI18n();
       refresh();
     </script>
   </body>

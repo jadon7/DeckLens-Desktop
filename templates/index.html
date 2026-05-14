@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeckLens — 图片化页面转可编辑 PPTX 与元素分层工作台</title>
+    <title>DeckLens - 图片化页面转可编辑 PPTX 与元素分层工作台</title>
     <link rel="icon" href="/static/decklens-logo.svg" type="image/svg+xml">
     <style>
         * {
@@ -3624,7 +3624,7 @@
 </head>
 <body>
     <div class="window-drag-region" aria-hidden="true"></div>
-    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" onclick="openSettings()">
+    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" onclick="openSettings()">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
             <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
@@ -3633,42 +3633,53 @@
     <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
         <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
             <div class="settings-header">
-                <strong id="settingsTitle">设置</strong>
-                <button class="settings-close" id="settingsClose" type="button" aria-label="关闭设置">×</button>
+                <strong id="settingsTitle" data-i18n="settings.title">设置</strong>
+                <button class="settings-close" id="settingsClose" type="button" aria-label="关闭设置" data-i18n-aria-label="settings.close">×</button>
             </div>
             <div class="settings-body">
+                <div class="settings-section" id="languageControl">
+                    <label>
+                        <strong data-i18n="settings.language.title">语言</strong>
+                        <small data-i18n="settings.language.help">默认跟随系统语言，可手动切换。</small>
+                        <select id="languageSelect" aria-label="语言" data-i18n-aria-label="settings.language.title">
+                            <option value="system" selected data-i18n="settings.language.system">跟随系统</option>
+                            <option value="zh" data-i18n="settings.language.zh">中文</option>
+                            <option value="en" data-i18n="settings.language.en">English</option>
+                        </select>
+                    </label>
+                </div>
                 <div class="settings-section" id="inpaintControl">
                     <label>
-                        <strong>底图清理算法</strong>
-                        <small>LaMa 更自然；本地均值更轻量，适合干净背景。</small>
-                        <select id="inpaintBackend" aria-label="底图清理算法">
+                        <strong data-i18n="settings.inpaint.title">底图清理算法</strong>
+                        <small data-i18n="settings.inpaint.help">LaMa 更自然；本地均值更轻量，适合干净背景。</small>
+                        <select id="inpaintBackend" aria-label="底图清理算法" data-i18n-aria-label="settings.inpaint.title">
                             <option value="lama" selected>LaMa</option>
-                            <option value="local_mean">本地均值</option>
+                            <option value="local_mean" data-i18n="settings.inpaint.localMean">本地均值</option>
                         </select>
                     </label>
                 </div>
                 <div class="settings-section" id="qwenApiControl">
                     <label>
                         <strong>fal.ai API Key</strong>
-                        <small>用于 AI 智能分层；会保存在这台电脑。</small>
+                        <small data-i18n="settings.api.help">用于 AI 智能分层；会保存在这台电脑。</small>
                         <input id="qwenApiKey" type="password" autocomplete="off" placeholder="fal key" aria-label="fal.ai API Key">
                     </label>
                 </div>
                 <div class="settings-section">
                     <div class="settings-row">
-                        <strong>检查更新</strong>
+                        <strong data-i18n="settings.update.title">检查更新</strong>
                         <div class="settings-update-status" id="updateStatus" aria-live="polite">
                             <span class="settings-update-dot" aria-hidden="true"></span>
-                            <span id="updateText">检查更新</span>
+                            <span id="updateText" data-i18n="settings.update.idle">检查更新</span>
                         </div>
                         <div class="settings-actions">
-                            <button class="settings-action" id="updateButton" type="button">检查更新</button>
+                            <button class="settings-action" id="updateButton" type="button" data-i18n="settings.update.check">检查更新</button>
                         </div>
                     </div>
                 </div>
                 <div class="settings-section">
                     <div class="settings-row">
-                        <strong>版本</strong>
+                        <strong data-i18n="settings.version.title">版本</strong>
                         <small id="appVersionText">DeckLens</small>
                     </div>
                 </div>
@@ -3684,81 +3695,81 @@
             <div class="light-wave" aria-hidden="true"></div>
             <canvas class="hero-wave-canvas" id="heroWaveCanvas" aria-hidden="true"></canvas>
             <div class="hero-copy">
-                <span class="eyebrow">图片化页面重建工具</span>
-                <div class="trust-strip" aria-label="产品能力">
-                    <div><strong>本地</strong><span>文件处理</span></div>
-                    <div><strong>多页</strong><span>合并导出</span></div>
-                    <div><strong>可改</strong><span>文字内容</span></div>
-                    <div><strong>可整</strong><span>页面元素</span></div>
+                <span class="eyebrow" data-i18n="hero.eyebrow">图片化页面重建工具</span>
+                <div class="trust-strip" aria-label="产品能力" data-i18n-aria-label="hero.trust.label">
+                    <div><strong data-i18n="hero.trust.local.strong">本地</strong><span data-i18n="hero.trust.local.text">文件处理</span></div>
+                    <div><strong data-i18n="hero.trust.pages.strong">多页</strong><span data-i18n="hero.trust.pages.text">合并导出</span></div>
+                    <div><strong data-i18n="hero.trust.edit.strong">可改</strong><span data-i18n="hero.trust.edit.text">文字内容</span></div>
+                    <div><strong data-i18n="hero.trust.layers.strong">可整</strong><span data-i18n="hero.trust.layers.text">页面元素</span></div>
                 </div>
                 <h1>
-                    <span class="hero-title-line">把图片化页面，变回</span>
+                    <span class="hero-title-line" data-i18n="hero.title.prefix">把图片化页面，变回</span>
                     <span class="hero-title-line gradient-word-wrap" aria-live="polite">
                         <span class="gradient-text gradient-text-glow" id="heroWordGlow" aria-hidden="true">可编辑 PPTX。</span>
                         <span class="gradient-text" id="heroWord">可编辑 PPTX。</span><span class="typing-caret" aria-hidden="true"></span>
                     </span>
                 </h1>
-                <p class="subtitle">
+                <p class="subtitle" data-i18n="hero.subtitle">
                     导入 AI 生成图或图片化 PPT，DeckLens 会把页面恢复成更容易继续修改的 PPTX：文字可改，元素可整理，多页可合并。
                 </p>
-                <div class="hero-chips" aria-label="核心能力">
-                    <span>本地运行</span>
-                    <span>批量合并</span>
-                    <span>可编辑文字</span>
-                    <span>元素分层</span>
-                    <span>交互式校对</span>
+                <div class="hero-chips" aria-label="核心能力" data-i18n-aria-label="hero.chips.label">
+                    <span data-i18n="hero.chip.local">本地运行</span>
+                    <span data-i18n="hero.chip.batch">批量合并</span>
+                    <span data-i18n="hero.chip.text">可编辑文字</span>
+                    <span data-i18n="hero.chip.layers">元素分层</span>
+                    <span data-i18n="hero.chip.review">交互式校对</span>
                 </div>
                 <div class="hero-actions">
-                    <button class="btn" type="button" onclick="heroStart('none')">开始转换</button>
-                    <button class="btn btn-secondary" type="button" onclick="heroStart('sam')">开启元素分层</button>
+                    <button class="btn" type="button" onclick="heroStart('none')" data-i18n="hero.action.start">开始转换</button>
+                    <button class="btn btn-secondary" type="button" onclick="heroStart('sam')" data-i18n="hero.action.layers">开启元素分层</button>
                 </div>
-                <div class="tech-strip" aria-label="输出结果">
-                    <span>可编辑文字</span>
-                    <span>可整理图层</span>
-                    <span>原版观感</span>
-                    <span>批量成稿</span>
-                    <span>本地处理</span>
+                <div class="tech-strip" aria-label="输出结果" data-i18n-aria-label="hero.output.label">
+                    <span data-i18n="hero.output.text">可编辑文字</span>
+                    <span data-i18n="hero.output.layers">可整理图层</span>
+                    <span data-i18n="hero.output.look">原版观感</span>
+                    <span data-i18n="hero.output.batch">批量成稿</span>
+                    <span data-i18n="hero.output.local">本地处理</span>
                 </div>
             </div>
 
             <div class="workbench-heading">
-                <h1>选择处理模式. <span class="muted">准备文档解析与重建。</span></h1>
+                <h1 data-i18n-html="workbench.heading">选择处理模式. <span class="muted">准备文档解析与重建。</span></h1>
             </div>
 
-            <section class="hero-workbench" id="restore" aria-label="DeckLens 导入工作台">
+            <section class="hero-workbench" id="restore" aria-label="DeckLens 导入工作台" data-i18n-aria-label="workbench.aria">
                 <div class="options-panel">
                     <div class="mode-grid" id="layers">
 	                        <div class="mode-card active" id="standardModeCard" onclick="document.getElementById('decomposeToggle').checked = false; document.getElementById('decomposeToggle').dispatchEvent(new Event('change'));">
-	                            <span class="tag">快速</span>
-	                            <strong>标准还原</strong>
-	                            <small>基础排版与文本提取，适合简单文档。</small>
+	                            <span class="tag" data-i18n="mode.standard.tag">快速</span>
+	                            <strong data-i18n="mode.standard.title">标准还原</strong>
+	                            <small data-i18n="mode.standard.desc">基础排版与文本提取，适合简单文档。</small>
 	                        </div>
 	                        <label class="mode-card layer" id="decomposeLabel">
 	                            <input type="checkbox" id="decomposeToggle">
-	                            <span class="tag">可校对</span>
-	                            <strong>元素分层</strong>
-	                            <small>图文分离，保留基础层级关系。</small>
-	                            <span class="option-badge off" id="decomposeBadge">未启用</span>
+	                            <span class="tag" data-i18n="mode.element.tag">可校对</span>
+	                            <strong data-i18n="mode.element.title">元素分层</strong>
+	                            <small data-i18n="mode.element.desc">图文分离，保留基础层级关系。</small>
+	                            <span class="option-badge off" id="decomposeBadge" data-i18n="common.disabled">未启用</span>
 	                        </label>
 	                        <div class="mode-card layer" id="qwenModeCard" onclick="setDecomposeMode('qwen')">
-	                            <span class="tag">高质量</span>
-	                            <strong>AI 智能分层</strong>
-	                            <small>深度语义理解，重建复杂页面结构。</small>
-	                            <span class="option-badge off" id="qwenBadge">未启用</span>
+	                            <span class="tag" data-i18n="mode.ai.tag">高质量</span>
+	                            <strong data-i18n="mode.ai.title">AI 智能分层</strong>
+	                            <small data-i18n="mode.ai.desc">深度语义理解，重建复杂页面结构。</small>
+	                            <span class="option-badge off" id="qwenBadge" data-i18n="common.disabled">未启用</span>
 	                        </div>
                     </div>
                     <div class="option-card" id="qwenLayerControl" style="display:none; margin-top: 14px;">
                         <span>
-                            <strong>Qwen 图层数</strong>
-                            <small>建议 4 层；复杂页面可提高到 6-8 层。</small>
+                            <strong data-i18n="qwen.layers.title">Qwen 图层数</strong>
+                            <small data-i18n="qwen.layers.help">建议 4 层；复杂页面可提高到 6-8 层。</small>
                         </span>
-                        <select id="qwenNumLayers" aria-label="Qwen 图层数">
-                            <option value="3">3 层</option>
-                            <option value="4" selected>4 层</option>
-                            <option value="5">5 层</option>
-                            <option value="6">6 层</option>
-                            <option value="7">7 层</option>
-                            <option value="8">8 层</option>
+                        <select id="qwenNumLayers" aria-label="Qwen 图层数" data-i18n-aria-label="qwen.layers.title">
+                            <option value="3" data-i18n="qwen.layers.3">3 层</option>
+                            <option value="4" selected data-i18n="qwen.layers.4">4 层</option>
+                            <option value="5" data-i18n="qwen.layers.5">5 层</option>
+                            <option value="6" data-i18n="qwen.layers.6">6 层</option>
+                            <option value="7" data-i18n="qwen.layers.7">7 层</option>
+                            <option value="8" data-i18n="qwen.layers.8">8 层</option>
                         </select>
                     </div>
                 </div>
@@ -3766,68 +3777,68 @@
                 <!-- 上传区域 -->
                 <div class="upload-zone" id="uploadZone">
                     <div class="icon" aria-hidden="true"></div>
-                    <div class="text">拖拽文件到这里，或点击选择文件</div>
-                    <div class="hint">支持 PNG / JPG，PDF 会按页面图片导入，可多选，总大小最大 100MB</div>
+                    <div class="text" data-i18n="upload.title">拖拽文件到这里，或点击选择文件</div>
+                    <div class="hint" data-i18n="upload.hint">支持 PNG / JPG，PDF 会按页面图片导入，可多选，总大小最大 100MB</div>
                     <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.pdf" multiple>
                     <div class="upload-zone-toolbar" aria-hidden="true">
-                        <span>选择文件</span>
-                        <span>多页合并</span>
-                        <span>本地处理</span>
-                        <strong>开始重建</strong>
+                        <span data-i18n="upload.toolbar.select">选择文件</span>
+                        <span data-i18n="upload.toolbar.merge">多页合并</span>
+                        <span data-i18n="upload.toolbar.local">本地处理</span>
+                        <strong data-i18n="upload.toolbar.start">开始重建</strong>
                     </div>
                 </div>
                 <!-- 文件列表 -->
                 <div class="file-list" id="fileList">
                     <div class="file-list-header">
-                        <h3>已选文件</h3>
+                        <h3 data-i18n="files.title">已选文件</h3>
                         <span class="count" id="fileCount"></span>
                     </div>
                     <div id="fileItems"></div>
                     <div class="file-actions">
-                        <button class="btn btn-sm" id="startBtn" onclick="startConvert()">开始转换</button>
-                        <button class="btn btn-sm btn-secondary" onclick="addMore()">继续添加</button>
-                        <button class="btn btn-sm btn-secondary" onclick="reset()">清空</button>
+                        <button class="btn btn-sm" id="startBtn" onclick="startConvert()" data-i18n="files.start">开始转换</button>
+                        <button class="btn btn-sm btn-secondary" onclick="addMore()" data-i18n="files.addMore">继续添加</button>
+                        <button class="btn btn-sm btn-secondary" onclick="reset()" data-i18n="files.clear">清空</button>
                     </div>
                 </div>
 
                 <!-- 处理状态 -->
                 <div class="status-panel" id="statusPanel">
                     <div class="status-header">
-                        <span class="task-info" id="taskInfo">处理中...</span>
+                        <span class="task-info" id="taskInfo" data-i18n="status.processing">处理中...</span>
                         <div class="status-meta">
                             <span class="status-mode normal" id="statusMode">标准还原</span>
                             <span class="elapsed" id="elapsed">0s</span>
                         </div>
                     </div>
-                    <div class="processing-flow" id="processingFlow" aria-label="处理进度">
+                    <div class="processing-flow" id="processingFlow" aria-label="处理进度" data-i18n-aria-label="status.flow.aria">
                         <div class="flow-step" data-flow-step="0" style="--flow-color:#6366f1">
                             <div class="flow-circle"><span>1</span></div>
-                            <strong>导入</strong>
-                            <small>文件进入本地队列</small>
+                            <strong data-i18n="status.flow.import.title">导入</strong>
+                            <small data-i18n="status.flow.import.desc">文件进入本地队列</small>
                         </div>
                         <div class="flow-line" data-flow-line="0"></div>
                         <div class="flow-step" data-flow-step="1" style="--flow-color:#76ffc1">
                             <div class="flow-circle"><span>2</span></div>
-                            <strong>读取</strong>
-                            <small>理解页面内容</small>
+                            <strong data-i18n="status.flow.read.title">读取</strong>
+                            <small data-i18n="status.flow.read.desc">理解页面内容</small>
                         </div>
                         <div class="flow-line" data-flow-line="1"></div>
                         <div class="flow-step" data-flow-step="2" style="--flow-color:#ceff66">
                             <div class="flow-circle"><span>3</span></div>
-                            <strong>重建</strong>
-                            <small>恢复可编辑层级</small>
+                            <strong data-i18n="status.flow.rebuild.title">重建</strong>
+                            <small data-i18n="status.flow.rebuild.desc">恢复可编辑层级</small>
                         </div>
                         <div class="flow-line" data-flow-line="2"></div>
                         <div class="flow-step" data-flow-step="3" style="--flow-color:#76ffc1">
                             <div class="flow-circle"><span>4</span></div>
-                            <strong>生成</strong>
-                            <small>输出 PPTX</small>
+                            <strong data-i18n="status.flow.export.title">生成</strong>
+                            <small data-i18n="status.flow.export.desc">输出 PPTX</small>
                         </div>
                         <div class="flow-repeat" aria-hidden="true">
                             <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
                                 <path d="M15 5H1M5 1L1 5L5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
-                            <span id="flowHint">多页会自动循环处理</span>
+                            <span id="flowHint" data-i18n="status.flow.hint">多页会自动循环处理</span>
                         </div>
                     </div>
                     <div class="progress-bar" aria-hidden="true">
@@ -3835,19 +3846,19 @@
                     </div>
                     <div class="status-live-card">
                         <div>
-                            <div class="status-step" id="statusStep">准备中...</div>
+                            <div class="status-step" id="statusStep" data-i18n="status.ready">准备中...</div>
                             <div class="status-detail" id="statusDetail"></div>
                         </div>
                         <span class="live-state" id="flowLiveState">
                             <span class="live-dot" aria-hidden="true"><span></span></span>
-                            正在处理
+                            <span data-i18n="status.live.processing">正在处理</span>
                         </span>
                     </div>
-                    <div class="step-feed" id="stepFeed" aria-label="处理明细">
-                        <div class="feed-item" data-feed-phase="0"><strong>导入文件</strong><span>确认格式、页数和本地任务队列。</span></div>
-                        <div class="feed-item" data-feed-phase="1"><strong>读取页面</strong><span>识别文字、位置和页面结构，长图或 PDF 会逐页处理。</span></div>
-                        <div class="feed-item" data-feed-phase="2"><strong>重建层级</strong><span>清理文字底图，并按模式恢复文本框或页面元素。</span></div>
-                        <div class="feed-item" data-feed-phase="3"><strong>输出文件</strong><span>合成 PPTX，保留可继续编辑的文本和图层。</span></div>
+                    <div class="step-feed" id="stepFeed" aria-label="处理明细" data-i18n-aria-label="status.feed.aria">
+                        <div class="feed-item" data-feed-phase="0"><strong data-i18n="status.feed.import.title">导入文件</strong><span data-i18n="status.feed.import.desc">确认格式、页数和本地任务队列。</span></div>
+                        <div class="feed-item" data-feed-phase="1"><strong data-i18n="status.feed.read.title">读取页面</strong><span data-i18n="status.feed.read.desc">识别文字、位置和页面结构，长图或 PDF 会逐页处理。</span></div>
+                        <div class="feed-item" data-feed-phase="2"><strong data-i18n="status.feed.rebuild.title">重建层级</strong><span data-i18n="status.feed.rebuild.desc">清理文字底图，并按模式恢复文本框或页面元素。</span></div>
+                        <div class="feed-item" data-feed-phase="3"><strong data-i18n="status.feed.export.title">输出文件</strong><span data-i18n="status.feed.export.desc">合成 PPTX，保留可继续编辑的文本和图层。</span></div>
                     </div>
                 </div>
 
@@ -3863,26 +3874,26 @@
                             </div>
                         </div>
                         <div class="result-content">
-                            <span class="result-kicker">Export Ready</span>
-                            <h3>PPTX 已生成</h3>
-                            <p class="message" id="resultMessage">转换完成，可以下载文件。</p>
-                            <div class="result-stats" aria-label="导出摘要">
+                            <span class="result-kicker" data-i18n="result.kicker">Export Ready</span>
+                            <h3 data-i18n="result.title">PPTX 已生成</h3>
+                            <p class="message" id="resultMessage" data-i18n="result.message">转换完成，可以下载文件。</p>
+                            <div class="result-stats" aria-label="导出摘要" data-i18n-aria-label="result.stats.aria">
                                 <div>
-                                    <span>页数</span>
+                                    <span data-i18n="result.stats.pages">页数</span>
                                     <strong id="resultSlideCount">-</strong>
                                 </div>
                                 <div>
-                                    <span>模式</span>
+                                    <span data-i18n="result.stats.mode">模式</span>
                                     <strong id="resultModeName">-</strong>
                                 </div>
                                 <div>
-                                    <span>耗时</span>
+                                    <span data-i18n="result.stats.elapsed">耗时</span>
                                     <strong id="resultElapsed">-</strong>
                                 </div>
                             </div>
                             <div class="result-actions">
-                                <a class="btn" id="downloadBtn" href="#">下载 PPTX</a>
-                                <button class="btn btn-secondary" onclick="reset()">继续转换</button>
+                                <a class="btn" id="downloadBtn" href="#" data-i18n="result.download">下载 PPTX</a>
+                                <button class="btn btn-secondary" onclick="reset()" data-i18n="result.continue">继续转换</button>
                             </div>
                         </div>
                     </div>
@@ -3891,7 +3902,7 @@
                 <!-- 错误 -->
                 <div class="error-panel" id="errorPanel">
                     <div class="message" id="errorMessage"></div>
-                    <button class="btn btn-secondary" onclick="reset()" style="margin-top:16px">重试</button>
+                    <button class="btn btn-secondary" onclick="reset()" style="margin-top:16px" data-i18n="error.retry">重试</button>
                 </div>
 
             </section>
@@ -3900,8 +3911,8 @@
         <!-- 元素预览 -->
         <div class="preview-panel" id="previewPanel">
             <div class="preview-header">
-                <h2>元素分割预览</h2>
-                <span class="preview-hint">点击/框选元素，Ctrl+G 合并，Delete 删除，Esc 取消选择</span>
+                <h2 data-i18n="preview.title">元素分割预览</h2>
+                <span class="preview-hint" data-i18n="preview.hint">点击/框选元素，Ctrl+G 合并，Delete 删除，Esc 取消选择</span>
             </div>
             <div class="preview-slide-nav" id="previewSlideNav"></div>
             <div class="preview-body">
@@ -3909,10 +3920,10 @@
                 <div class="preview-left">
                     <div class="preview-element-list" id="previewElementList"></div>
                     <div class="preview-left-buttons">
-                        <button class="btn btn-sm" onclick="mergeSelected()">合并选中 (Ctrl+G)</button>
-                        <button class="btn btn-sm btn-secondary" onclick="deleteSelected()">删除选中 (Del)</button>
-                        <button class="btn btn-sm btn-secondary" onclick="selectAll()">全选 (Ctrl+A)</button>
-                        <button class="btn btn-sm btn-secondary" onclick="resetPreview()">重置</button>
+                        <button class="btn btn-sm" onclick="mergeSelected()" data-i18n="preview.merge">合并选中 (Ctrl+G)</button>
+                        <button class="btn btn-sm btn-secondary" onclick="deleteSelected()" data-i18n="preview.delete">删除选中 (Del)</button>
+                        <button class="btn btn-sm btn-secondary" onclick="selectAll()" data-i18n="preview.selectAll">全选 (Ctrl+A)</button>
+                        <button class="btn btn-sm btn-secondary" onclick="resetPreview()" data-i18n="preview.reset">重置</button>
                     </div>
                 </div>
                 <!-- 右侧：画布 -->
@@ -3922,14 +3933,14 @@
                     </div>
                     <div class="preview-floating-toolbar" id="floatingToolbar">
                         <span class="selected-count" id="selectedCount">已选 0 个</span>
-                        <button class="btn btn-sm" onclick="mergeSelected()">合并为一组</button>
-                        <button class="btn btn-sm btn-secondary" onclick="deleteSelected()">删除选中</button>
+                        <button class="btn btn-sm" onclick="mergeSelected()" data-i18n="preview.mergeGroup">合并为一组</button>
+                        <button class="btn btn-sm btn-secondary" onclick="deleteSelected()" data-i18n="preview.deleteSelected">删除选中</button>
                     </div>
                 </div>
             </div>
             <div class="preview-actions">
-                <button class="btn" onclick="confirmAndGenerate()">确认，生成 PPTX</button>
-                <button class="btn btn-secondary" onclick="skipPreview()">跳过预览，直接生成</button>
+                <button class="btn" onclick="confirmAndGenerate()" data-i18n="preview.confirm">确认，生成 PPTX</button>
+                <button class="btn btn-secondary" onclick="skipPreview()" data-i18n="preview.skip">跳过预览，直接生成</button>
             </div>
         </div>
         <div class="preview-toast" id="previewToast"></div>
@@ -3938,13 +3949,13 @@
         <section class="process-section" id="workflow">
             <div class="section-head">
                 <span class="section-kicker">Workflow</span>
-                <h2>一次导入，三步变成可继续编辑的 PPTX。</h2>
-                <p>页面不用从零重做。DeckLens 把导入、重建、校对导出收进同一个工作流里，用户只需要决定要不要进入元素整理。</p>
+                <h2 data-i18n="workflow.title">一次导入，三步变成可继续编辑的 PPTX。</h2>
+                <p data-i18n="workflow.desc">页面不用从零重做。DeckLens 把导入、重建、校对导出收进同一个工作流里，用户只需要决定要不要进入元素整理。</p>
             </div>
             <div class="process-grid">
-                <article class="process-step"><span>1</span><strong>输入页面</strong><p>导入图片、PDF 或多页素材，统一合并成一个待重建任务。</p></article>
-                <article class="process-step"><span>2</span><strong>选择还原深度</strong><p>标准还原优先改文字；元素分层会额外生成可整理的页面元素。</p></article>
-                <article class="process-step"><span>3</span><strong>校对并导出</strong><p>需要时在预览里合并、删除元素，然后生成可继续编辑的 PPTX。</p></article>
+                <article class="process-step"><span>1</span><strong data-i18n="workflow.step1.title">输入页面</strong><p data-i18n="workflow.step1.desc">导入图片、PDF 或多页素材，统一合并成一个待重建任务。</p></article>
+                <article class="process-step"><span>2</span><strong data-i18n="workflow.step2.title">选择还原深度</strong><p data-i18n="workflow.step2.desc">标准还原优先改文字；元素分层会额外生成可整理的页面元素。</p></article>
+                <article class="process-step"><span>3</span><strong data-i18n="workflow.step3.title">校对并导出</strong><p data-i18n="workflow.step3.desc">需要时在预览里合并、删除元素，然后生成可继续编辑的 PPTX。</p></article>
             </div>
         </section>
 
@@ -3952,13 +3963,13 @@
             <div class="proof-copy">
                 <div>
                     <span class="section-kicker">Output</span>
-                    <h2>不是图片版 PPT，而是可操作的页面层。</h2>
-                    <p>DeckLens 优先保住原页面观感，再把最值得编辑的内容恢复出来：文字能改，主要元素能整理，多页能合并。</p>
+                    <h2 data-i18n="proof.title">不是图片版 PPT，而是可操作的页面层。</h2>
+                    <p data-i18n="proof.desc">DeckLens 优先保住原页面观感，再把最值得编辑的内容恢复出来：文字能改，主要元素能整理，多页能合并。</p>
                 </div>
                 <div class="proof-list">
-                    <span>文字重建为 PPTX 文本框</span>
-                    <span>关键视觉元素尽量拆成可移动图层</span>
-                    <span>复杂背景保持为稳定底图，避免碎片化编辑</span>
+                    <span data-i18n="proof.item1">文字重建为 PPTX 文本框</span>
+                    <span data-i18n="proof.item2">关键视觉元素尽量拆成可移动图层</span>
+                    <span data-i18n="proof.item3">复杂背景保持为稳定底图，避免碎片化编辑</span>
                 </div>
             </div>
             <div class="comparison-panel">
@@ -3968,8 +3979,8 @@
                         <span class="line"></span>
                         <span class="shape"></span>
                     </div>
-                    <strong>原始图片化页面</strong>
-                    <p>看起来像 PPT，但整体不可改。</p>
+                    <strong data-i18n="proof.before.title">原始图片化页面</strong>
+                    <p data-i18n="proof.before.desc">看起来像 PPT，但整体不可改。</p>
                 </article>
                 <article class="compare-card">
                     <div class="mini-slide output">
@@ -3977,8 +3988,8 @@
                         <span class="line"></span>
                         <span class="shape"></span>
                     </div>
-                    <strong>DeckLens 输出</strong>
-                    <p>保留观感，并尽量恢复可编辑层级。</p>
+                    <strong data-i18n="proof.after.title">DeckLens 输出</strong>
+                    <p data-i18n="proof.after.desc">保留观感，并尽量恢复可编辑层级。</p>
                 </article>
             </div>
         </section>
@@ -3986,35 +3997,467 @@
         <!-- 功能说明 -->
         <div class="features">
             <div class="feature-card">
-                <h3>标准还原</h3>
-                <p>适合只想快速改字的页面：保留视觉底图，并恢复主要文字内容。</p>
+                <h3 data-i18n="mode.standard.title">标准还原</h3>
+                <p data-i18n="feature.standard.desc">适合只想快速改字的页面：保留视觉底图，并恢复主要文字内容。</p>
             </div>
             <div class="feature-card">
-                <h3>元素分层</h3>
-                <p>适合继续改版的页面：先预览图层，再合并、删除或整理元素。</p>
+                <h3 data-i18n="mode.element.title">元素分层</h3>
+                <p data-i18n="feature.element.desc">适合继续改版的页面：先预览图层，再合并、删除或整理元素。</p>
             </div>
             <div class="feature-card">
-                <h3>批量成稿</h3>
-                <p>多张图片或 PDF 一次导入，所有页面合并输出为一套 PPTX。</p>
+                <h3 data-i18n="feature.batch.title">批量成稿</h3>
+                <p data-i18n="feature.batch.desc">多张图片或 PDF 一次导入，所有页面合并输出为一套 PPTX。</p>
             </div>
         </div>
 
-        <div class="boundary-note">
+        <div class="boundary-note" data-i18n="boundary.note">
             边界说明：DeckLens 不承诺恢复原始源文件。复杂插画、渐变、重叠装饰会优先保留为稳定背景，避免把页面拆成大量难以编辑的碎片。
         </div>
 
-        <footer>DeckLens · 本地运行 · 图片化页面转可编辑 PPTX</footer>
+        <footer data-i18n="footer">DeckLens · 本地运行 · 图片化页面转可编辑 PPTX</footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/fabric@6.6.1/dist/index.min.js"></script>
     <script>
+        const I18N = {
+            zh: {
+                'document.title': 'DeckLens - 图片化页面转可编辑 PPTX 与元素分层工作台',
+                'settings.open': '打开设置',
+                'settings.close': '关闭设置',
+                'settings.title': '设置',
+                'settings.language.title': '语言',
+                'settings.language.help': '默认跟随系统语言，可手动切换。',
+                'settings.language.system': '跟随系统',
+                'settings.language.zh': '中文',
+                'settings.language.en': 'English',
+                'settings.inpaint.title': '底图清理算法',
+                'settings.inpaint.help': 'LaMa 更自然；本地均值更轻量，适合干净背景。',
+                'settings.inpaint.localMean': '本地均值',
+                'settings.api.help': '用于 AI 智能分层；会保存在这台电脑。',
+                'settings.update.title': '检查更新',
+                'settings.update.idle': '检查更新',
+                'settings.update.check': '检查更新',
+                'settings.update.checking': '检查中',
+                'settings.update.downloading': '正在下载更新 {percent}%',
+                'settings.update.download': '下载',
+                'settings.update.install': '重启安装',
+                'settings.update.available': '发现新版本 {version}',
+                'settings.update.downloaded': '版本 {version} 已下载，重启后安装',
+                'settings.update.latest': '当前已是最新版本 {version}',
+                'settings.update.none': '暂无可用更新',
+                'settings.update.disabled': '当前环境不支持自动更新',
+                'settings.update.readFailed': '读取更新状态失败',
+                'settings.update.actionFailed': '更新操作失败',
+                'settings.update.error': '更新检查失败',
+                'settings.version.title': '版本',
+                'settings.version.available': ' · 可更新至 {version}',
+                'hero.eyebrow': '图片化页面重建工具',
+                'hero.trust.label': '产品能力',
+                'hero.trust.local.strong': '本地',
+                'hero.trust.local.text': '文件处理',
+                'hero.trust.pages.strong': '多页',
+                'hero.trust.pages.text': '合并导出',
+                'hero.trust.edit.strong': '可改',
+                'hero.trust.edit.text': '文字内容',
+                'hero.trust.layers.strong': '可整',
+                'hero.trust.layers.text': '页面元素',
+                'hero.title.prefix': '把图片化页面，变回',
+                'hero.title.word': '可编辑 PPTX。',
+                'hero.subtitle': '导入 AI 生成图或图片化 PPT，DeckLens 会把页面恢复成更容易继续修改的 PPTX：文字可改，元素可整理，多页可合并。',
+                'hero.chips.label': '核心能力',
+                'hero.chip.local': '本地运行',
+                'hero.chip.batch': '批量合并',
+                'hero.chip.text': '可编辑文字',
+                'hero.chip.layers': '元素分层',
+                'hero.chip.review': '交互式校对',
+                'hero.action.start': '开始转换',
+                'hero.action.layers': '开启元素分层',
+                'hero.output.label': '输出结果',
+                'hero.output.text': '可编辑文字',
+                'hero.output.layers': '可整理图层',
+                'hero.output.look': '原版观感',
+                'hero.output.batch': '批量成稿',
+                'hero.output.local': '本地处理',
+                'workbench.heading': '选择处理模式. <span class="muted">准备文档解析与重建。</span>',
+                'workbench.aria': 'DeckLens 导入工作台',
+                'mode.standard.tag': '快速',
+                'mode.standard.title': '标准还原',
+                'mode.standard.desc': '基础排版与文本提取，适合简单文档。',
+                'mode.element.tag': '可校对',
+                'mode.element.title': '元素分层',
+                'mode.element.desc': '图文分离，保留基础层级关系。',
+                'mode.ai.tag': '高质量',
+                'mode.ai.title': 'AI 智能分层',
+                'mode.ai.desc': '深度语义理解，重建复杂页面结构。',
+                'common.enabled': '已启用',
+                'common.disabled': '未启用',
+                'qwen.layers.title': 'Qwen 图层数',
+                'qwen.layers.help': '建议 4 层；复杂页面可提高到 6-8 层。',
+                'qwen.layers.3': '3 层',
+                'qwen.layers.4': '4 层',
+                'qwen.layers.5': '5 层',
+                'qwen.layers.6': '6 层',
+                'qwen.layers.7': '7 层',
+                'qwen.layers.8': '8 层',
+                'upload.title': '拖拽文件到这里，或点击选择文件',
+                'upload.hint': '支持 PNG / JPG，PDF 会按页面图片导入，可多选，总大小最大 100MB',
+                'upload.toolbar.select': '选择文件',
+                'upload.toolbar.merge': '多页合并',
+                'upload.toolbar.local': '本地处理',
+                'upload.toolbar.start': '开始重建',
+                'files.title': '已选文件',
+                'files.start': '开始转换',
+                'files.addMore': '继续添加',
+                'files.clear': '清空',
+                'files.count': '{count} 个文件',
+                'files.task': '{count} 个文件 · {cleanup}',
+                'files.importFailed': '导入失败',
+                'files.networkError': '网络错误: {message}',
+                'status.processing': '处理中...',
+                'status.ready': '准备中...',
+                'status.importing': '正在导入文件...',
+                'status.live.processing': '正在处理',
+                'status.live.importing': '正在导入',
+                'status.live.reading': '正在读取',
+                'status.live.rebuilding': '正在重建',
+                'status.live.exporting': '正在生成',
+                'status.flow.aria': '处理进度',
+                'status.flow.import.title': '导入',
+                'status.flow.import.desc': '文件进入本地队列',
+                'status.flow.read.title': '读取',
+                'status.flow.read.desc': '理解页面内容',
+                'status.flow.rebuild.title': '重建',
+                'status.flow.rebuild.desc': '恢复可编辑层级',
+                'status.flow.export.title': '生成',
+                'status.flow.export.desc': '输出 PPTX',
+                'status.flow.hint': '多页会自动循环处理',
+                'status.flow.pageHint': '第 {current}/{total} 页，完成后自动进入下一页',
+                'status.flow.nextHint': '完成后自动进入下一步',
+                'status.feed.aria': '处理明细',
+                'status.feed.import.title': '导入文件',
+                'status.feed.import.desc': '确认格式、页数和本地任务队列。',
+                'status.feed.read.title': '读取页面',
+                'status.feed.read.desc': '识别文字、位置和页面结构，长图或 PDF 会逐页处理。',
+                'status.feed.rebuild.title': '重建层级',
+                'status.feed.rebuild.desc': '清理文字底图，并按模式恢复文本框或页面元素。',
+                'status.feed.export.title': '输出文件',
+                'status.feed.export.desc': '合成 PPTX，保留可继续编辑的文本和图层。',
+                'status.pageProgress': '第 {current}/{total} 页',
+                'result.kicker': 'Export Ready',
+                'result.title': 'PPTX 已生成',
+                'result.message': '转换完成，可以下载文件。',
+                'result.generated': '已按 {mode} 输出为 PPTX，文字与页面层级可继续在 PowerPoint 中整理。',
+                'result.stats.aria': '导出摘要',
+                'result.stats.pages': '页数',
+                'result.stats.mode': '模式',
+                'result.stats.elapsed': '耗时',
+                'result.download': '下载 PPTX',
+                'result.continue': '继续转换',
+                'result.pages': '{count} 页',
+                'error.retry': '重试',
+                'preview.title': '元素分割预览',
+                'preview.hint': '点击/框选元素，Ctrl+G 合并，Delete 删除，Esc 取消选择',
+                'preview.merge': '合并选中 (Ctrl+G)',
+                'preview.delete': '删除选中 (Del)',
+                'preview.selectAll': '全选 (Ctrl+A)',
+                'preview.reset': '重置',
+                'preview.mergeGroup': '合并为一组',
+                'preview.deleteSelected': '删除选中',
+                'preview.confirm': '确认，生成 PPTX',
+                'preview.skip': '跳过预览，直接生成',
+                'preview.slide': '第 {index} 页',
+                'preview.selectedCount': '已选 {count} 个元素',
+                'preview.ungrouped': '未编组 ({count})',
+                'preview.grouped': '已合并',
+                'preview.group': '组 {index} ({count}个)',
+                'preview.deleted': '已删除',
+                'preview.groupLabel': ' [组{index}]',
+                'preview.toastMerged': '已合并 {count} 个元素为组 {group}',
+                'preview.toastDeleted': '已删除 {count} 个元素',
+                'preview.toastCleared': '已取消选择',
+                'preview.toastSelectedAll': '已全选 {count} 个元素',
+                'preview.toastMergedOneGroup': '已合并 {count} 个元素为一组',
+                'workflow.title': '一次导入，三步变成可继续编辑的 PPTX。',
+                'workflow.desc': '页面不用从零重做。DeckLens 把导入、重建、校对导出收进同一个工作流里，用户只需要决定要不要进入元素整理。',
+                'workflow.step1.title': '输入页面',
+                'workflow.step1.desc': '导入图片、PDF 或多页素材，统一合并成一个待重建任务。',
+                'workflow.step2.title': '选择还原深度',
+                'workflow.step2.desc': '标准还原优先改文字；元素分层会额外生成可整理的页面元素。',
+                'workflow.step3.title': '校对并导出',
+                'workflow.step3.desc': '需要时在预览里合并、删除元素，然后生成可继续编辑的 PPTX。',
+                'proof.title': '不是图片版 PPT，而是可操作的页面层。',
+                'proof.desc': 'DeckLens 优先保住原页面观感，再把最值得编辑的内容恢复出来：文字能改，主要元素能整理，多页能合并。',
+                'proof.item1': '文字重建为 PPTX 文本框',
+                'proof.item2': '关键视觉元素尽量拆成可移动图层',
+                'proof.item3': '复杂背景保持为稳定底图，避免碎片化编辑',
+                'proof.before.title': '原始图片化页面',
+                'proof.before.desc': '看起来像 PPT，但整体不可改。',
+                'proof.after.title': 'DeckLens 输出',
+                'proof.after.desc': '保留观感，并尽量恢复可编辑层级。',
+                'feature.standard.desc': '适合只想快速改字的页面：保留视觉底图，并恢复主要文字内容。',
+                'feature.element.desc': '适合继续改版的页面：先预览图层，再合并、删除或整理元素。',
+                'feature.batch.title': '批量成稿',
+                'feature.batch.desc': '多张图片或 PDF 一次导入，所有页面合并输出为一套 PPTX。',
+                'boundary.note': '边界说明：DeckLens 不承诺恢复原始源文件。复杂插画、渐变、重叠装饰会优先保留为稳定背景，避免把页面拆成大量难以编辑的碎片。',
+                'footer': 'DeckLens · 本地运行 · 图片化页面转可编辑 PPTX'
+            },
+            en: {
+                'document.title': 'DeckLens - image-based pages to editable PPTX and layers',
+                'settings.open': 'Open settings',
+                'settings.close': 'Close settings',
+                'settings.title': 'Settings',
+                'settings.language.title': 'Language',
+                'settings.language.help': 'Follows your system language by default. You can override it here.',
+                'settings.language.system': 'System',
+                'settings.language.zh': 'Chinese',
+                'settings.language.en': 'English',
+                'settings.inpaint.title': 'Background cleanup',
+                'settings.inpaint.help': 'LaMa is more natural; Local Mean is lighter and works best on clean backgrounds.',
+                'settings.inpaint.localMean': 'Local Mean',
+                'settings.api.help': 'Used for AI layered restore. Saved on this computer.',
+                'settings.update.title': 'Check for updates',
+                'settings.update.idle': 'Check for updates',
+                'settings.update.check': 'Check for updates',
+                'settings.update.checking': 'Checking',
+                'settings.update.downloading': 'Downloading update {percent}%',
+                'settings.update.download': 'Download',
+                'settings.update.install': 'Restart to install',
+                'settings.update.available': 'New version {version} found',
+                'settings.update.downloaded': 'Version {version} downloaded. Restart to install.',
+                'settings.update.latest': 'You are on the latest version {version}',
+                'settings.update.none': 'No update available',
+                'settings.update.disabled': 'Auto update is unavailable in this environment',
+                'settings.update.readFailed': 'Could not read update status',
+                'settings.update.actionFailed': 'Update action failed',
+                'settings.update.error': 'Update check failed',
+                'settings.version.title': 'Version',
+                'settings.version.available': ' · update to {version}',
+                'hero.eyebrow': 'Image page reconstruction tool',
+                'hero.trust.label': 'Product capabilities',
+                'hero.trust.local.strong': 'Local',
+                'hero.trust.local.text': 'file handling',
+                'hero.trust.pages.strong': 'Multi-page',
+                'hero.trust.pages.text': 'export',
+                'hero.trust.edit.strong': 'Editable',
+                'hero.trust.edit.text': 'text',
+                'hero.trust.layers.strong': 'Layered',
+                'hero.trust.layers.text': 'page elements',
+                'hero.title.prefix': 'Turn image-based pages back into',
+                'hero.title.word': 'editable PPTX.',
+                'hero.subtitle': 'Import AI-generated visuals or image-based slides. DeckLens rebuilds them into PPTX files that are easier to keep editing: editable text, organized elements, and merged multi-page output.',
+                'hero.chips.label': 'Core capabilities',
+                'hero.chip.local': 'Local runtime',
+                'hero.chip.batch': 'Batch merge',
+                'hero.chip.text': 'Editable text',
+                'hero.chip.layers': 'Element layers',
+                'hero.chip.review': 'Interactive review',
+                'hero.action.start': 'Start conversion',
+                'hero.action.layers': 'Enable element layers',
+                'hero.output.label': 'Output',
+                'hero.output.text': 'Editable text',
+                'hero.output.layers': 'Organized layers',
+                'hero.output.look': 'Original look',
+                'hero.output.batch': 'Batch output',
+                'hero.output.local': 'Local processing',
+                'workbench.heading': 'Choose a mode. <span class="muted">Prepare parsing and reconstruction.</span>',
+                'workbench.aria': 'DeckLens import workbench',
+                'mode.standard.tag': 'Fast',
+                'mode.standard.title': 'Standard Restore',
+                'mode.standard.desc': 'Basic layout and text extraction for simple pages.',
+                'mode.element.tag': 'Reviewable',
+                'mode.element.title': 'Element Layers',
+                'mode.element.desc': 'Separates graphics and text while preserving basic layer structure.',
+                'mode.ai.tag': 'High quality',
+                'mode.ai.title': 'AI Layered Restore',
+                'mode.ai.desc': 'Uses semantic understanding to rebuild complex page structure.',
+                'common.enabled': 'Enabled',
+                'common.disabled': 'Disabled',
+                'qwen.layers.title': 'Qwen layer count',
+                'qwen.layers.help': '4 layers is recommended. Use 6-8 for more complex pages.',
+                'qwen.layers.3': '3 layers',
+                'qwen.layers.4': '4 layers',
+                'qwen.layers.5': '5 layers',
+                'qwen.layers.6': '6 layers',
+                'qwen.layers.7': '7 layers',
+                'qwen.layers.8': '8 layers',
+                'upload.title': 'Drop files here, or click to choose files',
+                'upload.hint': 'Supports PNG / JPG. PDFs are imported as page images. Multiple files, 100 MB max total.',
+                'upload.toolbar.select': 'Choose files',
+                'upload.toolbar.merge': 'Merge pages',
+                'upload.toolbar.local': 'Local processing',
+                'upload.toolbar.start': 'Start rebuild',
+                'files.title': 'Selected files',
+                'files.start': 'Start conversion',
+                'files.addMore': 'Add more',
+                'files.clear': 'Clear',
+                'files.count': '{count} {count, plural, one {file} other {files}}',
+                'files.task': '{count} {count, plural, one {file} other {files}} · {cleanup}',
+                'files.importFailed': 'Import failed',
+                'files.networkError': 'Network error: {message}',
+                'status.processing': 'Processing...',
+                'status.ready': 'Preparing...',
+                'status.importing': 'Importing files...',
+                'status.live.processing': 'Processing',
+                'status.live.importing': 'Importing',
+                'status.live.reading': 'Reading',
+                'status.live.rebuilding': 'Rebuilding',
+                'status.live.exporting': 'Generating',
+                'status.flow.aria': 'Processing progress',
+                'status.flow.import.title': 'Import',
+                'status.flow.import.desc': 'Files enter the local queue',
+                'status.flow.read.title': 'Read',
+                'status.flow.read.desc': 'Understand page content',
+                'status.flow.rebuild.title': 'Rebuild',
+                'status.flow.rebuild.desc': 'Restore editable layers',
+                'status.flow.export.title': 'Generate',
+                'status.flow.export.desc': 'Export PPTX',
+                'status.flow.hint': 'Multi-page jobs loop automatically',
+                'status.flow.pageHint': 'Page {current}/{total}. The next page starts automatically.',
+                'status.flow.nextHint': 'The next step starts automatically.',
+                'status.feed.aria': 'Processing details',
+                'status.feed.import.title': 'Import files',
+                'status.feed.import.desc': 'Confirm format, page count, and the local job queue.',
+                'status.feed.read.title': 'Read page',
+                'status.feed.read.desc': 'Recognize text, positions, and page structure. Long images and PDFs are processed page by page.',
+                'status.feed.rebuild.title': 'Rebuild layers',
+                'status.feed.rebuild.desc': 'Clean text backgrounds and restore text boxes or page elements based on the selected mode.',
+                'status.feed.export.title': 'Export file',
+                'status.feed.export.desc': 'Compose a PPTX with editable text and layers.',
+                'status.pageProgress': 'Page {current}/{total}',
+                'result.kicker': 'Export Ready',
+                'result.title': 'PPTX generated',
+                'result.message': 'Conversion complete. The file is ready to download.',
+                'result.generated': 'Exported as PPTX using {mode}. Text and page layers can still be edited in PowerPoint.',
+                'result.stats.aria': 'Export summary',
+                'result.stats.pages': 'Pages',
+                'result.stats.mode': 'Mode',
+                'result.stats.elapsed': 'Time',
+                'result.download': 'Download PPTX',
+                'result.continue': 'Convert more',
+                'result.pages': '{count} {count, plural, one {page} other {pages}}',
+                'error.retry': 'Retry',
+                'preview.title': 'Element segmentation preview',
+                'preview.hint': 'Click or box-select elements. Ctrl+G merges, Delete removes, Esc clears selection.',
+                'preview.merge': 'Merge selected (Ctrl+G)',
+                'preview.delete': 'Delete selected (Del)',
+                'preview.selectAll': 'Select all (Ctrl+A)',
+                'preview.reset': 'Reset',
+                'preview.mergeGroup': 'Merge into group',
+                'preview.deleteSelected': 'Delete selected',
+                'preview.confirm': 'Confirm and generate PPTX',
+                'preview.skip': 'Skip preview and generate',
+                'preview.slide': 'Page {index}',
+                'preview.selectedCount': '{count} selected',
+                'preview.ungrouped': 'Ungrouped ({count})',
+                'preview.grouped': 'Merged',
+                'preview.group': 'Group {index} ({count})',
+                'preview.deleted': 'Deleted',
+                'preview.groupLabel': ' [Group {index}]',
+                'preview.toastMerged': 'Merged {count} elements into group {group}',
+                'preview.toastDeleted': 'Deleted {count} elements',
+                'preview.toastCleared': 'Selection cleared',
+                'preview.toastSelectedAll': 'Selected all {count} elements',
+                'preview.toastMergedOneGroup': 'Merged {count} elements into one group',
+                'workflow.title': 'Import once, then rebuild editable PPTX in three steps.',
+                'workflow.desc': 'No need to recreate pages from scratch. DeckLens keeps import, reconstruction, review, and export in one workflow.',
+                'workflow.step1.title': 'Input pages',
+                'workflow.step1.desc': 'Import images, PDFs, or multi-page materials into one reconstruction job.',
+                'workflow.step2.title': 'Choose depth',
+                'workflow.step2.desc': 'Standard Restore prioritizes text edits. Element Layers also produces page elements for cleanup.',
+                'workflow.step3.title': 'Review and export',
+                'workflow.step3.desc': 'Merge or delete elements in preview when needed, then export an editable PPTX.',
+                'proof.title': 'Not an image-only PPT, but an operable page layer stack.',
+                'proof.desc': 'DeckLens preserves the original look first, then restores the parts worth editing: text, key elements, and multi-page output.',
+                'proof.item1': 'Text rebuilt as PPTX text boxes',
+                'proof.item2': 'Key visual elements split into movable layers where possible',
+                'proof.item3': 'Complex backgrounds kept stable to avoid fragmented editing',
+                'proof.before.title': 'Original image-based page',
+                'proof.before.desc': 'Looks like slides, but cannot be edited as slides.',
+                'proof.after.title': 'DeckLens output',
+                'proof.after.desc': 'Preserves the look and restores editable structure where possible.',
+                'feature.standard.desc': 'For fast text edits: keep the visual background and restore primary text.',
+                'feature.element.desc': 'For follow-up redesign: preview layers, then merge, delete, or organize elements.',
+                'feature.batch.title': 'Batch output',
+                'feature.batch.desc': 'Import multiple images or PDFs once and export all pages as one PPTX deck.',
+                'boundary.note': 'Scope note: DeckLens does not promise to recover original source files. Complex illustration, gradients, and overlapping decoration stay as stable background first, avoiding lots of hard-to-edit fragments.',
+                'footer': 'DeckLens · Local runtime · Image-based pages to editable PPTX'
+            }
+        };
+
+        function getLanguagePreference() {
+            return localStorage.getItem('decklens.language') || 'system';
+        }
+
+        function getSystemLanguage() {
+            const locale = (navigator.language || navigator.userLanguage || 'zh').toLowerCase();
+            return locale.startsWith('zh') ? 'zh' : 'en';
+        }
+
+        function getActiveLanguage() {
+            const preference = getLanguagePreference();
+            return preference === 'system' ? getSystemLanguage() : preference;
+        }
+
+        function formatI18n(value, values = {}) {
+            return String(value).replace(/\{(\w+), plural, one \{([^{}]*)\} other \{([^{}]*)\}\}/g, (_match, name, one, other) => {
+                return Number(values[name]) === 1 ? one : other;
+            }).replace(/\{(\w+)\}/g, (_match, name) => values[name] ?? '');
+        }
+
+        function t(key, values = {}) {
+            const lang = getActiveLanguage();
+            const value = I18N[lang]?.[key] ?? I18N.zh[key] ?? key;
+            return formatI18n(value, values);
+        }
+
+        function modeLabel(mode) {
+            if (mode === 'qwen') return t('mode.ai.title');
+            if (mode === 'sam') return t('mode.element.title');
+            return t('mode.standard.title');
+        }
+
+        function formatFileCount(count) {
+            return t('files.count', { count });
+        }
+
+        function formatPageCount(count) {
+            return t('result.pages', { count });
+        }
+
+        function applyI18n() {
+            const lang = getActiveLanguage();
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+            document.title = t('document.title');
+            document.querySelectorAll('[data-i18n]').forEach((element) => {
+                element.textContent = t(element.dataset.i18n);
+            });
+            document.querySelectorAll('[data-i18n-html]').forEach((element) => {
+                element.innerHTML = t(element.dataset.i18nHtml);
+            });
+            document.querySelectorAll('[data-i18n-aria-label]').forEach((element) => {
+                element.setAttribute('aria-label', t(element.dataset.i18nAriaLabel));
+            });
+            const word = document.getElementById('heroWord');
+            const glow = document.getElementById('heroWordGlow');
+            if (word) word.textContent = t('hero.title.word');
+            if (glow) glow.textContent = t('hero.title.word');
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect) languageSelect.value = getLanguagePreference();
+            if (typeof setDecomposeMode === 'function') {
+                setDecomposeMode(decomposeMode);
+            }
+            if (selectedFiles?.length) {
+                renderFileList();
+            }
+        }
+
         function initHeroTitle() {
             const word = document.getElementById('heroWord');
             const glow = document.getElementById('heroWordGlow');
             if (!word || !glow) return;
 
-            word.textContent = '可编辑 PPTX。';
-            glow.textContent = '可编辑 PPTX。';
+            word.textContent = t('hero.title.word');
+            glow.textContent = t('hero.title.word');
         }
 
         function initHoverGlow() {
@@ -4233,7 +4676,8 @@
         const SETTINGS_STORAGE = {
             apiKey: 'decklens.falApiKey',
             inpaintBackend: 'decklens.inpaintBackend',
-            firstRunSeen: 'decklens.settingsFirstRunSeen'
+            firstRunSeen: 'decklens.settingsFirstRunSeen',
+            language: 'decklens.language'
         };
 
         function initSettingsPanel() {
@@ -4244,6 +4688,7 @@
             const text = document.getElementById('updateText');
             const button = document.getElementById('updateButton');
             const versionText = document.getElementById('appVersionText');
+            const languageSelect = document.getElementById('languageSelect');
             const updates = window.decklensRuntime?.updates;
 
             if (!settingsButton || !settingsOverlay || !settingsClose) {
@@ -4255,6 +4700,9 @@
             if (savedBackend && Array.from(inpaintBackend.options).some((option) => option.value === savedBackend)) {
                 inpaintBackend.value = savedBackend;
             }
+            if (languageSelect) {
+                languageSelect.value = getLanguagePreference();
+            }
 
             qwenApiKey.addEventListener('input', () => {
                 const value = qwenApiKey.value.trim();
@@ -4264,47 +4712,73 @@
             inpaintBackend.addEventListener('change', () => {
                 localStorage.setItem(SETTINGS_STORAGE.inpaintBackend, inpaintBackend.value);
             });
+            languageSelect?.addEventListener('change', () => {
+                if (languageSelect.value === 'system') {
+                    localStorage.removeItem(SETTINGS_STORAGE.language);
+                } else {
+                    localStorage.setItem(SETTINGS_STORAGE.language, languageSelect.value);
+                }
+                applyI18n();
+                render(currentStatus);
+            });
 
             let currentStatus = { status: 'idle' };
+
+            function updateMessage(status) {
+                const state = status.status || 'idle';
+                if (state === 'available') return t('settings.update.available', { version: status.availableVersion || '' });
+                if (state === 'downloaded') return t('settings.update.downloaded', { version: status.availableVersion || '' });
+                if (state === 'downloading') {
+                    const percent = Math.max(0, Math.min(100, Math.round(status.progress?.percent || 0)));
+                    return t('settings.update.downloading', { percent });
+                }
+                if (state === 'checking') return t('settings.update.checking');
+                if (state === 'not-available') {
+                    return status.version ? t('settings.update.latest', { version: status.version }) : t('settings.update.none');
+                }
+                if (state === 'disabled') return t('settings.update.disabled');
+                if (state === 'error') return t('settings.update.error');
+                return t('settings.update.idle');
+            }
 
             function render(status) {
                 currentStatus = status || { status: 'idle' };
                 const state = currentStatus.status || 'idle';
                 if (updateStatus) updateStatus.className = `settings-update-status ${state}`;
-                text.textContent = currentStatus.message || '检查更新';
+                text.textContent = updateMessage(currentStatus);
                 button.disabled = state === 'checking' || state === 'downloading';
                 button.classList.toggle('secondary', state !== 'available' && state !== 'downloaded');
 
                 if (state === 'available') {
-                    button.textContent = '下载';
+                    button.textContent = t('settings.update.download');
                 } else if (state === 'downloaded') {
-                    button.textContent = '重启安装';
+                    button.textContent = t('settings.update.install');
                 } else if (state === 'downloading') {
                     const percent = Math.max(0, Math.min(100, Math.round(currentStatus.progress?.percent || 0)));
                     button.textContent = `${percent}%`;
                 } else if (state === 'checking') {
-                    button.textContent = '检查中';
+                    button.textContent = t('settings.update.checking');
                 } else {
-                    button.textContent = '检查更新';
+                    button.textContent = t('settings.update.check');
                 }
 
                 if (versionText) {
                     const current = currentStatus.version || '0.2.0';
-                    const available = currentStatus.availableVersion ? ` · 可更新至 ${currentStatus.availableVersion}` : '';
+                    const available = currentStatus.availableVersion ? t('settings.version.available', { version: currentStatus.availableVersion }) : '';
                     versionText.textContent = `DeckLens ${current}${available}`;
                 }
             }
 
             async function loadStatus() {
                 if (!updates) {
-                    render({ status: 'disabled', message: '当前环境不支持自动更新', version: '0.2.0' });
+                    render({ status: 'disabled', message: t('settings.update.disabled'), version: '0.2.0' });
                     button.disabled = true;
                     return;
                 }
                 try {
                     render(await updates.getStatus());
                 } catch (error) {
-                    render({ status: 'error', message: '读取更新状态失败', error: error.message });
+                    render({ status: 'error', message: t('settings.update.readFailed'), error: error.message });
                 }
             }
 
@@ -4316,19 +4790,19 @@
                 if (!updates) return;
                 try {
                     if (currentStatus.status === 'available') {
-                        render({ ...currentStatus, status: 'downloading', message: '正在下载更新...', progress: null });
+                        render({ ...currentStatus, status: 'downloading', message: t('settings.update.downloading', { percent: 0 }), progress: null });
                         render(await updates.download());
                     } else if (currentStatus.status === 'downloaded') {
                         await updates.install();
                     } else {
-                        render({ ...currentStatus, status: 'checking', message: '正在检查更新...' });
+                        render({ ...currentStatus, status: 'checking', message: t('settings.update.checking') });
                         const startedAt = Date.now();
                         const result = await updates.check();
                         await wait(Math.max(0, 500 - (Date.now() - startedAt)));
                         render(result);
                     }
                 } catch (error) {
-                    render({ status: 'error', message: '更新操作失败', error: error.message });
+                    render({ status: 'error', message: t('settings.update.actionFailed'), error: error.message });
                 }
             });
 
@@ -4415,33 +4889,33 @@
             decomposeMode = mode;
             decomposeToggle.checked = mode === 'sam';
             if (mode === 'sam') {
-                decomposeBadge.textContent = '已启用';
+                decomposeBadge.textContent = t('common.enabled');
                 decomposeBadge.className = 'option-badge on';
                 standardModeCard.classList.remove('active');
                 decomposeLabel.classList.add('active');
                 qwenModeCard.classList.remove('active');
-                qwenBadge.textContent = '未启用';
+                qwenBadge.textContent = t('common.disabled');
                 qwenBadge.className = 'option-badge off';
                 qwenLayerControl.style.display = 'none';
             } else if (mode === 'qwen') {
-                decomposeBadge.textContent = '未启用';
+                decomposeBadge.textContent = t('common.disabled');
                 decomposeBadge.className = 'option-badge off';
                 standardModeCard.classList.remove('active');
                 decomposeLabel.classList.remove('active');
                 qwenModeCard.classList.add('active');
-                qwenBadge.textContent = '已启用';
+                qwenBadge.textContent = t('common.enabled');
                 qwenBadge.className = 'option-badge on';
                 qwenLayerControl.style.display = 'flex';
                 if (!qwenApiKey.value.trim()) {
                     openSettings({ highlightApiKey: true });
                 }
             } else {
-                decomposeBadge.textContent = '未启用';
+                decomposeBadge.textContent = t('common.disabled');
                 decomposeBadge.className = 'option-badge off';
                 standardModeCard.classList.add('active');
                 decomposeLabel.classList.remove('active');
                 qwenModeCard.classList.remove('active');
-                qwenBadge.textContent = '未启用';
+                qwenBadge.textContent = t('common.disabled');
                 qwenBadge.className = 'option-badge off';
                 qwenLayerControl.style.display = 'none';
             }
@@ -4450,6 +4924,7 @@
         decomposeToggle.addEventListener('change', () => {
             setDecomposeMode(decomposeToggle.checked ? 'sam' : 'none');
         });
+        applyI18n();
 
         function focusUploadWorkbench() {
             document.getElementById('restore')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -4553,7 +5028,7 @@
 
             uploadZone.style.display = 'none';
             fileList.classList.add('active');
-            fileCount.textContent = `${selectedFiles.length} 个文件`;
+            fileCount.textContent = formatFileCount(selectedFiles.length);
 
             fileItems.innerHTML = selectedFiles.map((f, i) => {
                 const ext = f.name.split('.').pop().toLowerCase();
@@ -4589,19 +5064,19 @@
             const decompose = decomposeMode !== 'none';
             const modeEl = document.getElementById('statusMode');
             if (decomposeMode === 'qwen') {
-                modeEl.textContent = 'AI 智能分层';
+                modeEl.textContent = modeLabel('qwen');
                 modeEl.className = 'status-mode';
             } else if (decompose) {
-                modeEl.textContent = '元素分层';
+                modeEl.textContent = modeLabel('sam');
                 modeEl.className = 'status-mode';
             } else {
-                modeEl.textContent = '标准还原';
+                modeEl.textContent = modeLabel('none');
                 modeEl.className = 'status-mode normal';
             }
 
             const cleanupName = inpaintBackend.options[inpaintBackend.selectedIndex]?.text || 'LaMa';
-            document.getElementById('taskInfo').textContent = `${selectedFiles.length} 个文件 · ${cleanupName}`;
-            document.getElementById('statusStep').textContent = '正在导入文件...';
+            document.getElementById('taskInfo').textContent = t('files.task', { count: selectedFiles.length, cleanup: cleanupName });
+            document.getElementById('statusStep').textContent = t('status.importing');
             document.getElementById('statusDetail').textContent = '';
             document.getElementById('elapsed').textContent = '0s';
             startElapsedTimer();
@@ -4626,7 +5101,7 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    showError(data.error || '导入失败');
+                    showError(data.error || t('files.importFailed'));
                     return;
                 }
 
@@ -4634,7 +5109,7 @@
                 startPolling(data.task_id);
 
             } catch (err) {
-                showError('网络错误: ' + err.message);
+                showError(t('files.networkError', { message: err.message }));
             }
         }
 
@@ -4712,15 +5187,16 @@
 
             const liveState = document.getElementById('flowLiveState');
             if (liveState) {
-                const stateLabel = phase === 3 ? '正在生成' : phase === 2 ? '正在重建' : phase === 1 ? '正在读取' : '正在导入';
-                liveState.lastChild.textContent = stateLabel;
+                const stateLabel = phase === 3 ? t('status.live.exporting') : phase === 2 ? t('status.live.rebuilding') : phase === 1 ? t('status.live.reading') : t('status.live.importing');
+                const label = liveState.querySelector('[data-i18n="status.live.processing"]');
+                if (label) label.textContent = stateLabel;
             }
 
             const hint = document.getElementById('flowHint');
             if (hint) {
                 const total = data.total_slides || selectedFiles.length || 1;
                 const current = Math.max(1, Math.min(data.current_slide || 1, total));
-                hint.textContent = total > 1 ? `第 ${current}/${total} 页，完成后自动进入下一页` : '完成后自动进入下一步';
+                hint.textContent = total > 1 ? t('status.flow.pageHint', { current, total }) : t('status.flow.nextHint');
             }
         }
 
@@ -4753,10 +5229,10 @@
             // 更新文字
             if (data.total_slides > 0) {
                 document.getElementById('taskInfo').textContent =
-                    `第 ${data.current_slide}/${data.total_slides} 页`;
+                    t('status.pageProgress', { current: data.current_slide, total: data.total_slides });
             }
 
-            document.getElementById('statusStep').textContent = data.current_step || '处理中...';
+            document.getElementById('statusStep').textContent = data.current_step || t('status.processing');
             updateElapsedLabel();
 
             // 详细信息
@@ -4791,11 +5267,11 @@
 
             const elapsed = Math.round(data.elapsed || 0);
             const slides = data.total_slides || selectedFiles.length || 0;
-            const mode = data.decompose_mode === 'qwen' ? 'AI 智能分层' : data.decompose ? '元素分层' : '标准还原';
-            const slideText = slides > 0 ? `${slides} 页` : '-';
+            const mode = data.decompose_mode === 'qwen' ? modeLabel('qwen') : data.decompose ? modeLabel('sam') : modeLabel('none');
+            const slideText = slides > 0 ? formatPageCount(slides) : '-';
             const elapsedText = elapsed > 0 ? `${elapsed}s` : '-';
             document.getElementById('resultMessage').textContent =
-                `已按 ${mode} 输出为 PPTX，文字与页面层级可继续在 PowerPoint 中整理。`;
+                t('result.generated', { mode });
             document.getElementById('resultSlideCount').textContent = slideText;
             document.getElementById('resultModeName').textContent = mode;
             document.getElementById('resultElapsed').textContent = elapsedText;
@@ -4867,7 +5343,7 @@
                 return;
             }
             nav.innerHTML = previewData.slides.map((s, i) =>
-                `<div class="slide-tab ${i === currentSlideIdx ? 'active' : ''}" onclick="switchSlide(${i})">第 ${i+1} 页</div>`
+                `<div class="slide-tab ${i === currentSlideIdx ? 'active' : ''}" onclick="switchSlide(${i})">${t('preview.slide', { index: i + 1 })}</div>`
             ).join('');
         }
 
@@ -5136,7 +5612,7 @@
             const count = selectedMasks.size;
             if (count >= 2) {
                 toolbar.classList.add('active');
-                document.getElementById('selectedCount').textContent = `已选 ${count} 个元素`;
+                document.getElementById('selectedCount').textContent = t('preview.selectedCount', { count });
             } else {
                 toolbar.classList.remove('active');
             }
@@ -5161,25 +5637,25 @@
 
             // 未打组元素
             if (ungrouped.length > 0) {
-                html += `<div class="preview-list-section-label">未编组 (${ungrouped.length})</div>`;
+                html += `<div class="preview-list-section-label">${t('preview.ungrouped', { count: ungrouped.length })}</div>`;
                 html += ungrouped.map(m => renderListItem(m)).join('');
             }
 
             // 已合并组
             if (grouped.length > 0) {
-                html += `<div class="preview-list-section-label">已合并</div>`;
+                html += `<div class="preview-list-section-label">${t('preview.grouped')}</div>`;
                 // 按组显示
                 for (let gi = 0; gi < mergeGroups.length; gi++) {
                     const group = mergeGroups[gi];
                     const groupMasks = slide.masks.filter(m => group.includes(m.id));
-                    html += `<div class="preview-list-section-label" style="color:#6f6;padding-left:16px">组 ${gi+1} (${group.length}个)</div>`;
+                    html += `<div class="preview-list-section-label" style="color:#6f6;padding-left:16px">${t('preview.group', { index: gi + 1, count: group.length })}</div>`;
                     html += groupMasks.map(m => renderListItem(m)).join('');
                 }
             }
 
             // 已删除
             if (deleted.length > 0) {
-                html += `<div class="preview-list-section-label">已删除</div>`;
+                html += `<div class="preview-list-section-label">${t('preview.deleted')}</div>`;
                 html += deleted.map(m => renderListItem(m)).join('');
             }
 
@@ -5195,7 +5671,7 @@
             if (group) cls += ' merged';
 
             const [r, g, b] = m.color;
-            const groupLabel = group ? ` [组${mergeGroups.indexOf(group)+1}]` : '';
+            const groupLabel = group ? t('preview.groupLabel', { index: mergeGroups.indexOf(group) + 1 }) : '';
             return `<div class="${cls}" data-mask-id="${m.id}"
                 onclick="toggleMaskFromList(${m.id})"
                 onmouseenter="hoverListItem(${m.id}, true)"
@@ -5274,7 +5750,7 @@
             selectedMasks.clear();
             updateVisualStates();
             renderElementList();
-            showToast(`已合并 ${count} 个元素为组 ${mergeGroups.length}`);
+            showToast(t('preview.toastMerged', { count, group: mergeGroups.length }));
         }
 
         function deleteSelected() {
@@ -5286,7 +5762,7 @@
             selectedMasks.clear();
             updateVisualStates();
             renderElementList();
-            showToast(`已删除 ${count} 个元素`);
+            showToast(t('preview.toastDeleted', { count }));
         }
 
         function selectAll() {
@@ -5340,7 +5816,7 @@
             document.getElementById('previewPanel').classList.remove('active');
             cleanupPreview();
             statusPanel.classList.add('active');
-            document.getElementById('statusStep').textContent = '正在生成 PPTX...';
+            document.getElementById('statusStep').textContent = t('status.live.exporting') + ' PPTX...';
             document.getElementById('progressFill').style.width = '80%';
             startElapsedTimer();
             updateProcessingFlow(86, '正在生成 PPTX...', previewData || {});
@@ -5374,24 +5850,24 @@
             if (key === 'Escape') {
                 e.preventDefault();
                 clearSelection();
-                showToast('已取消选择');
+                showToast(t('preview.toastCleared'));
             } else if (key === 'Delete' || key === 'Backspace') {
                 e.preventDefault();
                 if (selectedMasks.size > 0) {
                     const count = selectedMasks.size;
                     deleteSelected();
-                    showToast(`已删除 ${count} 个元素`);
+                    showToast(t('preview.toastDeleted', { count }));
                 }
             } else if (ctrl && (key === 'a' || key === 'A')) {
                 e.preventDefault();
                 selectAll();
-                showToast(`已全选 ${selectedMasks.size} 个元素`);
+                showToast(t('preview.toastSelectedAll', { count: selectedMasks.size }));
             } else if (ctrl && (key === 'g' || key === 'G')) {
                 e.preventDefault();
                 if (selectedMasks.size >= 2) {
                     const count = selectedMasks.size;
                     mergeSelected();
-                    showToast(`已合并 ${count} 个元素为一组`);
+                    showToast(t('preview.toastMergedOneGroup', { count }));
                 }
             }
         }

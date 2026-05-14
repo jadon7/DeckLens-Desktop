@@ -123,6 +123,11 @@ Cloudflare update infrastructure is defined in `wrangler.toml` and
 `cloudflare/update-worker.js`. The Worker serves files from the
 `decklens-updates` R2 bucket on `updates.dsxzai.com`.
 
+The desktop UI supports Chinese and English. On first launch it follows the
+system language, and users can override the language from the settings panel.
+The runtime setup screen follows the system language as well so first-run
+bootstrap and the main workbench stay consistent.
+
 The desktop runtime expects Python 3.11 or 3.12 to be available on the machine. On macOS it searches common Homebrew, framework, and user-local Python locations because Finder-launched apps do not inherit a normal shell `PATH`. A custom interpreter can be provided with `DECKLENS_PYTHON=/path/to/python`.
 
 ## Optional High-Memory Local Mode
