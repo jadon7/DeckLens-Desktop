@@ -2804,8 +2804,8 @@
 
         .electron-shell.platform-darwin .window-drag-region {
             position: fixed;
-            inset: 0 128px auto 0;
-            z-index: 75;
+            inset: 0 0 auto 0;
+            z-index: 45;
             display: block;
             height: 56px;
             -webkit-app-region: drag;
@@ -2829,9 +2829,8 @@
 
         .ppt-sidebar-button,
         .settings-button {
-            position: fixed;
-            top: 16px;
-            z-index: 220;
+            position: static;
+            z-index: 2;
             display: none;
             align-items: center;
             justify-content: center;
@@ -2846,14 +2845,6 @@
             pointer-events: auto;
             transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
             -webkit-app-region: no-drag;
-        }
-
-        .settings-button {
-            right: 22px;
-        }
-
-        .ppt-sidebar-button {
-            right: 72px;
         }
 
         .ppt-sidebar-button[aria-expanded="true"],
@@ -2973,7 +2964,7 @@
 
         .ppt-history-list {
             display: grid;
-            gap: 10px;
+            gap: 6px;
         }
 
         .ppt-history-empty,
@@ -3003,7 +2994,7 @@
             padding: 10px 12px;
             border: 0;
             border-radius: 7px;
-            background: transparent;
+            background-color: #fff;
         }
 
         .ppt-history-item:hover {
@@ -3373,6 +3364,7 @@
 
         .workbench-nav {
             position: relative;
+            z-index: 90;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -3384,6 +3376,21 @@
             text-transform: uppercase;
             pointer-events: none;
             -webkit-app-region: drag;
+        }
+
+        .workbench-actions {
+            position: absolute;
+            top: 16px;
+            right: 0;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+            -webkit-app-region: no-drag;
+        }
+
+        .electron-shell .workbench-actions {
+            display: flex;
         }
 
         .electron-shell.platform-darwin .workbench-nav {
@@ -3938,18 +3945,6 @@
 </head>
 <body>
     <div class="window-drag-region" aria-hidden="true"></div>
-    <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M7 4.75h10a2.25 2.25 0 0 1 2.25 2.25v10A2.25 2.25 0 0 1 17 19.25H7A2.25 2.25 0 0 1 4.75 17V7A2.25 2.25 0 0 1 7 4.75Z" stroke="currentColor" stroke-width="1.8"></path>
-            <path d="M8.25 8.5h7.5M8.25 12h7.5M8.25 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-        </svg>
-    </button>
-    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" aria-controls="settingsOverlay" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
-            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-        </svg>
-    </button>
     <aside class="ppt-sidebar" id="pptSidebar" aria-hidden="true">
         <div class="ppt-sidebar-body">
             <div class="ppt-history-list" id="pptHistoryList"></div>
@@ -4026,6 +4021,20 @@
         <section class="hero-shell">
             <header class="workbench-nav" aria-label="DeckLens workspace">
                 <span class="workbench-mark" aria-hidden="true"></span>
+                <div class="workbench-actions" aria-label="窗口操作">
+                    <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M7 4.75h10a2.25 2.25 0 0 1 2.25 2.25v10A2.25 2.25 0 0 1 17 19.25H7A2.25 2.25 0 0 1 4.75 17V7A2.25 2.25 0 0 1 7 4.75Z" stroke="currentColor" stroke-width="1.8"></path>
+                            <path d="M8.25 8.5h7.5M8.25 12h7.5M8.25 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                        </svg>
+                    </button>
+                    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" aria-controls="settingsOverlay" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
+                            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
             </header>
 
             <div class="light-wave" aria-hidden="true"></div>
@@ -4248,7 +4257,7 @@
         <div class="preview-panel" id="previewPanel">
             <div class="preview-header">
                 <h2 data-i18n="preview.title">元素分割预览</h2>
-                <span class="preview-hint" data-i18n="preview.hint">点击/框选元素，Ctrl+G 合并，Delete 删除，Esc 取消选择</span>
+                <span class="preview-hint" id="previewHint" data-i18n="preview.hint">点击/框选元素，Ctrl+G 合并，Delete 删除，Esc 取消选择</span>
             </div>
             <div class="preview-slide-nav" id="previewSlideNav"></div>
             <div class="preview-body">
@@ -4256,9 +4265,9 @@
                 <div class="preview-left">
                     <div class="preview-element-list" id="previewElementList"></div>
                     <div class="preview-left-buttons">
-                        <button class="btn btn-sm" onclick="mergeSelected()" data-i18n="preview.merge">合并选中 (Ctrl+G)</button>
+                        <button class="btn btn-sm" id="previewMergeButton" onclick="mergeSelected()" data-i18n="preview.merge">合并选中 (Ctrl+G)</button>
                         <button class="btn btn-sm btn-secondary" onclick="deleteSelected()" data-i18n="preview.delete">删除选中 (Del)</button>
-                        <button class="btn btn-sm btn-secondary" onclick="selectAll()" data-i18n="preview.selectAll">全选 (Ctrl+A)</button>
+                        <button class="btn btn-sm btn-secondary" id="previewSelectAllButton" onclick="selectAll()" data-i18n="preview.selectAll">全选 (Ctrl+A)</button>
                         <button class="btn btn-sm btn-secondary" onclick="resetPreview()" data-i18n="preview.reset">重置</button>
                     </div>
                 </div>
@@ -4456,8 +4465,8 @@
                 'qwen.layers.6': '6 层',
                 'qwen.layers.7': '7 层',
                 'qwen.layers.8': '8 层',
-                'upload.title': '拖拽文件到这里，或点击选择文件',
-                'upload.hint': '支持 PNG / JPG，PDF 会按页面图片导入，可多选，总大小最大 100MB',
+                'upload.title': '拖拽、粘贴文件到这里，或点击选择文件',
+                'upload.hint': '支持 PNG / JPG / 粘贴截图，PDF 会按页面图片导入，可多选，总大小最大 100MB',
                 'upload.toolbar.select': '选择文件',
                 'upload.toolbar.merge': '多页合并',
                 'upload.toolbar.local': '本地处理',
@@ -4513,10 +4522,10 @@
                 'result.pages': '{count} 页',
                 'error.retry': '重试',
                 'preview.title': '元素分割预览',
-                'preview.hint': '点击/框选元素，Ctrl+G 合并，Delete 删除，Esc 取消选择',
-                'preview.merge': '合并选中 (Ctrl+G)',
+                'preview.hint': '点击/框选元素，{modifier}+G 合并，Delete 删除，Esc 取消选择',
+                'preview.merge': '合并选中 ({modifier}+G)',
                 'preview.delete': '删除选中 (Del)',
-                'preview.selectAll': '全选 (Ctrl+A)',
+                'preview.selectAll': '全选 ({modifier}+A)',
                 'preview.reset': '重置',
                 'preview.mergeGroup': '合并为一组',
                 'preview.deleteSelected': '删除选中',
@@ -4658,8 +4667,8 @@
                 'qwen.layers.6': '6 layers',
                 'qwen.layers.7': '7 layers',
                 'qwen.layers.8': '8 layers',
-                'upload.title': 'Drop files here, or click to choose files',
-                'upload.hint': 'Supports PNG / JPG. PDFs are imported as page images. Multiple files, 100 MB max total.',
+                'upload.title': 'Drop or paste files here, or click to choose files',
+                'upload.hint': 'Supports PNG / JPG / pasted screenshots. PDFs are imported as page images. Multiple files, 100 MB max total.',
                 'upload.toolbar.select': 'Choose files',
                 'upload.toolbar.merge': 'Merge pages',
                 'upload.toolbar.local': 'Local processing',
@@ -4715,10 +4724,10 @@
                 'result.pages': '{count} {count, plural, one {page} other {pages}}',
                 'error.retry': 'Retry',
                 'preview.title': 'Element segmentation preview',
-                'preview.hint': 'Click or box-select elements. Ctrl+G merges, Delete removes, Esc clears selection.',
-                'preview.merge': 'Merge selected (Ctrl+G)',
+                'preview.hint': 'Click or box-select elements. {modifier}+G merges, Delete removes, Esc clears selection.',
+                'preview.merge': 'Merge selected ({modifier}+G)',
                 'preview.delete': 'Delete selected (Del)',
-                'preview.selectAll': 'Select all (Ctrl+A)',
+                'preview.selectAll': 'Select all ({modifier}+A)',
                 'preview.reset': 'Reset',
                 'preview.mergeGroup': 'Merge into group',
                 'preview.deleteSelected': 'Delete selected',
@@ -4802,6 +4811,25 @@
             return t('result.pages', { count });
         }
 
+        function isMacPlatform() {
+            return document.documentElement.classList.contains('platform-darwin')
+                || /Mac|iPhone|iPad|iPod/i.test(navigator.platform || '');
+        }
+
+        function shortcutModifierLabel() {
+            return isMacPlatform() ? '⌘' : 'Ctrl';
+        }
+
+        function updatePreviewShortcutLabels() {
+            const values = { modifier: shortcutModifierLabel() };
+            const hint = document.getElementById('previewHint');
+            const merge = document.getElementById('previewMergeButton');
+            const selectAllButton = document.getElementById('previewSelectAllButton');
+            if (hint) hint.textContent = t('preview.hint', values);
+            if (merge) merge.textContent = t('preview.merge', values);
+            if (selectAllButton) selectAllButton.textContent = t('preview.selectAll', values);
+        }
+
         function applyI18n() {
             const lang = getActiveLanguage();
             document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
@@ -4828,6 +4856,7 @@
                 renderFileList();
             }
             renderPptHistory(pptHistoryItems);
+            updatePreviewShortcutLabels();
         }
 
         function initHeroTitle() {
@@ -5552,6 +5581,46 @@
                 addFiles(Array.from(fileInput.files));
                 fileInput.value = '';
             }
+        });
+
+        function isEditableTarget(target) {
+            return Boolean(target?.closest?.('input, textarea, select, [contenteditable="true"]'));
+        }
+
+        function pastedFileName(file, index) {
+            const extensionByType = {
+                'image/png': 'png',
+                'image/jpeg': 'jpg',
+                'application/pdf': 'pdf'
+            };
+            const extension = extensionByType[file.type] || file.name.split('.').pop()?.toLowerCase() || 'png';
+            return `pasted-${new Date().toISOString().replace(/[:.]/g, '-')}-${index + 1}.${extension}`;
+        }
+
+        function normalizeClipboardFile(file, index) {
+            if (!file) return null;
+            const hasExtension = /\.[a-z0-9]+$/i.test(file.name || '');
+            if (file.name && hasExtension) return file;
+            return new File([file], pastedFileName(file, index), {
+                type: file.type || 'image/png',
+                lastModified: Date.now()
+            });
+        }
+
+        function clipboardFiles(event) {
+            const items = Array.from(event.clipboardData?.items || []);
+            return items
+                .filter((item) => item.kind === 'file')
+                .map((item, index) => normalizeClipboardFile(item.getAsFile(), index))
+                .filter(Boolean);
+        }
+
+        document.addEventListener('paste', (event) => {
+            const files = clipboardFiles(event);
+            if (files.length === 0 || isEditableTarget(event.target)) return;
+            event.preventDefault();
+            addFiles(files);
+            focusUploadWorkbench();
         });
 
         function addFiles(files) {
@@ -6394,7 +6463,7 @@
             if (document.activeElement !== document.body) return;
 
             const key = e.key;
-            const ctrl = e.ctrlKey || e.metaKey;
+            const shortcut = isMacPlatform() ? e.metaKey : e.ctrlKey;
 
             if (key === 'Escape') {
                 e.preventDefault();
@@ -6407,11 +6476,11 @@
                     deleteSelected();
                     showToast(t('preview.toastDeleted', { count }));
                 }
-            } else if (ctrl && (key === 'a' || key === 'A')) {
+            } else if (shortcut && (key === 'a' || key === 'A')) {
                 e.preventDefault();
                 selectAll();
                 showToast(t('preview.toastSelectedAll', { count: selectedMasks.size }));
-            } else if (ctrl && (key === 'g' || key === 'G')) {
+            } else if (shortcut && (key === 'g' || key === 'G')) {
                 e.preventDefault();
                 if (selectedMasks.size >= 2) {
                     const count = selectedMasks.size;

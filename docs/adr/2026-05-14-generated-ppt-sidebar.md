@@ -25,10 +25,10 @@ right-side panel can be open at a time. Each entry button is also its panel's
 open/close control, so the panels omit separate close buttons and redundant
 headers.
 
-On macOS, a fixed drag region stays above the workbench while leaving the
-floating entry buttons outside the draggable hit area and at a higher stacking
-level. This preserves window dragging from the app's top area without blocking
-the history and settings entry buttons.
+On macOS, a fixed drag region stays behind the workbench navigation. The
+history and settings entry buttons live inside the navigation action area
+instead of floating outside the app chrome, so the page shell and draggable
+region cannot block their click targets.
 
 History file actions stay hidden until the row is hovered or focused. The
 actions use compact icon buttons with tooltips instead of text pills, keeping
