@@ -87,6 +87,7 @@
       "gatekeeperAssess": false,
       "notarize": true,
       "sign": "./build/sign-mac.cjs",
+      "icon": "build/icon.icns",
       "target": [
         "dmg",
         "zip"
@@ -94,6 +95,7 @@
       "category": "public.app-category.productivity"
     },
     "win": {
+      "icon": "build/icon.ico",
       "target": "nsis"
     },
     "nsis": {

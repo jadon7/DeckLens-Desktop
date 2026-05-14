@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeckLens - 图片化页面转可编辑 PPTX 与元素分层工作台</title>
-    <link rel="icon" href="/static/decklens-logo.svg" type="image/svg+xml">
+    <link rel="icon" href="/static/app-icon.png" type="image/png">
     <style>
         * {
             margin: 0;
@@ -2930,7 +2930,7 @@
         }
 
         .ppt-sidebar-header {
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: flex-end;
             gap: 12px;
@@ -2987,7 +2987,7 @@
             flex: 1;
             min-height: 0;
             overflow: auto;
-            padding: 8px;
+            padding: 82px 8px 8px;
         }
 
         .ppt-history-list {
@@ -3260,25 +3260,13 @@
             border-radius: 5px;
             background: #111;
             color: #fff;
-            font-size: 9px;
-            font-weight: 850;
-            line-height: 1;
+            overflow: hidden;
         }
 
-        .platform-icon.douyin {
-            background: linear-gradient(135deg, #111 0%, #111 48%, #00f5ff 49%, #fe2c55 100%);
-        }
-
-        .platform-icon.xiaohongshu {
-            background: #ff2442;
-            font-size: 8px;
-        }
-
-        .platform-icon.bilibili {
-            background: #00aeec;
-            font-size: 12px;
-            font-family: Georgia, serif;
-            font-style: italic;
+        .platform-icon img {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
         .settings-link-row a:hover {
@@ -3934,24 +3922,6 @@
         </svg>
     </button>
     <aside class="ppt-sidebar" id="pptSidebar" aria-hidden="true">
-        <div class="ppt-sidebar-header">
-            <div class="ppt-sidebar-title">
-                <strong data-i18n="history.title">已生成 PPT</strong>
-                <small id="pptHistorySummary" data-i18n="history.summary.empty">还没有生成的 PPTX</small>
-            </div>
-            <div class="ppt-sidebar-header-actions">
-                <button class="ppt-sidebar-icon-button" id="pptHistoryRefresh" type="button" aria-label="刷新列表" data-i18n-aria-label="history.refresh">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M20 11a8 8 0 0 0-14.1-5.16M4 5v5h5M4 13a8 8 0 0 0 14.1 5.16M20 19v-5h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                    </svg>
-                </button>
-                <button class="ppt-sidebar-icon-button" id="pptSidebarClose" type="button" aria-label="关闭列表" data-i18n-aria-label="history.close">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M6.75 6.75l10.5 10.5M17.25 6.75 6.75 17.25" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
         <div class="ppt-sidebar-body">
             <div class="ppt-history-list" id="pptHistoryList"></div>
         </div>
@@ -4014,9 +3984,9 @@
                         <strong data-i18n="settings.author.title">作者</strong>
                         <small data-i18n="settings.author.name">大师的AI小灶</small>
                         <div class="settings-link-row">
-                            <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noreferrer"><span class="platform-icon douyin" aria-hidden="true">抖</span><span data-i18n="settings.author.douyin">抖音</span></a>
-                            <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&amp;xsec_source=pc_search" target="_blank" rel="noreferrer"><span class="platform-icon xiaohongshu" aria-hidden="true">RED</span><span data-i18n="settings.author.xiaohongshu">小红书</span></a>
-                            <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noreferrer"><span class="platform-icon bilibili" aria-hidden="true">b</span><span data-i18n="settings.author.bilibili">B 站</span></a>
+                            <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noreferrer"><span class="platform-icon" aria-hidden="true"><img src="/static/social/douyin.svg" alt=""></span><span data-i18n="settings.author.douyin">抖音</span></a>
+                            <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&amp;xsec_source=pc_search" target="_blank" rel="noreferrer"><span class="platform-icon" aria-hidden="true"><img src="/static/social/xiaohongshu.svg" alt=""></span><span data-i18n="settings.author.xiaohongshu">小红书</span></a>
+                            <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noreferrer"><span class="platform-icon" aria-hidden="true"><img src="/static/social/bilibili.svg" alt=""></span><span data-i18n="settings.author.bilibili">B 站</span></a>
                         </div>
                     </div>
                 </div>
@@ -5182,11 +5152,9 @@
 
         function initPptSidebar() {
             const button = document.getElementById('pptSidebarButton');
-            const closeButton = document.getElementById('pptSidebarClose');
-            const refreshButton = document.getElementById('pptHistoryRefresh');
             const list = document.getElementById('pptHistoryList');
             const api = window.decklensRuntime?.pptOutputs;
-            if (!button || !closeButton || !refreshButton || !list) {
+            if (!button || !list) {
                 return;
             }
 
@@ -5197,8 +5165,6 @@
                 event.preventDefault();
                 togglePptSidebar();
             });
-            closeButton.addEventListener('click', closePptSidebar);
-            refreshButton.addEventListener('click', () => refreshPptHistory());
             list.addEventListener('click', async (event) => {
                 const actionButton = event.target.closest('[data-history-action]');
                 if (!actionButton || !api) return;
