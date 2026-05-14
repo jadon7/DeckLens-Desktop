@@ -1897,7 +1897,7 @@
             position: relative;
             display: flex;
             align-items: flex-start;
-            justify-content: center;
+            justify-content: space-around;
             gap: 10px;
             margin: 8px auto 32px;
             padding: 0 0 22px;
@@ -2515,14 +2515,14 @@
             padding: 2px;
             border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgb(92 92 92 / 6%);
             overflow: hidden;
         }
 
         .status-panel .progress-bar .fill {
             position: relative;
             border-radius: 999px;
-            background: linear-gradient(90deg, #6366f1, #76ffc1, #ceff66);
+            background: linear-gradient(90deg, #6366f1, #3ab27c, #8fb53f);
             box-shadow: 0 0 20px rgba(118, 255, 193, 0.26);
         }
 
@@ -2751,7 +2751,7 @@
 
             .processing-flow {
                 gap: 6px;
-                justify-content: space-between;
+                justify-content: space-around;
             }
 
             .flow-step {
@@ -2834,13 +2834,26 @@
             display: none;
         }
 
+        .window-topbar {
+            display: none;
+        }
+
         .electron-shell.platform-darwin .window-drag-region {
+            display: none;
+        }
+
+        .electron-shell.platform-darwin .window-topbar {
             position: fixed;
-            inset: 0 124px auto 72px;
-            z-index: 950;
-            display: block;
-            height: 118px;
-            -webkit-app-region: drag;
+            inset: 0 0 auto 72px;
+            z-index: 1000;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+            gap: 8px;
+            height: 72px;
+            padding: 16px 22px 0 0;
+            pointer-events: auto;
+            -webkit-app-region: no-drag;
         }
 
         .electron-shell.platform-darwin button,
@@ -2851,7 +2864,6 @@
         .electron-shell.platform-darwin textarea,
         .electron-shell.platform-darwin .mode-card,
         .electron-shell.platform-darwin .upload-zone,
-        .electron-shell.platform-darwin .preview-panel,
         .electron-shell.platform-darwin .ppt-sidebar-button,
         .electron-shell.platform-darwin .ppt-sidebar,
         .electron-shell.platform-darwin .settings-button,
@@ -2878,6 +2890,14 @@
             pointer-events: auto;
             transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
             -webkit-app-region: no-drag;
+        }
+
+        .window-topbar .ppt-sidebar-button,
+        .window-topbar .settings-button {
+            position: relative;
+            top: auto;
+            right: auto;
+            flex: 0 0 auto;
         }
 
         .ppt-sidebar-button {
@@ -3824,7 +3844,7 @@
         }
 
         .processing-flow {
-            justify-content: flex-start;
+            justify-content: space-around;
             margin: 8px 0 22px;
         }
 
@@ -3898,7 +3918,7 @@
         .preview-floating-actions {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 0;
         }
 
         .preview-floating-toolbar .btn {
@@ -4013,7 +4033,7 @@
             height: 100vh;
             max-width: 100%;
             margin: 0;
-            padding: 18px 18px 30px;
+            padding: 18px 18px 60px;
             overflow: hidden;
             border: 0;
             border-radius: 0;
@@ -4127,19 +4147,21 @@
 
             .processing-flow {
                 overflow-x: auto;
-                justify-content: flex-start;
+                justify-content: space-around;
             }
         }
     </style>
 </head>
 <body>
-    <div class="window-drag-region" aria-hidden="true"></div>
-    <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false">
-        <img src="/static/ui/list.svg" alt="" aria-hidden="true">
-    </button>
-    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" aria-controls="settingsOverlay" aria-expanded="false">
-        <img src="/static/ui/settings.svg" alt="" aria-hidden="true">
-    </button>
+    <div class="window-topbar" aria-label="窗口控制区">
+        <div class="window-drag-region" aria-hidden="true"></div>
+        <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false">
+            <img src="/static/ui/list.svg" alt="" aria-hidden="true">
+        </button>
+        <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" aria-controls="settingsOverlay" aria-expanded="false">
+            <img src="/static/ui/settings.svg" alt="" aria-hidden="true">
+        </button>
+    </div>
     <aside class="ppt-sidebar" id="pptSidebar" aria-hidden="true">
         <div class="ppt-sidebar-body">
             <div class="ppt-history-list" id="pptHistoryList"></div>
@@ -4985,6 +5007,53 @@
             return t('mode.standard.title');
         }
 
+        function initWindowTopbarDrag() {
+            const topbar = document.querySelector('.window-topbar');
+            const moveBy = window.decklensRuntime?.windowControls?.moveBy;
+            if (!topbar || !moveBy) return;
+
+            let dragging = false;
+            let lastScreenX = 0;
+            let lastScreenY = 0;
+
+            const isInteractiveTarget = (target) => Boolean(target?.closest?.(
+                'button, a, input, select, textarea, label, [role="button"]'
+            ));
+
+            topbar.addEventListener('pointerdown', (event) => {
+                if (event.button !== 0 || isInteractiveTarget(event.target)) return;
+                dragging = true;
+                lastScreenX = event.screenX;
+                lastScreenY = event.screenY;
+                topbar.setPointerCapture?.(event.pointerId);
+                event.preventDefault();
+            });
+
+            topbar.addEventListener('pointermove', (event) => {
+                if (!dragging) return;
+                const deltaX = event.screenX - lastScreenX;
+                const deltaY = event.screenY - lastScreenY;
+                if (deltaX || deltaY) {
+                    moveBy(deltaX, deltaY);
+                    lastScreenX = event.screenX;
+                    lastScreenY = event.screenY;
+                }
+                event.preventDefault();
+            });
+
+            const stopDragging = (event) => {
+                if (!dragging) return;
+                dragging = false;
+                if (event?.pointerId !== undefined) {
+                    topbar.releasePointerCapture?.(event.pointerId);
+                }
+            };
+
+            topbar.addEventListener('pointerup', stopDragging);
+            topbar.addEventListener('pointercancel', stopDragging);
+            window.addEventListener('blur', stopDragging);
+        }
+
         function formatFileCount(count) {
             return t('files.count', { count });
         }
@@ -5631,6 +5700,7 @@
             }
         }
 
+        initWindowTopbarDrag();
         initHeroTitle();
         initHoverGlow();
         initHeroWave();

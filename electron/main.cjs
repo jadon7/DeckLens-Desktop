@@ -637,6 +637,23 @@ ipcMain.handle('settings:get', () => readSettings());
 
 ipcMain.handle('settings:set', (_event, patch) => writeSettings(patch));
 
+ipcMain.on('window:move-by', (event, delta) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win || win.isDestroyed() || win.isFullScreen()) {
+    return;
+  }
+  const deltaX = Number(delta?.deltaX || 0);
+  const deltaY = Number(delta?.deltaY || 0);
+  if (!Number.isFinite(deltaX) || !Number.isFinite(deltaY)) {
+    return;
+  }
+  if (Math.abs(deltaX) > 200 || Math.abs(deltaY) > 200) {
+    return;
+  }
+  const [x, y] = win.getPosition();
+  win.setPosition(Math.round(x + deltaX), Math.round(y + deltaY), false);
+});
+
 ipcMain.handle('ppt:list', () => listGeneratedPptx());
 
 ipcMain.handle('ppt:open', async (_event, fileName) => {

@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld('decklensRuntime', {
     get: () => ipcRenderer.invoke('settings:get'),
     set: (patch) => ipcRenderer.invoke('settings:set', patch)
   },
+  windowControls: {
+    moveBy: (deltaX, deltaY) => ipcRenderer.send('window:move-by', { deltaX, deltaY })
+  },
   onLog: (callback) => {
     const listener = (_event, line) => callback(line);
     ipcRenderer.on('runtime-log', listener);
