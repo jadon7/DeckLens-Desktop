@@ -209,6 +209,49 @@ function userPath(...parts) {
   return path.join(app.getPath('userData'), ...parts);
 }
 
+function settingsPath() {
+  return userPath('settings.json');
+}
+
+function readSettings() {
+  try {
+    const raw = fs.readFileSync(settingsPath(), 'utf8');
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      appendLog(`Settings read failed: ${error.message}`);
+    }
+    return {};
+  }
+}
+
+function sanitizeSettingsPatch(patch) {
+  if (!patch || typeof patch !== 'object') {
+    return {};
+  }
+  const allowedKeys = new Set(['falApiKey', 'inpaintBackend', 'language', 'firstRunSeen']);
+  return Object.fromEntries(
+    Object.entries(patch)
+      .filter(([key, value]) => allowedKeys.has(key) && (value === null || typeof value === 'string' || typeof value === 'boolean'))
+  );
+}
+
+function writeSettings(patch) {
+  const current = readSettings();
+  const cleanPatch = sanitizeSettingsPatch(patch);
+  for (const [key, value] of Object.entries(cleanPatch)) {
+    if (value === null || value === '') {
+      delete current[key];
+    } else {
+      current[key] = value;
+    }
+  }
+  fs.mkdirSync(path.dirname(settingsPath()), { recursive: true });
+  fs.writeFileSync(settingsPath(), JSON.stringify(current, null, 2));
+  return current;
+}
+
 function backendDir() {
   return userPath('backend');
 }
@@ -589,6 +632,10 @@ ipcMain.handle('updates:install', () => {
   autoUpdater.quitAndInstall(false, true);
   return { ...updateState };
 });
+
+ipcMain.handle('settings:get', () => readSettings());
+
+ipcMain.handle('settings:set', (_event, patch) => writeSettings(patch));
 
 ipcMain.handle('ppt:list', () => listGeneratedPptx());
 

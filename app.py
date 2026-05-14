@@ -17,6 +17,7 @@ import json
 import gc
 import sys
 import shutil
+import re
 from pathlib import Path
 
 import numpy as np
@@ -41,6 +42,11 @@ INPAINT_BACKEND_LABELS = {
     "lama": "LaMa",
     "local_mean": "本地均值",
 }
+OUTPUT_MODE_LABELS = {
+    "none": "标准还原",
+    "sam": "元素分层",
+    "qwen": "AI智能分层",
+}
 # 任务状态存储（简单内存版）
 tasks = {}
 
@@ -61,6 +67,34 @@ def compact_finished_task(task):
     """Drop preview-only data after output is ready; download only needs output path."""
     for key in ("preview_data", "all_images", "user_decision"):
         task.pop(key, None)
+
+
+def original_upload_name(saved_path: str) -> str:
+    name = Path(saved_path).name
+    return name.split("_", 1)[1] if "_" in name else name
+
+
+def safe_filename_part(value: str, fallback: str = "DeckLens") -> str:
+    stem = Path(value or fallback).stem.strip() or fallback
+    stem = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', "-", stem)
+    stem = re.sub(r"\s+", " ", stem).strip(" .-_")
+    return (stem or fallback)[:64]
+
+
+def allocate_output_path(saved_paths: list, decompose_mode: str) -> str:
+    first_name = original_upload_name(saved_paths[0]) if saved_paths else "DeckLens"
+    base = safe_filename_part(first_name)
+    if len(saved_paths) > 1:
+        base = f"{base} 等{len(saved_paths)}个文件"
+    mode = OUTPUT_MODE_LABELS.get(decompose_mode, OUTPUT_MODE_LABELS["none"])
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    filename = f"{base}_{mode}_{timestamp}.pptx"
+    candidate = OUTPUT_DIR / filename
+    suffix = 2
+    while candidate.exists():
+        candidate = OUTPUT_DIR / f"{base}_{mode}_{timestamp}-{suffix}.pptx"
+        suffix += 1
+    return str(candidate)
 
 
 @app.route("/")
@@ -124,6 +158,7 @@ def convert():
         return jsonify({"error": "qwen_num_layers 必须是数字"}), 400
     qwen_num_layers = max(3, min(8, qwen_num_layers))
     qwen_api_key = request.form.get("qwen_api_key", "").strip()
+    output_path = allocate_output_path(saved_paths, decompose_mode)
     # 记录任务
     tasks[task_id] = {
         "status": "processing",
@@ -139,7 +174,7 @@ def convert():
         "inpaint_backend_label": INPAINT_BACKEND_LABELS[inpaint_backend],
         "qwen_num_layers": qwen_num_layers,
         "qwen_api_configured": bool(qwen_api_key or os.environ.get("FAL_KEY")),
-        "output": None,
+        "output": output_path,
         "error": None,
         "created_at": time.time(),
         "elapsed": 0,
@@ -186,7 +221,7 @@ def download(task_id):
     return send_file(
         task["output"],
         as_attachment=True,
-        download_name=f"DeckLens_{task_id}.pptx",
+        download_name=Path(task["output"]).name,
     )
 
 
@@ -217,6 +252,8 @@ def status(task_id):
 
     if task["status"] == "done":
         response["download_url"] = f"/api/download/{task_id}"
+        if task.get("output"):
+            response["output_name"] = Path(task["output"]).name
     elif task["status"] == "preview":
         response["preview_url"] = f"/api/preview/{task_id}"
     elif task["status"] == "error":
@@ -351,7 +388,7 @@ def _process_task(
         # Qwen 云端分层直接生成 PPTX；FastSAM 分层保留交互式预览校对流程。
         if decompose_mode == "qwen":
             tasks[task_id]["message"] += f"（AI 智能分层，{qwen_num_layers} 层）"
-            output_path = str(OUTPUT_DIR / f"{task_id}.pptx")
+            output_path = tasks[task_id]["output"]
 
             def progress_cb(current_idx, total, filename, msg):
                 public_msg = public_step_message(msg)
@@ -384,7 +421,7 @@ def _process_task(
             _process_for_preview(task_id, all_images, task_dir, start_time, inpaint_backend=inpaint_backend)
         else:
             # 标准模式：直接生成 PPTX
-            output_path = str(OUTPUT_DIR / f"{task_id}.pptx")
+            output_path = tasks[task_id]["output"]
 
             def progress_cb(current_idx, total, filename, msg):
                 public_msg = public_step_message(msg)
@@ -637,7 +674,7 @@ def _generate_pptx_with_decision(task_id: str):
         decision = task["user_decision"]
         all_images = task["all_images"]
 
-        output_path = str(OUTPUT_DIR / f"{task_id}.pptx")
+        output_path = task["output"]
         prs = Presentation()
 
         slides_decision = decision.get("slides", [])

@@ -10,6 +10,14 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        *::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
         }
 
         body {
@@ -2629,6 +2637,9 @@
         .preview-canvas-wrap {
             padding: 10px;
             border-radius: 18px;
+            max-width: 100%;
+            min-height: 0;
+            height: 100%;
             overflow: auto;
         }
 
@@ -2804,7 +2815,7 @@
 
         .electron-shell.platform-darwin .window-drag-region {
             position: fixed;
-            inset: 0 0 auto 0;
+            inset: 0 128px auto 0;
             z-index: 45;
             display: block;
             height: 56px;
@@ -2829,8 +2840,9 @@
 
         .ppt-sidebar-button,
         .settings-button {
-            position: static;
-            z-index: 2;
+            position: fixed;
+            top: 16px;
+            z-index: 1000;
             display: none;
             align-items: center;
             justify-content: center;
@@ -2845,6 +2857,14 @@
             pointer-events: auto;
             transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
             -webkit-app-region: no-drag;
+        }
+
+        .ppt-sidebar-button {
+            right: 72px;
+        }
+
+        .settings-button {
+            right: 22px;
         }
 
         .ppt-sidebar-button[aria-expanded="true"],
@@ -3001,13 +3021,35 @@
             background: #ececea;
         }
 
+        .ppt-history-item.is-latest {
+            background: #fff;
+        }
+
+        .ppt-history-item.is-latest:hover {
+            background: #ececea;
+        }
+
         .ppt-history-main {
             display: grid;
             gap: 5px;
             min-width: 0;
+            transition: padding-right 0.14s ease;
+        }
+
+        .ppt-history-item:hover .ppt-history-main,
+        .ppt-history-item:focus-within .ppt-history-main {
+            padding-right: 92px;
+        }
+
+        .ppt-history-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
         }
 
         .ppt-history-name {
+            min-width: 0;
             overflow: hidden;
             color: #111;
             font-size: 13px;
@@ -3015,6 +3057,19 @@
             line-height: 1.35;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        .ppt-history-latest-dot {
+            display: none;
+            flex: 0 0 auto;
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #509cf8;
+        }
+
+        .ppt-history-item.is-latest .ppt-history-latest-dot {
+            display: inline-block;
         }
 
         .ppt-history-meta {
@@ -3152,6 +3207,7 @@
         .settings-body {
             display: grid;
             flex: 1;
+            align-content: start;
             gap: 8px;
             min-height: 0;
             overflow: auto;
@@ -3333,6 +3389,7 @@
         }
 
         body.side-panel-open .container {
+            align-self: flex-start;
             width: calc(100% - min(var(--ppt-sidebar-width), calc(100vw - 28px)));
         }
 
@@ -3375,33 +3432,11 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             pointer-events: none;
-            -webkit-app-region: drag;
-        }
-
-        .workbench-actions {
-            position: absolute;
-            top: 16px;
-            right: 0;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            pointer-events: auto;
             -webkit-app-region: no-drag;
-        }
-
-        .electron-shell .workbench-actions {
-            display: flex;
         }
 
         .electron-shell.platform-darwin .workbench-nav {
             padding-left: 0;
-        }
-
-        .workbench-mark {
-            width: 19px;
-            height: 24px;
-            background: #050505;
-            transform: skewX(-10deg);
         }
 
         .workbench-heading {
@@ -3412,7 +3447,7 @@
         .workbench-heading h1 {
             margin: 0;
             color: #050505;
-            font-size: clamp(34px, 3vw, 42px);
+            font-size: clamp(28px, 2.4vw, 34px);
             line-height: 1.08;
             font-weight: 760;
             letter-spacing: 0;
@@ -3751,6 +3786,62 @@
             transform: none;
         }
 
+        .preview-left-buttons .btn {
+            min-height: 30px;
+            min-width: 0;
+            padding: 0 10px;
+            font-size: 12px;
+        }
+
+        .preview-header {
+            display: block;
+        }
+
+        .preview-header h2 {
+            margin-bottom: 6px;
+        }
+
+        .preview-left-buttons {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 6px;
+        }
+
+        .preview-floating-toolbar {
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 0;
+            padding: 8px;
+            border: 1px solid #e3e3e3;
+            border-radius: 7px;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        .preview-floating-toolbar .selected-count {
+            color: #334155;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .preview-floating-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preview-floating-toolbar .btn {
+            min-height: 30px;
+            min-width: 0;
+            padding: 0 10px;
+            font-size: 12px;
+        }
+
+        body.side-panel-open .container.preview-mode {
+            width: 100%;
+        }
+
         .flow-step.is-active small,
         .flow-step.is-complete small {
             color: #8b8b8b;
@@ -3845,13 +3936,15 @@
         }
 
         .preview-panel.active {
-            display: block;
+            display: grid;
+            grid-template-rows: auto auto minmax(0, 1fr) auto;
             grid-column: 1;
             grid-row: 1;
             height: 100vh;
+            max-width: 100%;
             margin: 0;
             padding: 18px;
-            overflow: auto;
+            overflow: hidden;
             border: 0;
             border-radius: 0;
             background: #fff;
@@ -3861,10 +3954,36 @@
         }
 
         .preview-header,
-        .preview-left,
-        .preview-right,
+        .preview-body,
         .preview-actions {
-            max-width: 1180px;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .preview-body {
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .preview-left,
+        .preview-right {
+            max-width: 100%;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .preview-right {
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) auto;
+            gap: 8px;
+        }
+
+        .preview-element-list {
+            max-height: none;
+            min-height: 0;
+            overflow: auto;
         }
 
         .preview-header h2 {
@@ -3922,7 +4041,7 @@
             }
 
             .workbench-heading h1 {
-                font-size: 34px;
+                font-size: 28px;
             }
 
             .hero-workbench {
@@ -3945,6 +4064,18 @@
 </head>
 <body>
     <div class="window-drag-region" aria-hidden="true"></div>
+    <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 4.75h10a2.25 2.25 0 0 1 2.25 2.25v10A2.25 2.25 0 0 1 17 19.25H7A2.25 2.25 0 0 1 4.75 17V7A2.25 2.25 0 0 1 7 4.75Z" stroke="currentColor" stroke-width="1.8"></path>
+            <path d="M8.25 8.5h7.5M8.25 12h7.5M8.25 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        </svg>
+    </button>
+    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" aria-controls="settingsOverlay" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+        </svg>
+    </button>
     <aside class="ppt-sidebar" id="pptSidebar" aria-hidden="true">
         <div class="ppt-sidebar-body">
             <div class="ppt-history-list" id="pptHistoryList"></div>
@@ -4019,23 +4150,7 @@
     </aside>
     <div class="container">
         <section class="hero-shell">
-            <header class="workbench-nav" aria-label="DeckLens workspace">
-                <span class="workbench-mark" aria-hidden="true"></span>
-                <div class="workbench-actions" aria-label="窗口操作">
-                    <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M7 4.75h10a2.25 2.25 0 0 1 2.25 2.25v10A2.25 2.25 0 0 1 17 19.25H7A2.25 2.25 0 0 1 4.75 17V7A2.25 2.25 0 0 1 7 4.75Z" stroke="currentColor" stroke-width="1.8"></path>
-                            <path d="M8.25 8.5h7.5M8.25 12h7.5M8.25 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                        </svg>
-                    </button>
-                    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" aria-controls="settingsOverlay" aria-expanded="false">
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
-                            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-                        </svg>
-                    </button>
-                </div>
-            </header>
+            <header class="workbench-nav" aria-label="DeckLens workspace"></header>
 
             <div class="light-wave" aria-hidden="true"></div>
             <canvas class="hero-wave-canvas" id="heroWaveCanvas" aria-hidden="true"></canvas>
@@ -4256,7 +4371,7 @@
         <!-- 元素预览 -->
         <div class="preview-panel" id="previewPanel">
             <div class="preview-header">
-                <h2 data-i18n="preview.title">元素分割预览</h2>
+                <h2 data-i18n="preview.title">背景元素合并与删除</h2>
                 <span class="preview-hint" id="previewHint" data-i18n="preview.hint">点击/框选元素，Ctrl+G 合并，Delete 删除，Esc 取消选择</span>
             </div>
             <div class="preview-slide-nav" id="previewSlideNav"></div>
@@ -4265,8 +4380,6 @@
                 <div class="preview-left">
                     <div class="preview-element-list" id="previewElementList"></div>
                     <div class="preview-left-buttons">
-                        <button class="btn btn-sm" id="previewMergeButton" onclick="mergeSelected()" data-i18n="preview.merge">合并选中 (Ctrl+G)</button>
-                        <button class="btn btn-sm btn-secondary" onclick="deleteSelected()" data-i18n="preview.delete">删除选中 (Del)</button>
                         <button class="btn btn-sm btn-secondary" id="previewSelectAllButton" onclick="selectAll()" data-i18n="preview.selectAll">全选 (Ctrl+A)</button>
                         <button class="btn btn-sm btn-secondary" onclick="resetPreview()" data-i18n="preview.reset">重置</button>
                     </div>
@@ -4278,14 +4391,16 @@
                     </div>
                     <div class="preview-floating-toolbar" id="floatingToolbar">
                         <span class="selected-count" id="selectedCount">已选 0 个</span>
-                        <button class="btn btn-sm" onclick="mergeSelected()" data-i18n="preview.mergeGroup">合并为一组</button>
-                        <button class="btn btn-sm btn-secondary" onclick="deleteSelected()" data-i18n="preview.deleteSelected">删除选中</button>
+                        <div class="preview-floating-actions">
+                            <button class="btn btn-sm" id="previewToolbarMergeButton" onclick="mergeSelected()" data-i18n="preview.mergeGroup">合并为一组</button>
+                            <button class="btn btn-sm btn-secondary" id="previewToolbarDeleteButton" onclick="deleteSelected()" data-i18n="preview.deleteSelected">删除选中</button>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="preview-actions">
-                <button class="btn" onclick="confirmAndGenerate()" data-i18n="preview.confirm">确认，生成 PPTX</button>
-                <button class="btn btn-secondary" onclick="skipPreview()" data-i18n="preview.skip">跳过预览，直接生成</button>
+                <button class="btn" onclick="confirmAndGenerate()" data-i18n="preview.confirm">确认</button>
+                <button class="btn btn-secondary" onclick="cancelPreview()" data-i18n="preview.skip">取消</button>
             </div>
         </div>
         <div class="preview-toast" id="previewToast"></div>
@@ -4498,7 +4613,7 @@
                 'status.flow.export.desc': '输出 PPTX',
                 'status.flow.hint': '多页会自动循环处理',
                 'status.flow.pageHint': '第 {current}/{total} 页，完成后自动进入下一页',
-                'status.flow.nextHint': '完成后自动进入下一步',
+                'status.flow.nextHint': '',
                 'status.feed.aria': '处理明细',
                 'status.feed.import.title': '导入文件',
                 'status.feed.import.desc': '确认格式、页数和本地任务队列。',
@@ -4521,7 +4636,7 @@
                 'result.continue': '继续转换',
                 'result.pages': '{count} 页',
                 'error.retry': '重试',
-                'preview.title': '元素分割预览',
+                'preview.title': '背景元素合并与删除',
                 'preview.hint': '点击/框选元素，{modifier}+G 合并，Delete 删除，Esc 取消选择',
                 'preview.merge': '合并选中 ({modifier}+G)',
                 'preview.delete': '删除选中 (Del)',
@@ -4529,8 +4644,8 @@
                 'preview.reset': '重置',
                 'preview.mergeGroup': '合并为一组',
                 'preview.deleteSelected': '删除选中',
-                'preview.confirm': '确认，生成 PPTX',
-                'preview.skip': '跳过预览，直接生成',
+                'preview.confirm': '确认',
+                'preview.skip': '取消',
                 'preview.slide': '第 {index} 页',
                 'preview.selectedCount': '已选 {count} 个元素',
                 'preview.ungrouped': '未编组 ({count})',
@@ -4700,7 +4815,7 @@
                 'status.flow.export.desc': 'Export PPTX',
                 'status.flow.hint': 'Multi-page jobs loop automatically',
                 'status.flow.pageHint': 'Page {current}/{total}. The next page starts automatically.',
-                'status.flow.nextHint': 'The next step starts automatically.',
+                'status.flow.nextHint': '',
                 'status.feed.aria': 'Processing details',
                 'status.feed.import.title': 'Import files',
                 'status.feed.import.desc': 'Confirm format, page count, and the local job queue.',
@@ -4723,7 +4838,7 @@
                 'result.continue': 'Convert more',
                 'result.pages': '{count} {count, plural, one {page} other {pages}}',
                 'error.retry': 'Retry',
-                'preview.title': 'Element segmentation preview',
+                'preview.title': 'Background element merge and delete',
                 'preview.hint': 'Click or box-select elements. {modifier}+G merges, Delete removes, Esc clears selection.',
                 'preview.merge': 'Merge selected ({modifier}+G)',
                 'preview.delete': 'Delete selected (Del)',
@@ -4731,8 +4846,8 @@
                 'preview.reset': 'Reset',
                 'preview.mergeGroup': 'Merge into group',
                 'preview.deleteSelected': 'Delete selected',
-                'preview.confirm': 'Confirm and generate PPTX',
-                'preview.skip': 'Skip preview and generate',
+                'preview.confirm': 'Confirm',
+                'preview.skip': 'Cancel',
                 'preview.slide': 'Page {index}',
                 'preview.selectedCount': '{count} selected',
                 'preview.ungrouped': 'Ungrouped ({count})',
@@ -5088,7 +5203,12 @@
             language: 'decklens.language'
         };
 
+        function persistDesktopSettings(patch) {
+            window.decklensRuntime?.settings?.set?.(patch).catch(() => {});
+        }
+
         let pptHistoryItems = [];
+        let latestGeneratedPptx = null;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -5148,9 +5268,12 @@
                 return;
             }
             list.innerHTML = items.map((item, index) => `
-                <article class="ppt-history-item">
+                <article class="ppt-history-item ${item.id === latestGeneratedPptx ? 'is-latest' : ''}" data-history-id="${escapeHtml(item.id)}">
                     <div class="ppt-history-main">
-                        <div class="ppt-history-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+                        <div class="ppt-history-title">
+                            <div class="ppt-history-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+                            <span class="ppt-history-latest-dot" aria-hidden="true"></span>
+                        </div>
                         <div class="ppt-history-meta">
                             <span>${escapeHtml(formatHistoryTime(item.modifiedAt))}</span>
                             <span>${escapeHtml(formatHistorySize(item.size))}</span>
@@ -5221,9 +5344,7 @@
                 return;
             }
 
-            button.addEventListener('click', () => {
-                togglePptSidebar();
-            });
+            button.addEventListener('click', togglePptSidebar);
             list.addEventListener('click', async (event) => {
                 const actionButton = event.target.closest('[data-history-action]');
                 if (!actionButton || !api) return;
@@ -5244,6 +5365,14 @@
                     renderPptHistoryMessage(t('history.actionFailed', { message: error.message || '' }), true);
                 }
             });
+            list.addEventListener('mouseenter', (event) => {
+                const item = event.target.closest('.ppt-history-item.is-latest');
+                if (!item) return;
+                if (item.dataset.historyId === latestGeneratedPptx) {
+                    latestGeneratedPptx = null;
+                }
+                item.classList.remove('is-latest');
+            }, true);
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape' && document.getElementById('pptSidebar')?.classList.contains('active')) {
                     closePptSidebar();
@@ -5252,7 +5381,7 @@
             refreshPptHistory({ silent: true });
         }
 
-        function initSettingsPanel() {
+        async function initSettingsPanel() {
             const settingsButton = document.getElementById('settingsButton');
             const settingsOverlay = document.getElementById('settingsOverlay');
             const settingsClose = document.getElementById('settingsClose');
@@ -5267,7 +5396,27 @@
                 return;
             }
 
-            qwenApiKey.value = localStorage.getItem(SETTINGS_STORAGE.apiKey) || '';
+            let desktopSettings = {};
+            try {
+                desktopSettings = await window.decklensRuntime?.settings?.get?.() || {};
+            } catch (error) {
+                desktopSettings = {};
+            }
+
+            qwenApiKey.value = desktopSettings.falApiKey || localStorage.getItem(SETTINGS_STORAGE.apiKey) || '';
+            if (desktopSettings.falApiKey) {
+                localStorage.setItem(SETTINGS_STORAGE.apiKey, desktopSettings.falApiKey);
+            }
+            if (desktopSettings.firstRunSeen) {
+                localStorage.setItem(SETTINGS_STORAGE.firstRunSeen, '1');
+            }
+            if (desktopSettings.language) {
+                localStorage.setItem(SETTINGS_STORAGE.language, desktopSettings.language);
+            }
+            if (desktopSettings.inpaintBackend) {
+                localStorage.setItem(SETTINGS_STORAGE.inpaintBackend, desktopSettings.inpaintBackend);
+            }
+
             const savedBackend = localStorage.getItem(SETTINGS_STORAGE.inpaintBackend);
             if (savedBackend && Array.from(inpaintBackend.options).some((option) => option.value === savedBackend)) {
                 inpaintBackend.value = savedBackend;
@@ -5280,15 +5429,19 @@
                 const value = qwenApiKey.value.trim();
                 if (value) localStorage.setItem(SETTINGS_STORAGE.apiKey, value);
                 else localStorage.removeItem(SETTINGS_STORAGE.apiKey);
+                persistDesktopSettings({ falApiKey: value || null });
             });
             inpaintBackend.addEventListener('change', () => {
                 localStorage.setItem(SETTINGS_STORAGE.inpaintBackend, inpaintBackend.value);
+                persistDesktopSettings({ inpaintBackend: inpaintBackend.value });
             });
             languageSelect?.addEventListener('change', () => {
                 if (languageSelect.value === 'system') {
                     localStorage.removeItem(SETTINGS_STORAGE.language);
+                    persistDesktopSettings({ language: null });
                 } else {
                     localStorage.setItem(SETTINGS_STORAGE.language, languageSelect.value);
+                    persistDesktopSettings({ language: languageSelect.value });
                 }
                 applyI18n();
                 render(currentStatus);
@@ -5381,9 +5534,7 @@
             if (updates) updates.onStatus(render);
             loadStatus();
 
-            settingsButton.addEventListener('click', () => {
-                toggleSettings();
-            });
+            settingsButton.addEventListener('click', toggleSettings);
             settingsClose.addEventListener('click', closeSettings);
             settingsOverlay.addEventListener('click', (event) => {
                 if (event.target === settingsOverlay) closeSettings();
@@ -5440,6 +5591,7 @@
             document.body.classList.add('side-panel-open');
             if (markFirstRunSeen) {
                 localStorage.setItem(SETTINGS_STORAGE.firstRunSeen, '1');
+                persistDesktopSettings({ firstRunSeen: true });
             }
             if (highlightApiKey) {
                 qwenApiControl.classList.add('highlight');
@@ -5820,7 +5972,7 @@
             if (hint) {
                 const total = data.total_slides || selectedFiles.length || 1;
                 const current = Math.max(1, Math.min(data.current_slide || 1, total));
-                hint.textContent = total > 1 ? t('status.flow.pageHint', { current, total }) : t('status.flow.nextHint');
+                hint.textContent = total > 1 ? t('status.flow.pageHint', { current, total }) : '';
             }
         }
 
@@ -5893,7 +6045,7 @@
             selectedFiles = [];
             uploadZone.style.display = '';
             fileInput.value = '';
-            refreshPptHistory({ silent: true });
+            latestGeneratedPptx = data.output_name || null;
             openPptSidebar();
         }
 
@@ -5934,6 +6086,8 @@
 
         async function showPreview(statusData) {
             statusPanel.classList.remove('active');
+            closePptSidebar();
+            closeSettings();
             currentTaskId = statusData.task_id;
 
             // 获取预览数据
@@ -6227,12 +6381,18 @@
 
         function updateFloatingToolbar() {
             const toolbar = document.getElementById('floatingToolbar');
+            const mergeButton = document.getElementById('previewToolbarMergeButton');
+            const deleteButton = document.getElementById('previewToolbarDeleteButton');
             const count = selectedMasks.size;
-            if (count >= 2) {
+            if (count > 0) {
                 toolbar.classList.add('active');
                 document.getElementById('selectedCount').textContent = t('preview.selectedCount', { count });
+                if (mergeButton) mergeButton.hidden = count < 2;
+                if (deleteButton) deleteButton.hidden = false;
             } else {
                 toolbar.classList.remove('active');
+                if (mergeButton) mergeButton.hidden = true;
+                if (deleteButton) deleteButton.hidden = true;
             }
         }
 
@@ -6452,6 +6612,24 @@
             mergeGroups = [];
             deletedMasks.clear();
             await confirmAndGenerate();
+        }
+
+        function cancelPreview() {
+            document.getElementById('previewPanel').classList.remove('active');
+            document.querySelector('.container').classList.remove('preview-mode');
+            cleanupPreview();
+            currentTaskId = null;
+            previewData = null;
+            selectedMasks = new Set();
+            deletedMasks = new Set();
+            mergeGroups = [];
+            selectedFiles = [];
+            uploadZone.style.display = '';
+            fileList.classList.remove('active');
+            statusPanel.classList.remove('active');
+            errorPanel.classList.remove('active');
+            fileInput.value = '';
+            document.removeEventListener('keydown', handleKeydown);
         }
 
         // ─── 快捷键 ───

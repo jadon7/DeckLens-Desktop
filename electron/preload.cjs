@@ -25,6 +25,10 @@ contextBridge.exposeInMainWorld('decklensRuntime', {
     reveal: (fileName) => ipcRenderer.invoke('ppt:reveal', fileName),
     delete: (fileName) => ipcRenderer.invoke('ppt:delete', fileName)
   },
+  settings: {
+    get: () => ipcRenderer.invoke('settings:get'),
+    set: (patch) => ipcRenderer.invoke('settings:set', patch)
+  },
   onLog: (callback) => {
     const listener = (_event, line) => callback(line);
     ipcRenderer.on('runtime-log', listener);
