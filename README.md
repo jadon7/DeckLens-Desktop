@@ -167,6 +167,11 @@ The product website lives in `site/` and is deployed to
 npm run site:deploy
 ```
 
+Website icon fonts are self-hosted under `site/vendor/phosphor/`. Do not depend
+on extensionless Variant export helper files such as `site/web` or duplicated
+`site/style*.css` files for production; Cloudflare Pages serves extensionless
+scripts with a generic MIME type, which can break icons under `nosniff`.
+
 The GitHub repository Website/Homepage should point to
 `https://deck.dsxzai.com/`. The update feed remains separate at
 `https://updates.dsxzai.com/` and is only for Electron auto-update metadata and
