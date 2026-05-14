@@ -25,15 +25,18 @@ right-side panel can be open at a time. Each entry button is also its panel's
 open/close control, so the panels omit separate close buttons and redundant
 headers.
 
-On macOS, a fixed drag region stays above both the workbench and the right-side
-panel while leaving the floating entry buttons non-draggable. This preserves
-window dragging from the app's top area even when a side panel is open.
+On macOS, a fixed drag region stays above the workbench while leaving the
+floating entry buttons outside the draggable hit area and at a higher stacking
+level. This preserves window dragging from the app's top area without blocking
+the history and settings entry buttons.
 
-History file actions stay hidden until the row is hovered or focused. This
-keeps the generated PPT list scannable while preserving open, reveal, and
-delete actions. Settings uses the same side-panel structure as history instead
-of a modal overlay. When a conversion completes, DeckLens refreshes and opens
-the history panel directly instead of showing a separate result card.
+History file actions stay hidden until the row is hovered or focused. The
+actions use compact icon buttons with tooltips instead of text pills, keeping
+the generated PPT list scannable while preserving open, reveal, and delete
+actions. The history entry does not show a file-count badge. Settings uses the
+same side-panel structure as history instead of a modal overlay. When a
+conversion completes, DeckLens refreshes and opens the history panel directly
+instead of showing a separate result card.
 
 The file operations are implemented in the Electron main process. The renderer
 passes only output file names, and the main process resolves them inside

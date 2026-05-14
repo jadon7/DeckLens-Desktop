@@ -2804,7 +2804,7 @@
 
         .electron-shell.platform-darwin .window-drag-region {
             position: fixed;
-            inset: 0 0 auto 0;
+            inset: 0 128px auto 0;
             z-index: 75;
             display: block;
             height: 56px;
@@ -2831,7 +2831,7 @@
         .settings-button {
             position: fixed;
             top: 16px;
-            z-index: 80;
+            z-index: 220;
             display: none;
             align-items: center;
             justify-content: center;
@@ -2860,27 +2860,6 @@
         .settings-button[aria-expanded="true"] {
             background: #111;
             color: #fff;
-        }
-
-        .ppt-sidebar-button::after {
-            content: attr(data-count);
-            position: absolute;
-            right: -4px;
-            bottom: -4px;
-            display: none;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 999px;
-            background: #ceff66;
-            color: #111;
-            font-size: 10px;
-            font-weight: 800;
-            line-height: 18px;
-        }
-
-        .ppt-sidebar-button.has-items::after {
-            display: block;
         }
 
         .electron-shell .ppt-sidebar-button,
@@ -3061,15 +3040,15 @@
             right: 8px;
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: 2px;
             max-width: calc(100% - 16px);
-            padding: 4px;
+            padding: 0;
             border-radius: 999px;
-            background: rgba(245, 245, 244, 0.92);
+            background: transparent;
             opacity: 0;
             pointer-events: none;
             transform: translateY(-50%);
-            transition: opacity 0.14s ease, background 0.14s ease;
+            transition: opacity 0.14s ease;
         }
 
         .ppt-history-item:hover .ppt-history-actions,
@@ -3079,20 +3058,24 @@
         }
 
         .ppt-history-action {
-            min-height: 26px;
-            padding: 0 9px;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            min-height: 0;
+            padding: 0;
             border: 0;
             border-radius: 999px;
             background: transparent;
             color: #555;
-            font-size: 11px;
-            font-weight: 650;
             cursor: pointer;
         }
 
         .ppt-history-action.primary {
-            background: #111;
-            color: #fff;
+            background: transparent;
+            color: #111;
         }
 
         .ppt-history-action.danger {
@@ -3105,7 +3088,39 @@
         }
 
         .ppt-history-action.primary:hover {
-            background: #222;
+            background: #fff;
+        }
+
+        .ppt-history-action svg {
+            width: 15px;
+            height: 15px;
+            pointer-events: none;
+        }
+
+        .ppt-history-action::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            right: 50%;
+            bottom: calc(100% + 7px);
+            z-index: 4;
+            padding: 4px 7px;
+            border-radius: 5px;
+            background: #111;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 650;
+            line-height: 1;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(50%) translateY(2px);
+            transition: opacity 0.12s ease, transform 0.12s ease;
+        }
+
+        .ppt-history-action:hover::after,
+        .ppt-history-action:focus-visible::after {
+            opacity: 1;
+            transform: translateX(50%) translateY(0);
         }
 
         .settings-panel {
@@ -3167,7 +3182,7 @@
         }
 
         .settings-section.highlight {
-            box-shadow: 0 0 0 3px rgba(206, 255, 102, 0.72);
+            box-shadow: 0 0 0 3px rgba(80, 156, 248, 0.34);
             background: #fff;
         }
 
@@ -3199,6 +3214,15 @@
             padding: 0 14px;
             outline: none;
             font: inherit;
+        }
+
+        .settings-section select {
+            appearance: none;
+            padding-right: 44px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 14px 14px;
         }
 
         .settings-section input:focus,
@@ -3914,7 +3938,7 @@
 </head>
 <body>
     <div class="window-drag-region" aria-hidden="true"></div>
-    <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false" data-count="0">
+    <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M7 4.75h10a2.25 2.25 0 0 1 2.25 2.25v10A2.25 2.25 0 0 1 17 19.25H7A2.25 2.25 0 0 1 4.75 17V7A2.25 2.25 0 0 1 7 4.75Z" stroke="currentColor" stroke-width="1.8"></path>
             <path d="M8.25 8.5h7.5M8.25 12h7.5M8.25 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
@@ -5066,14 +5090,19 @@
 
         function updatePptHistorySummary(count) {
             const summary = document.getElementById('pptHistorySummary');
-            const button = document.getElementById('pptSidebarButton');
             if (summary) {
                 summary.textContent = count > 0 ? t('history.summary.count', { count }) : t('history.summary.empty');
             }
-            if (button) {
-                button.dataset.count = count > 99 ? '99+' : String(count);
-                button.classList.toggle('has-items', count > 0);
+        }
+
+        function historyActionIcon(action) {
+            if (action === 'open') {
+                return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 5h5v5M13 11l6-6M19 14.5V17a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
             }
+            if (action === 'reveal') {
+                return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.75 7.75A2.75 2.75 0 0 1 7.5 5h3l2 2h4A2.75 2.75 0 0 1 19.25 9.75v6.75A2.5 2.5 0 0 1 16.75 19H7.25a2.5 2.5 0 0 1-2.5-2.5V7.75Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 13h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+            }
+            return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.5 5h5M5.75 7.5h12.5M9 10.5v6M15 10.5v6M7.5 7.5l.55 10.1A2.5 2.5 0 0 0 10.55 20h2.9a2.5 2.5 0 0 0 2.5-2.4l.55-10.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         }
 
         function renderPptHistory(items = pptHistoryItems) {
@@ -5099,9 +5128,9 @@
                         </div>
                     </div>
                     <div class="ppt-history-actions">
-                        <button class="ppt-history-action primary" type="button" data-history-action="open" data-history-index="${index}">${escapeHtml(t('history.action.open'))}</button>
-                        <button class="ppt-history-action" type="button" data-history-action="reveal" data-history-index="${index}">${escapeHtml(t('history.action.reveal'))}</button>
-                        <button class="ppt-history-action danger" type="button" data-history-action="delete" data-history-index="${index}">${escapeHtml(t('history.action.delete'))}</button>
+                        <button class="ppt-history-action primary" type="button" data-history-action="open" data-history-index="${index}" aria-label="${escapeHtml(t('history.action.open'))}" title="${escapeHtml(t('history.action.open'))}" data-tooltip="${escapeHtml(t('history.action.open'))}">${historyActionIcon('open')}</button>
+                        <button class="ppt-history-action" type="button" data-history-action="reveal" data-history-index="${index}" aria-label="${escapeHtml(t('history.action.reveal'))}" title="${escapeHtml(t('history.action.reveal'))}" data-tooltip="${escapeHtml(t('history.action.reveal'))}">${historyActionIcon('reveal')}</button>
+                        <button class="ppt-history-action danger" type="button" data-history-action="delete" data-history-index="${index}" aria-label="${escapeHtml(t('history.action.delete'))}" title="${escapeHtml(t('history.action.delete'))}" data-tooltip="${escapeHtml(t('history.action.delete'))}">${historyActionIcon('delete')}</button>
                     </div>
                 </article>
             `).join('');
