@@ -2836,10 +2836,10 @@
 
         .electron-shell.platform-darwin .window-drag-region {
             position: fixed;
-            inset: 0 128px auto 0;
-            z-index: 45;
+            inset: 0 152px auto 78px;
+            z-index: 950;
             display: block;
-            height: 56px;
+            height: 72px;
             -webkit-app-region: drag;
         }
 
@@ -2922,10 +2922,17 @@
         }
 
         .ppt-sidebar-button svg,
-        .settings-button svg {
+        .settings-button svg,
+        .ppt-sidebar-button img,
+        .settings-button img {
             width: 19px;
             height: 19px;
             pointer-events: none;
+        }
+
+        .ppt-sidebar-button[aria-expanded="true"] img,
+        .settings-button[aria-expanded="true"] img {
+            filter: invert(1);
         }
 
         .ppt-sidebar,
@@ -3168,7 +3175,8 @@
             background: #fff;
         }
 
-        .ppt-history-action svg {
+        .ppt-history-action svg,
+        .ppt-history-action img {
             width: 15px;
             height: 15px;
             pointer-events: none;
@@ -4127,16 +4135,10 @@
 <body>
     <div class="window-drag-region" aria-hidden="true"></div>
     <button class="ppt-sidebar-button" id="pptSidebarButton" type="button" aria-label="打开 PPT 列表" data-i18n-aria-label="history.open" aria-controls="pptSidebar" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M7 4.75h10a2.25 2.25 0 0 1 2.25 2.25v10A2.25 2.25 0 0 1 17 19.25H7A2.25 2.25 0 0 1 4.75 17V7A2.25 2.25 0 0 1 7 4.75Z" stroke="currentColor" stroke-width="1.8"></path>
-            <path d="M8.25 8.5h7.5M8.25 12h7.5M8.25 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-        </svg>
+        <img src="/static/ui/list.svg" alt="" aria-hidden="true">
     </button>
     <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" aria-controls="settingsOverlay" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
-            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
-        </svg>
+        <img src="/static/ui/settings.svg" alt="" aria-hidden="true">
     </button>
     <aside class="ppt-sidebar" id="pptSidebar" aria-hidden="true">
         <div class="ppt-sidebar-body">
@@ -5311,12 +5313,12 @@
 
         function historyActionIcon(action) {
             if (action === 'open') {
-                return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 5h5v5M13 11l6-6M19 14.5V17a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+                return '<img src="/static/ui/open.svg" alt="" aria-hidden="true">';
             }
             if (action === 'reveal') {
-                return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.75 7.75A2.75 2.75 0 0 1 7.5 5h3l2 2h4A2.75 2.75 0 0 1 19.25 9.75v6.75A2.5 2.5 0 0 1 16.75 19H7.25a2.5 2.5 0 0 1-2.5-2.5V7.75Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 13h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+                return '<img src="/static/ui/folder.svg" alt="" aria-hidden="true">';
             }
-            return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.5 5h5M5.75 7.5h12.5M9 10.5v6M15 10.5v6M7.5 7.5l.55 10.1A2.5 2.5 0 0 0 10.55 20h2.9a2.5 2.5 0 0 0 2.5-2.4l.55-10.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            return '<img src="/static/ui/delete.svg" alt="" aria-hidden="true">';
         }
 
         function renderPptHistory(items = pptHistoryItems) {
@@ -5462,6 +5464,9 @@
             if (!settingsButton || !settingsOverlay || !settingsClose) {
                 return;
             }
+
+            settingsButton.addEventListener('click', toggleSettings);
+            settingsClose.addEventListener('click', closeSettings);
 
             let desktopSettings = {};
             try {
@@ -5612,8 +5617,6 @@
             if (updates) updates.onStatus(render);
             loadStatus();
 
-            settingsButton.addEventListener('click', toggleSettings);
-            settingsClose.addEventListener('click', closeSettings);
             settingsOverlay.addEventListener('click', (event) => {
                 if (event.target === settingsOverlay) closeSettings();
             });

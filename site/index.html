@@ -1,607 +1,1316 @@
 <!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="zh-CN" vid="0"><head vid="1"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" vid="3">
     <title>DeckLens - 从静态图片到可编辑 PowerPoint</title>
-    <meta name="description" content="DeckLens 是一个桌面工具，用于把图片化 PPT、AI 生成页面和截图还原成可继续编辑的 PowerPoint 文件。">
-    <meta property="og:title" content="DeckLens">
-    <meta property="og:description" content="从静态图片到可编辑 PowerPoint。">
-    <meta property="og:image" content="/assets/decklens-desktop.jpg">
-    <meta property="og:type" content="website">
-    <link rel="icon" href="/assets/app-icon.png" type="image/png">
-    <style>
-      :root {
-        color-scheme: light;
-        --ink: #0a0a0a;
-        --muted: #777;
-        --subtle: #f7f7f7;
-        --panel: #fff;
-        --line: #e7e7e7;
-        --blue: #509cf8;
-        --max: 1120px;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      }
+    <meta name="description" content="DeckLens 将图片化 PPT、AI 生成页面和截图还原成可编辑的 PowerPoint 文件。">
+    <link rel="icon" href="/assets/app-icon.png">
 
-      * {
-        box-sizing: border-box;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
-
-      body {
-        margin: 0;
-        background: #fff;
-        color: var(--ink);
-        letter-spacing: 0;
-      }
-
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
-
-      .site-nav {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        border-bottom: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(18px);
-      }
-
-      .nav-inner {
-        width: min(var(--max), calc(100% - 48px));
-        height: 64px;
-        margin: 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 22px;
-      }
-
-      .brand,
-      .brand-mark,
-      .nav-links,
-      .nav-actions,
-      .button {
-        display: inline-flex;
-        align-items: center;
-      }
-
-      .brand {
-        gap: 10px;
-        font-size: 20px;
-        font-weight: 820;
-      }
-
-      .brand-mark {
-        width: 19px;
-        height: 19px;
-        justify-content: center;
-        border: 2px solid var(--ink);
-        border-radius: 4px;
-      }
-
-      .brand-mark::before {
-        content: "";
-        width: 7px;
-        height: 7px;
-        border: 2px solid var(--ink);
-        border-radius: 2px;
-        transform: translate(3px, -3px);
-        background: #fff;
-      }
-
-      .nav-links,
-      .nav-actions {
-        gap: 24px;
-        color: #565656;
-        font-size: 14px;
-        font-weight: 520;
-      }
-
-      .nav-actions {
-        gap: 16px;
-      }
-
-      .nav-links a,
-      .nav-actions a {
-        line-height: 1;
-      }
-
-      .nav-links a:hover,
-      .nav-actions a:hover {
-        color: var(--ink);
-      }
-
-      .nav-download {
-        min-height: 32px;
-        padding: 0 14px;
-        border-radius: 5px;
-        background: var(--ink);
-        color: #fff !important;
-        font-weight: 700;
-      }
-
-      .hero {
-        position: relative;
-        overflow: hidden;
-        padding: 88px 24px 0;
-        border-bottom: 1px solid var(--line);
-        text-align: center;
-      }
-
-      .hero-inner {
-        width: min(var(--max), 100%);
-        margin: 0 auto;
-      }
-
-      h1 {
-        max-width: 780px;
-        margin: 0 auto;
-        font-size: clamp(48px, 7.2vw, 92px);
-        line-height: 0.96;
-        font-weight: 860;
-        letter-spacing: 0;
-      }
-
-      .hero-copy {
-        max-width: 690px;
-        margin: 32px auto 0;
-        color: #7b7b7b;
-        font-size: clamp(17px, 1.9vw, 22px);
-        line-height: 1.65;
-      }
-
-      .actions {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 16px;
-        margin-top: 48px;
-      }
-
-      .button {
-        min-height: 50px;
-        justify-content: center;
-        gap: 9px;
-        padding: 0 28px;
-        border: 1px solid var(--ink);
-        border-radius: 3px;
-        background: var(--ink);
-        color: #fff;
-        font-size: 16px;
-        font-weight: 760;
-      }
-
-      .button.secondary {
-        border-color: var(--line);
-        background: #fff;
-        color: var(--ink);
-      }
-
-      .button:hover {
-        transform: translateY(-1px);
-      }
-
-      .button svg {
-        width: 17px;
-        height: 17px;
-      }
-
-      .product-frame {
-        position: relative;
-        width: min(1024px, 100%);
-        margin: 96px auto -1px;
-        padding: 18px 18px 0;
-        border: 1px solid var(--line);
-        border-bottom: 0;
-        border-radius: 8px 8px 0 0;
-        background: #fbfbfb;
-        box-shadow: 0 34px 80px rgba(15, 23, 42, 0.12);
-      }
-
-      .product-window {
-        overflow: hidden;
-        border: 1px solid var(--line);
-        border-bottom: 0;
-        border-radius: 6px 6px 0 0;
-        background: #fff;
-      }
-
-      .window-bar {
-        height: 36px;
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        padding: 0 14px;
-        border-bottom: 1px solid var(--line);
-        background: #f8f8f8;
-      }
-
-      .window-bar span {
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background: #d8d8d8;
-      }
-
-      .product-window img {
-        display: block;
-        width: 100%;
-        height: auto;
-      }
-
-      main {
-        display: grid;
-      }
-
-      section {
-        padding: 96px 24px;
-      }
-
-      .section-inner {
-        width: min(var(--max), 100%);
-        margin: 0 auto;
-      }
-
-      .section-head {
-        max-width: 720px;
-        margin-bottom: 34px;
-      }
-
-      .section-kicker {
-        display: inline-block;
-        margin-bottom: 16px;
-        color: var(--blue);
-        font-size: 13px;
-        font-weight: 780;
-      }
-
-      h2 {
-        margin: 0;
-        font-size: clamp(32px, 4.6vw, 56px);
-        line-height: 1.04;
-        font-weight: 820;
-        letter-spacing: 0;
-      }
-
-      .section-head p {
-        margin: 18px 0 0;
-        color: var(--muted);
-        font-size: 18px;
-        line-height: 1.65;
-      }
-
-      .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        overflow: hidden;
-      }
-
-      .feature {
-        min-height: 245px;
-        display: grid;
-        align-content: space-between;
-        gap: 36px;
-        padding: 28px;
-        background: #fff;
-        border-right: 1px solid var(--line);
-      }
-
-      .feature:last-child {
-        border-right: 0;
-      }
-
-      .feature span {
-        width: 34px;
-        height: 34px;
-        display: inline-grid;
-        place-items: center;
-        border-radius: 50%;
-        background: #eef5ff;
-        color: var(--blue);
-        font-weight: 820;
-      }
-
-      .feature strong {
-        display: block;
-        margin-bottom: 12px;
-        font-size: 24px;
-        line-height: 1.15;
-      }
-
-      .feature p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.6;
-      }
-
-      .workflow {
-        background: var(--subtle);
-      }
-
-      .steps {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 1px;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: var(--line);
-      }
-
-      .step {
-        min-height: 215px;
-        display: grid;
-        align-content: space-between;
-        padding: 26px;
-        background: #fff;
-      }
-
-      .step small {
-        color: #a1a1a1;
-        font-size: 13px;
-        font-weight: 760;
-      }
-
-      .step strong {
-        font-size: 24px;
-      }
-
-      .step p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.6;
-      }
-
-      .download {
-        min-height: 420px;
-        display: grid;
-        align-items: center;
-        background: var(--ink);
-        color: #fff;
-      }
-
-      .download .section-head p {
-        color: rgba(255, 255, 255, 0.66);
-      }
-
-      .download .button {
-        border-color: #fff;
-        background: #fff;
-        color: var(--ink);
-      }
-
-      .download .button.secondary {
-        background: transparent;
-        color: #fff;
-      }
-
-      footer {
-        padding: 28px 24px;
-        color: #777;
-        font-size: 13px;
-      }
-
-      .footer-inner {
-        width: min(var(--max), 100%);
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
-
-      @media (max-width: 860px) {
-        .nav-inner {
-          width: calc(100% - 28px);
+    <script src="./web" vid="5"></script><link rel="stylesheet" type="text/css" href="./style.css"><link rel="stylesheet" type="text/css" href="./style(1).css"><link rel="stylesheet" type="text/css" href="./style(2).css"><link rel="stylesheet" type="text/css" href="./style(3).css"><link rel="stylesheet" type="text/css" href="./style(4).css"><link rel="stylesheet" type="text/css" href="./style(5).css">
+    <link href="./css2" rel="stylesheet" vid="6">
+    <style vid="7">
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #111111;
+            -webkit-font-smoothing: antialiased;
         }
-
-        .nav-links {
-          display: none;
+        .hero-gradient {
+            background: radial-gradient(circle at 50% -20%, #f9f9f9 0%, #ffffff 70%);
         }
-
-        .nav-actions {
-          gap: 10px;
-          font-size: 13px;
+        .border-subtle {
+            border-color: #e5e5e5;
         }
-
-        .hero {
-          padding-top: 68px;
+        .text-secondary {
+            color: #666666;
         }
-
-        .hero-copy {
-          margin-top: 24px;
+        .workflow-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            width: 100%;
+            height: 1px;
+            background: #e5e5e5;
+            z-index: -1;
         }
-
-        .actions {
-          margin-top: 34px;
-        }
-
-        .product-frame {
-          margin-top: 64px;
-          padding: 10px 10px 0;
-        }
-
-        .feature-grid,
-        .steps {
-          grid-template-columns: 1fr;
-        }
-
-        .feature {
-          min-height: 190px;
-          border-right: 0;
-          border-bottom: 1px solid var(--line);
-        }
-
-        .feature:last-child {
-          border-bottom: 0;
-        }
-
-        section {
-          padding: 68px 20px;
-        }
-      }
-
-      @media (max-width: 560px) {
-        .brand {
-          font-size: 18px;
-        }
-
-        .nav-actions a:not(.nav-download) {
-          display: none;
-        }
-
-        h1 {
-          font-size: clamp(42px, 13vw, 58px);
-        }
-
-        .hero-copy {
-          font-size: 16px;
-        }
-
-        .button {
-          width: 100%;
-        }
-      }
     </style>
-  </head>
-  <body>
-    <nav class="site-nav" aria-label="主导航">
-      <div class="nav-inner">
-        <a class="brand" href="#top" aria-label="DeckLens home"><span class="brand-mark" aria-hidden="true"></span>DeckLens</a>
-        <div class="nav-links">
-          <a href="#features">产品特性</a>
-          <a href="#workflow">工作流</a>
-          <a href="#pricing">价格</a>
+
+  <style type="text/css">
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}
+
+::backdrop {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}/*
+! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com
+*//*
+1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)
+2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)
+*/
+
+*,
+::before,
+::after {
+  box-sizing: border-box; /* 1 */
+  border-width: 0; /* 2 */
+  border-style: solid; /* 2 */
+  border-color: #e5e7eb; /* 2 */
+}
+
+::before,
+::after {
+  --tw-content: '';
+}
+
+/*
+1. Use a consistent sensible line-height in all browsers.
+2. Prevent adjustments of font size after orientation changes in iOS.
+3. Use a more readable tab size.
+4. Use the user's configured `sans` font-family by default.
+5. Use the user's configured `sans` font-feature-settings by default.
+6. Use the user's configured `sans` font-variation-settings by default.
+7. Disable tap highlights on iOS
+*/
+
+html,
+:host {
+  line-height: 1.5; /* 1 */
+  -webkit-text-size-adjust: 100%; /* 2 */
+  -moz-tab-size: 4; /* 3 */
+  tab-size: 4; /* 3 */
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; /* 4 */
+  font-feature-settings: normal; /* 5 */
+  font-variation-settings: normal; /* 6 */
+  -webkit-tap-highlight-color: transparent; /* 7 */
+}
+
+/*
+1. Remove the margin in all browsers.
+2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.
+*/
+
+body {
+  margin: 0; /* 1 */
+  line-height: inherit; /* 2 */
+}
+
+/*
+1. Add the correct height in Firefox.
+2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)
+3. Ensure horizontal rules are visible by default.
+*/
+
+hr {
+  height: 0; /* 1 */
+  color: inherit; /* 2 */
+  border-top-width: 1px; /* 3 */
+}
+
+/*
+Add the correct text decoration in Chrome, Edge, and Safari.
+*/
+
+abbr:where([title]) {
+  text-decoration: underline dotted;
+}
+
+/*
+Remove the default font size and weight for headings.
+*/
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/*
+Reset links to optimize for opt-in styling instead of opt-out.
+*/
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/*
+Add the correct font weight in Edge and Safari.
+*/
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+/*
+1. Use the user's configured `mono` font-family by default.
+2. Use the user's configured `mono` font-feature-settings by default.
+3. Use the user's configured `mono` font-variation-settings by default.
+4. Correct the odd `em` font sizing in all browsers.
+*/
+
+code,
+kbd,
+samp,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; /* 1 */
+  font-feature-settings: normal; /* 2 */
+  font-variation-settings: normal; /* 3 */
+  font-size: 1em; /* 4 */
+}
+
+/*
+Add the correct font size in all browsers.
+*/
+
+small {
+  font-size: 80%;
+}
+
+/*
+Prevent `sub` and `sup` elements from affecting the line height in all browsers.
+*/
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+/*
+1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)
+2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)
+3. Remove gaps between table borders by default.
+*/
+
+table {
+  text-indent: 0; /* 1 */
+  border-color: inherit; /* 2 */
+  border-collapse: collapse; /* 3 */
+}
+
+/*
+1. Change the font styles in all browsers.
+2. Remove the margin in Firefox and Safari.
+3. Remove default padding in all browsers.
+*/
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit; /* 1 */
+  font-feature-settings: inherit; /* 1 */
+  font-variation-settings: inherit; /* 1 */
+  font-size: 100%; /* 1 */
+  font-weight: inherit; /* 1 */
+  line-height: inherit; /* 1 */
+  letter-spacing: inherit; /* 1 */
+  color: inherit; /* 1 */
+  margin: 0; /* 2 */
+  padding: 0; /* 3 */
+}
+
+/*
+Remove the inheritance of text transform in Edge and Firefox.
+*/
+
+button,
+select {
+  text-transform: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Remove default button styles.
+*/
+
+button,
+input:where([type='button']),
+input:where([type='reset']),
+input:where([type='submit']) {
+  -webkit-appearance: button; /* 1 */
+  background-color: transparent; /* 2 */
+  background-image: none; /* 2 */
+}
+
+/*
+Use the modern Firefox focus style for all focusable elements.
+*/
+
+:-moz-focusring {
+  outline: auto;
+}
+
+/*
+Remove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)
+*/
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/*
+Add the correct vertical alignment in Chrome and Firefox.
+*/
+
+progress {
+  vertical-align: baseline;
+}
+
+/*
+Correct the cursor style of increment and decrement buttons in Safari.
+*/
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+/*
+1. Correct the odd appearance in Chrome and Safari.
+2. Correct the outline style in Safari.
+*/
+
+[type='search'] {
+  -webkit-appearance: textfield; /* 1 */
+  outline-offset: -2px; /* 2 */
+}
+
+/*
+Remove the inner padding in Chrome and Safari on macOS.
+*/
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Change font properties to `inherit` in Safari.
+*/
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button; /* 1 */
+  font: inherit; /* 2 */
+}
+
+/*
+Add the correct display in Chrome and Safari.
+*/
+
+summary {
+  display: list-item;
+}
+
+/*
+Removes the default spacing and border for appropriate elements.
+*/
+
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
+  margin: 0;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+Reset default styling for dialogs.
+*/
+dialog {
+  padding: 0;
+}
+
+/*
+Prevent resizing textareas horizontally by default.
+*/
+
+textarea {
+  resize: vertical;
+}
+
+/*
+1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)
+2. Set the default placeholder color to the user's configured gray 400 color.
+*/
+
+input::placeholder,
+textarea::placeholder {
+  opacity: 1; /* 1 */
+  color: #9ca3af; /* 2 */
+}
+
+/*
+Set the default cursor for buttons.
+*/
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+/*
+Make sure disabled buttons don't get the pointer cursor.
+*/
+:disabled {
+  cursor: default;
+}
+
+/*
+1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)
+2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)
+   This can trigger a poorly considered lint error in some tools but is included by design.
+*/
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block; /* 1 */
+  vertical-align: middle; /* 2 */
+}
+
+/*
+Constrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)
+*/
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Make elements with the HTML hidden attribute stay hidden by default */
+[hidden]:where(:not([hidden="until-found"])) {
+  display: none;
+}
+.fixed {
+  position: fixed;
+}
+.absolute {
+  position: absolute;
+}
+.relative {
+  position: relative;
+}
+.-top-3 {
+  top: -0.75rem;
+}
+.bottom-10 {
+  bottom: 2.5rem;
+}
+.left-1\/2 {
+  left: 50%;
+}
+.left-4 {
+  left: 1rem;
+}
+.right-10 {
+  right: 2.5rem;
+}
+.top-0 {
+  top: 0px;
+}
+.top-4 {
+  top: 1rem;
+}
+.z-50 {
+  z-index: 50;
+}
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+.mb-12 {
+  margin-bottom: 3rem;
+}
+.mb-16 {
+  margin-bottom: 4rem;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+.mb-8 {
+  margin-bottom: 2rem;
+}
+.mt-12 {
+  margin-top: 3rem;
+}
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.mt-24 {
+  margin-top: 6rem;
+}
+.mt-4 {
+  margin-top: 1rem;
+}
+.flex {
+  display: flex;
+}
+.grid {
+  display: grid;
+}
+.hidden {
+  display: none;
+}
+.aspect-\[4\/3\] {
+  aspect-ratio: 4/3;
+}
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+.h-12 {
+  height: 3rem;
+}
+.h-16 {
+  height: 4rem;
+}
+.h-24 {
+  height: 6rem;
+}
+.h-3 {
+  height: 0.75rem;
+}
+.h-4 {
+  height: 1rem;
+}
+.h-full {
+  height: 100%;
+}
+.w-1\/3 {
+  width: 33.333333%;
+}
+.w-12 {
+  width: 3rem;
+}
+.w-4\/5 {
+  width: 80%;
+}
+.w-48 {
+  width: 12rem;
+}
+.w-5\/6 {
+  width: 83.333333%;
+}
+.w-full {
+  width: 100%;
+}
+.max-w-2xl {
+  max-width: 42rem;
+}
+.max-w-5xl {
+  max-width: 64rem;
+}
+.max-w-\[1280px\] {
+  max-width: 1280px;
+}
+.max-w-sm {
+  max-width: 24rem;
+}
+.flex-1 {
+  flex: 1 1 0%;
+}
+.shrink-0 {
+  flex-shrink: 0;
+}
+.-translate-x-1\/2 {
+  --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-start {
+  align-items: flex-start;
+}
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.gap-1 {
+  gap: 0.25rem;
+}
+.gap-12 {
+  gap: 3rem;
+}
+.gap-16 {
+  gap: 4rem;
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.gap-4 {
+  gap: 1rem;
+}
+.gap-6 {
+  gap: 1.5rem;
+}
+.gap-8 {
+  gap: 2rem;
+}
+.space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
+}
+.space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
+}
+.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+}
+.overflow-hidden {
+  overflow: hidden;
+}
+.rounded {
+  border-radius: 0.25rem;
+}
+.rounded-full {
+  border-radius: 9999px;
+}
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+.rounded-sm {
+  border-radius: 0.125rem;
+}
+.border {
+  border-width: 1px;
+}
+.border-y {
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+}
+.border-b {
+  border-bottom-width: 1px;
+}
+.border-r {
+  border-right-width: 1px;
+}
+.border-t {
+  border-top-width: 1px;
+}
+.border-dashed {
+  border-style: dashed;
+}
+.border-\[\#111111\]\/20 {
+  border-color: rgb(17 17 17 / 0.2);
+}
+.border-blue-500\/50 {
+  border-color: rgb(59 130 246 / 0.5);
+}
+.border-zinc-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(228 228 231 / var(--tw-border-opacity, 1));
+}
+.bg-\[\#111111\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(17 17 17 / var(--tw-bg-opacity, 1));
+}
+.bg-blue-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
+}
+.bg-transparent {
+  background-color: transparent;
+}
+.bg-white {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+.bg-white\/80 {
+  background-color: rgb(255 255 255 / 0.8);
+}
+.bg-zinc-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(244 244 245 / var(--tw-bg-opacity, 1));
+}
+.bg-zinc-100\/50 {
+  background-color: rgb(244 244 245 / 0.5);
+}
+.bg-zinc-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(250 250 250 / var(--tw-bg-opacity, 1));
+}
+.p-1 {
+  padding: 0.25rem;
+}
+.p-4 {
+  padding: 1rem;
+}
+.p-8 {
+  padding: 2rem;
+}
+.px-1 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.py-24 {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+}
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+.pb-24 {
+  padding-bottom: 6rem;
+}
+.pt-40 {
+  padding-top: 10rem;
+}
+.pt-8 {
+  padding-top: 2rem;
+}
+.text-center {
+  text-align: center;
+}
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+.text-5xl {
+  font-size: 3rem;
+  line-height: 1;
+}
+.text-6xl {
+  font-size: 3.75rem;
+  line-height: 1;
+}
+.text-\[10px\] {
+  font-size: 10px;
+}
+.text-\[12px\] {
+  font-size: 12px;
+}
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.font-bold {
+  font-weight: 700;
+}
+.font-light {
+  font-weight: 300;
+}
+.font-medium {
+  font-weight: 500;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.uppercase {
+  text-transform: uppercase;
+}
+.leading-\[1\.1\] {
+  line-height: 1.1;
+}
+.leading-relaxed {
+  line-height: 1.625;
+}
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+.tracking-widest {
+  letter-spacing: 0.1em;
+}
+.text-\[\#111111\] {
+  --tw-text-opacity: 1;
+  color: rgb(17 17 17 / var(--tw-text-opacity, 1));
+}
+.text-black {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity, 1));
+}
+.text-blue-500 {
+  --tw-text-opacity: 1;
+  color: rgb(59 130 246 / var(--tw-text-opacity, 1));
+}
+.text-green-600 {
+  --tw-text-opacity: 1;
+  color: rgb(22 163 74 / var(--tw-text-opacity, 1));
+}
+.text-white {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+.text-zinc-200 {
+  --tw-text-opacity: 1;
+  color: rgb(228 228 231 / var(--tw-text-opacity, 1));
+}
+.antialiased {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.shadow-lg {
+  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.shadow-xl {
+  --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.backdrop-blur-md {
+  --tw-backdrop-blur: blur(12px);
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+}
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.hover\:bg-zinc-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(244 244 245 / var(--tw-bg-opacity, 1));
+}
+.hover\:bg-zinc-200:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(228 228 231 / var(--tw-bg-opacity, 1));
+}
+.hover\:bg-zinc-50:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(250 250 250 / var(--tw-bg-opacity, 1));
+}
+.hover\:bg-zinc-800:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(39 39 42 / var(--tw-bg-opacity, 1));
+}
+.hover\:text-\[\#111111\]:hover {
+  --tw-text-opacity: 1;
+  color: rgb(17 17 17 / var(--tw-text-opacity, 1));
+}
+.group:hover .group-hover\:text-\[\#111111\] {
+  --tw-text-opacity: 1;
+  color: rgb(17 17 17 / var(--tw-text-opacity, 1));
+}
+@media (min-width: 768px) {
+
+  .md\:block {
+    display: block;
+  }
+
+  .md\:flex {
+    display: flex;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .md\:flex-row {
+    flex-direction: row;
+  }
+
+  .md\:text-7xl {
+    font-size: 4.5rem;
+    line-height: 1;
+  }
+}* {
+      -ms-overflow-style: none !important;
+      scrollbar-width: none !important;
+    }
+
+    *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+  </style></head>
+<body class="w-full h-full" vid="8">
+
+
+    <nav class="fixed top-0 w-full z-50 border-b border-subtle bg-white/80 backdrop-blur-md" vid="9">
+        <div class="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between" vid="10">
+            <div class="flex items-center gap-8" vid="11">
+                <div class="flex items-center gap-2 font-bold text-xl tracking-tight" vid="12">
+                    <i class="ph-bold ph-intersect-square text-[#111111]" vid="13"></i>
+                    <span vid="14">DeckLens</span>
+                </div>
+                <div class="hidden md:flex items-center gap-6 text-sm font-medium text-secondary" vid="15">
+                    <a href="#features" class="hover:text-[#111111] transition-colors" vid="16">产品特性</a>
+                    <a href="#workflow" class="hover:text-[#111111] transition-colors" vid="17">工作流</a>
+                    <a href="#pricing" class="hover:text-[#111111] transition-colors" vid="18">功能</a>
+                </div>
+            </div>
+            <div class="flex items-center gap-4" vid="19">
+                <a href="https://github.com/jadon7/DeckLens-Desktop" class="text-sm font-medium text-secondary hover:text-[#111111] transition-colors" vid="20" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a class="bg-[#111111] text-white text-xs font-semibold px-4 py-2 rounded hover:bg-zinc-800 transition-colors" vid="21" href="https://updates.dsxzai.com/download/mac" data-platform-download="true">开始下载</a>
+            </div>
         </div>
-        <div class="nav-actions">
-          <a href="https://github.com/jadon7/DeckLens-Desktop">GitHub</a>
-          <a id="navDownloadLink" class="nav-download" href="https://updates.dsxzai.com/download">开始下载</a>
-        </div>
-      </div>
     </nav>
 
-    <header class="hero" id="top">
-      <div class="hero-inner">
-        <h1>从静态图片到可编辑的 PowerPoint</h1>
-        <p class="hero-copy">DeckLens 将图片化 PPT、AI 生成页面和截图还原成原生 PowerPoint 格式。保留原版观感，恢复文本框和可整理的页面元素。</p>
-        <div class="actions">
-          <a id="downloadLink" class="button" href="https://updates.dsxzai.com/download">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v10m0 0 4-4m-4 4-4-4M5 18.5h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            开始下载
-          </a>
-          <a class="button secondary" href="https://github.com/jadon7/DeckLens-Desktop">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 19c-4 1.2-4-2-5-2.5M15 22v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6A4.7 4.7 0 0 0 18.7 7c.1-.4.6-1.8-.2-3.5 0 0-1.1-.3-3.5 1.3a12 12 0 0 0-6 0C6.6 3.2 5.5 3.5 5.5 3.5 4.7 5.2 5.2 6.6 5.3 7A4.7 4.7 0 0 0 4 10.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V22" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            GitHub
-          </a>
-        </div>
-        <div class="product-frame" aria-label="DeckLens desktop preview">
-          <div class="product-window">
-            <div class="window-bar" aria-hidden="true"><span></span><span></span><span></span></div>
-            <img src="/assets/decklens-desktop.jpg" alt="DeckLens 桌面应用界面预览">
-          </div>
-        </div>
-      </div>
-    </header>
 
-    <main>
-      <section id="features">
-        <div class="section-inner">
-          <div class="section-head">
-            <span class="section-kicker">产品特性</span>
-            <h2>面向继续编辑，而不是只导出一张图片。</h2>
-            <p>DeckLens 会把最值得继续修改的部分恢复出来：文字可改，关键元素可整理，复杂背景保持稳定。</p>
-          </div>
-          <div class="feature-grid">
-            <article class="feature">
-              <span>1</span>
-              <div><strong>恢复文本框</strong><p>识别页面文字、位置和样式，把需要改动的内容恢复为 PPTX 中可编辑的文本对象。</p></div>
-            </article>
-            <article class="feature">
-              <span>2</span>
-              <div><strong>清理旧底图</strong><p>去掉原始图片中的旧文字区域，并尽量保持背景连续，让二次覆盖更自然。</p></div>
-            </article>
-            <article class="feature">
-              <span>3</span>
-              <div><strong>整理页面元素</strong><p>元素分层后可在预览里选择、合并或删除图层，再生成最终 PowerPoint。</p></div>
-            </article>
-          </div>
-        </div>
-      </section>
+    <section class="hero-gradient pt-40 pb-24 px-6 border-b border-subtle" vid="22">
+        <div class="max-w-[1280px] mx-auto text-center" vid="23">
+            <h1 class="text-5xl md:text-7xl font-semibold tracking-tight mb-8 leading-[1.1] text-[#111111]" vid="24">
+                从静态图片到<br vid="25">
+                可编辑的 PowerPoint
+            </h1>
+            <p class="text-xl text-secondary max-w-2xl mx-auto mb-12 font-light leading-relaxed" vid="26">
+                DeckLens 将图片化 PPT、AI 生成页面和截图还原成原生 PowerPoint 格式。
+                保留原版观感，恢复文本框和可整理的页面元素。
+            </p>
+            <div class="flex items-center justify-center gap-4" vid="27">
+                <a class="bg-[#111111] text-white px-8 py-3 rounded-sm font-medium hover:bg-zinc-800 transition-all flex items-center gap-2" vid="28" href="https://updates.dsxzai.com/download/mac" data-platform-download="true"><i class="ph ph-download-simple" vid="29"></i>
+                    开始下载
+                </a>
+                <a class="bg-transparent border border-zinc-200 text-[#111111] px-8 py-3 rounded-sm font-medium hover:bg-zinc-50 transition-all flex items-center gap-2" vid="30" href="https://github.com/jadon7/DeckLens-Desktop" target="_blank" rel="noopener noreferrer"><i class="ph ph-github-logo" vid="31"></i>
+                    GitHub
+                </a>
+            </div>
 
-      <section class="workflow" id="workflow">
-        <div class="section-inner">
-          <div class="section-head">
-            <span class="section-kicker">工作流</span>
-            <h2>一次导入，四步完成。</h2>
-            <p>桌面端把导入、识别、重建、导出放进一个紧凑流程，适合反复处理多页素材。</p>
-          </div>
-          <div class="steps">
-            <article class="step"><small>01</small><strong>导入</strong><p>选择 PNG、JPG，或把 PDF 页面按图片导入。</p></article>
-            <article class="step"><small>02</small><strong>读取</strong><p>识别文本、位置、页面结构和基础样式。</p></article>
-            <article class="step"><small>03</small><strong>重建</strong><p>清理底图，并按模式恢复文本或页面元素。</p></article>
-            <article class="step"><small>04</small><strong>导出</strong><p>生成可继续编辑的 PPTX，多页素材合并成一套文件。</p></article>
-          </div>
-        </div>
-      </section>
 
-      <section id="pricing">
-        <div class="section-inner">
-          <div class="section-head">
-            <span class="section-kicker">价格</span>
-            <h2>开源桌面工具，核心流程本地运行。</h2>
-            <p>标准还原和元素分层默认在本地完成。AI 智能分层可配置自己的 fal.ai API Key，适合更复杂的页面结构恢复。</p>
-          </div>
-        </div>
-      </section>
+            <div class="mt-24 relative max-w-5xl mx-auto" vid="32">
+                <div class="aspect-video bg-zinc-50 rounded-lg border border-subtle p-1 shadow-xl overflow-hidden" vid="33">
+                    <div class="w-full h-full bg-white rounded flex" vid="34">
 
-      <section class="download">
-        <div class="section-inner">
-          <div class="section-head">
-            <span class="section-kicker">下载</span>
-            <h2>选择你的系统版本。</h2>
-            <p>macOS 版本已签名并公证。Windows 版本当前为未签名安装包，安装时可能出现系统安全提示。</p>
-          </div>
-          <div class="actions">
-            <a id="macDownloadLink" class="button" href="https://updates.dsxzai.com/download/mac">下载 macOS 版</a>
-            <a id="winDownloadLink" class="button secondary" href="https://updates.dsxzai.com/download/windows">下载 Windows 版</a>
-          </div>
-        </div>
-      </section>
-    </main>
+                        <div class="w-48 border-r border-subtle p-4 hidden md:block" vid="35">
+                            <div class="space-y-4" vid="36">
+                                <div class="w-full h-24 bg-zinc-100/50 rounded border border-zinc-200" vid="37"></div>
+                                <div class="w-full h-24 bg-zinc-50 rounded border border-zinc-200" vid="38"></div>
+                                <div class="w-full h-24 bg-zinc-50 rounded border border-zinc-200" vid="39"></div>
+                            </div>
+                        </div>
 
-    <footer>
-      <div class="footer-inner">
-        <span>DeckLens · 图片化页面转可编辑 PPTX</span>
-        <span>Website: deck.dsxzai.com · Updates: updates.dsxzai.com</span>
-      </div>
+                        <div class="flex-1 p-8 flex items-center justify-center relative" vid="40">
+                            <div class="w-4/5 aspect-[4/3] bg-white text-black p-8 relative shadow-lg border border-subtle" vid="41">
+                                <div class="absolute top-4 left-4 border border-dashed border-blue-500/50 p-1 flex items-center gap-1" vid="42">
+                                    <div class="text-[10px] bg-blue-500 text-white px-1" vid="43">TEXT_BLOCK</div>
+                                    <div class="text-[12px] font-bold text-[#111111]" vid="44">DeckLens 智能识别文本</div>
+                                </div>
+                                <div class="mt-12 h-4 w-1/3 bg-zinc-100" vid="45"></div>
+                                <div class="mt-4 space-y-2" vid="46">
+                                    <div class="h-3 w-full bg-zinc-50" vid="47"></div>
+                                    <div class="h-3 w-5/6 bg-zinc-50" vid="48"></div>
+                                </div>
+                                <div class="mt-12 grid grid-cols-2 gap-4" vid="49">
+                                    <div class="aspect-video bg-zinc-50 border border-dashed border-zinc-200" vid="50"></div>
+                                    <div class="aspect-video bg-zinc-50 border border-dashed border-zinc-200" vid="51"></div>
+                                </div>
+
+                                <div class="absolute bottom-10 right-10 flex flex-col items-center" vid="52">
+                                    <i class="ph ph-cursor text-blue-500 text-xl" vid="53"></i>
+                                    <span class="text-[10px] text-blue-500 font-mono" vid="54">Restoring...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="features" class="py-24 px-6 bg-white" vid="55">
+        <div class="max-w-[1280px] mx-auto" vid="56">
+            <div class="grid md:grid-cols-2 gap-16 items-start" vid="57">
+                <div vid="58">
+                    <h2 class="text-3xl font-medium mb-6 text-[#111111]" vid="59">面向后续编辑，<br vid="60">而不是只导出一张图片。</h2>
+                    <p class="text-secondary font-light leading-relaxed mb-8" vid="61">
+                        DeckLens 的目标是把最值得继续修改的部分恢复出来：文本可改，关键元素可整理，复杂背景保持稳定。
+                    </p>
+                </div>
+                <div class="grid gap-12" vid="62">
+                    <div class="flex gap-6" vid="63">
+                        <div class="w-12 h-12 rounded bg-zinc-50 border border-subtle flex items-center justify-center shrink-0" vid="64">
+                            <i class="ph ph-text-t text-xl text-[#111111]" vid="65"></i>
+                        </div>
+                        <div vid="66">
+                            <h3 class="font-medium mb-2 text-[#111111]" vid="67">文字恢复为 PPTX 文本框</h3>
+                            <p class="text-sm text-secondary leading-relaxed" vid="68">利用高精度 OCR 与语义布局分析，将图片中的文字还原为可编辑、可调整样式的原生 PPT 文本组件。</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-6" vid="69">
+                        <div class="w-12 h-12 rounded bg-zinc-50 border border-subtle flex items-center justify-center shrink-0" vid="70">
+                            <i class="ph ph-magic-wand text-xl text-[#111111]" vid="71"></i>
+                        </div>
+                        <div vid="72">
+                            <h3 class="font-medium mb-2 text-[#111111]" vid="73">底图清理保持原版观感</h3>
+                            <p class="text-sm text-secondary leading-relaxed" vid="74">智能擦除文字残留，自动补全背景纹理，确保导出的 PPT 底图干净清爽，不影响二次设计。</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-6" vid="75">
+                        <div class="w-12 h-12 rounded bg-zinc-50 border border-subtle flex items-center justify-center shrink-0" vid="76">
+                            <i class="ph ph-layers text-xl text-[#111111]" vid="77"></i>
+                        </div>
+                        <div vid="78">
+                            <h3 class="font-medium mb-2 text-[#111111]" vid="79">元素分层可人工校对</h3>
+                            <p class="text-sm text-secondary leading-relaxed" vid="80">图形、图标、文字自动分层管理，支持在导出前进行可视化预览与逻辑调整，保证产出质量。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="workflow" class="py-24 px-6 border-y border-subtle bg-zinc-50" vid="81">
+        <div class="max-w-[1280px] mx-auto" vid="82">
+            <div class="mb-16" vid="83">
+                <h2 class="text-3xl font-medium mb-4 text-[#111111]" vid="84">一次导入，四步完成。</h2>
+                <p class="text-secondary" vid="85">桌面端把上传、识别、重建、导出放进一个紧凑流程，适合反复处理多页素材。</p>
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-8" vid="86">
+                <div class="relative group" vid="87">
+                    <div class="text-zinc-200 text-6xl font-bold mb-6 group-hover:text-[#111111] transition-colors" vid="88">01</div>
+                    <h4 class="font-medium mb-2 text-[#111111]" vid="89">导入</h4>
+                    <p class="text-sm text-secondary" vid="90">拖拽或批量上传图片、PDF 或截图至工作区。</p>
+                </div>
+                <div class="relative group" vid="91">
+                    <div class="text-zinc-200 text-6xl font-bold mb-6 group-hover:text-[#111111] transition-colors" vid="92">02</div>
+                    <h4 class="font-medium mb-2 text-[#111111]" vid="93">读取</h4>
+                    <p class="text-sm text-secondary" vid="94">AI 引擎自动解析文字坐标、字体大小及图像层级。</p>
+                </div>
+                <div class="relative group" vid="95">
+                    <div class="text-zinc-200 text-6xl font-bold mb-6 group-hover:text-[#111111] transition-colors" vid="96">03</div>
+                    <h4 class="font-medium mb-2 text-[#111111]" vid="97">重建</h4>
+                    <p class="text-sm text-secondary" vid="98">实时生成 PPTX 结构，清理背景噪点，对齐视觉元素。</p>
+                </div>
+                <div class="relative group" vid="99">
+                    <div class="text-zinc-200 text-6xl font-bold mb-6 group-hover:text-[#111111] transition-colors" vid="100">04</div>
+                    <h4 class="font-medium mb-2 text-[#111111]" vid="101">导出</h4>
+                    <p class="text-sm text-secondary" vid="102">一键保存为标准 PowerPoint 文件，完美兼容主流幻灯片软件。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="pricing" class="py-24 px-6 bg-white" vid="103">
+        <div class="max-w-[1280px] mx-auto" vid="104">
+            <div class="text-center mb-16" vid="105">
+                <h2 class="text-3xl font-medium mb-4 text-[#111111]" vid="106">按页面复杂度选择恢复深度</h2>
+                <p class="text-secondary" vid="107">无论简单草稿还是复杂视觉，均能提供精准的恢复方案。</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6" vid="108">
+
+                <div class="p-8 border border-subtle rounded-lg bg-white hover:bg-zinc-50 transition-colors" vid="109">
+                    <div class="mb-6" vid="110">
+                        <span class="text-xs uppercase tracking-widest text-secondary font-semibold" vid="111">BASIC</span>
+                        <h3 class="text-xl font-medium mt-2 text-[#111111]" vid="112">标准还原</h3>
+                    </div>
+                    <p class="text-sm text-secondary mb-8 leading-relaxed" vid="113">
+                        适用于简单文档。快速提取文本并生成对应的 PPTX 页面，保持基本排版对齐。
+                    </p>
+                    <ul class="space-y-3 mb-8 text-sm" vid="114">
+                        <li class="flex items-center gap-2 text-[#111111]" vid="115"><i class="ph ph-check text-green-600" vid="116"></i> 文字 OCR 还原</li>
+                        <li class="flex items-center gap-2 text-[#111111]" vid="117"><i class="ph ph-check text-green-600" vid="118"></i> 基本布局对齐</li>
+                        <li class="flex items-center gap-2 text-secondary/50" vid="119"><i class="ph ph-minus" vid="120"></i> 元素深度分层</li>
+                    </ul>
+                </div>
+
+
+                <div class="p-8 border border-[#111111]/20 rounded-lg bg-zinc-50 hover:bg-zinc-100 transition-colors relative" vid="121">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#111111] text-white text-[10px] font-bold px-3 py-1 rounded-full" vid="122">POPULAR</div>
+                    <div class="mb-6" vid="123">
+                        <span class="text-xs uppercase tracking-widest text-secondary font-semibold" vid="124">ADVANCED</span>
+                        <h3 class="text-xl font-medium mt-2 text-[#111111]" vid="125">元素分层</h3>
+                    </div>
+                    <p class="text-sm text-secondary mb-8 leading-relaxed" vid="126">
+                        适用于设计类 PPT。支持图标与装饰元素的独立分层，提供更灵活的后续编辑能力。
+                    </p>
+                    <ul class="space-y-3 mb-8 text-sm" vid="127">
+                        <li class="flex items-center gap-2 text-[#111111]" vid="128"><i class="ph ph-check text-green-600" vid="129"></i> 文字 OCR 还原</li>
+                        <li class="flex items-center gap-2 text-[#111111]" vid="130"><i class="ph ph-check text-green-600" vid="131"></i> 装饰元素自动切图</li>
+                        <li class="flex items-center gap-2 text-[#111111]" vid="132"><i class="ph ph-check text-green-600" vid="133"></i> 背景自动补全</li>
+                    </ul>
+                </div>
+
+
+                <div class="p-8 border border-subtle rounded-lg bg-white hover:bg-zinc-50 transition-colors" vid="134">
+                    <div class="mb-6" vid="135">
+                        <span class="text-xs uppercase tracking-widest text-secondary font-semibold" vid="136">PRO</span>
+                        <h3 class="text-xl font-medium mt-2 text-[#111111]" vid="137">AI 智能分层</h3>
+                    </div>
+                    <p class="text-sm text-secondary mb-8 leading-relaxed" vid="138">
+                        针对 AI 生成图片进行深度语义解析，重构逻辑层级，将复杂的 AI 产出转化为可用的工作素材。
+                    </p>
+                    <ul class="space-y-3 mb-8 text-sm" vid="139">
+                        <li class="flex items-center gap-2 text-[#111111]" vid="140"><i class="ph ph-check text-green-600" vid="141"></i> 深度语义解析</li>
+                        <li class="flex items-center gap-2 text-[#111111]" vid="142"><i class="ph ph-check text-green-600" vid="143"></i> 智能逻辑分组</li>
+                        <li class="flex items-center gap-2 text-[#111111]" vid="144"><i class="ph ph-check text-green-600" vid="145"></i> 高级图像修复</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <footer id="download" class="py-24 px-6 border-t border-subtle bg-white" vid="146">
+        <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-start gap-12" vid="147">
+            <div vid="148">
+                <div class="flex items-center gap-2 font-bold text-xl tracking-tight mb-4 text-[#111111]" vid="149">
+                    <i class="ph-bold ph-intersect-square" vid="150"></i>
+                    <span vid="151">DeckLens</span>
+                </div>
+                <p class="text-secondary text-sm max-w-sm mb-6" vid="152">
+                    桌面客户端现已完全开源。我们致力于为内容创作者提供最高效的 PPT 恢复与二次编辑工具。
+                </p>
+                <div class="flex gap-4" vid="153">
+                    <a class="bg-zinc-100 text-[#111111] px-4 py-2 rounded text-xs font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2" vid="154" href="https://updates.dsxzai.com/download/mac"><i class="ph ph-desktop" vid="155"></i> 下载 macOS 版</a>
+                    <a class="bg-zinc-100 text-[#111111] px-4 py-2 rounded text-xs font-medium hover:bg-zinc-200 transition-colors flex items-center gap-2" vid="156" href="https://updates.dsxzai.com/download/windows"><i class="ph ph-microsoft-windows-logo" vid="157"></i> 下载 Windows 版</a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-16" vid="158">
+                <div vid="159">
+                    <h5 class="text-xs font-bold uppercase tracking-widest mb-6 text-[#111111]" vid="160">产品</h5>
+                    <ul class="space-y-4 text-sm text-secondary" vid="161">
+                        <li vid="162"><a href="#download" class="hover:text-[#111111] transition-colors" vid="163">下载中心</a></li>
+                        <li vid="164"><a href="https://github.com/jadon7/DeckLens-Desktop/releases" class="hover:text-[#111111] transition-colors" vid="165" target="_blank" rel="noopener noreferrer">版本说明</a></li>
+                        <li vid="173"><a href="https://github.com/jadon7/DeckLens-Desktop/issues" class="hover:text-[#111111] transition-colors" vid="174" target="_blank" rel="noopener noreferrer">Issues</a></li>
+                    </ul>
+                </div>
+                <div vid="177">
+                    <h5 class="text-xs font-bold uppercase tracking-widest mb-6 text-[#111111]" vid="178">法律</h5>
+                    <ul class="space-y-4 text-sm text-secondary" vid="179">
+                        <li vid="180"><a href="https://github.com/jadon7/DeckLens-Desktop" class="hover:text-[#111111] transition-colors" vid="181" target="_blank" rel="noopener noreferrer">隐私政策</a></li>
+                        <li vid="182"><a href="https://github.com/jadon7/DeckLens-Desktop/blob/main/LICENSE" class="hover:text-[#111111] transition-colors" vid="183" target="_blank" rel="noopener noreferrer">许可协议</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-[1280px] mx-auto mt-24 pt-8 border-t border-subtle flex justify-between items-center text-xs text-secondary" vid="184">
+            <span vid="185">© 2024 DeckLens Open Source Project.</span>
+            <div class="flex gap-6" vid="186">
+                <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" class="hover:text-[#111111]" vid="187" target="_blank" rel="noopener noreferrer">抖音</a>
+                <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&xsec_source=pc_search" class="hover:text-[#111111]" vid="188" target="_blank" rel="noopener noreferrer">小红书</a>
+                <a href="https://space.bilibili.com/3537118131391269" class="hover:text-[#111111]" vid="189" target="_blank" rel="noopener noreferrer">B 站</a>
+                <a href="https://github.com/jadon7/DeckLens-Desktop" class="hover:text-[#111111]" vid="190" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </div>
+        </div>
     </footer>
 
-    <script>
-      (() => {
-        const platform = navigator.userAgent || navigator.platform || '';
-        const isWindows = /Windows/i.test(platform);
-        const downloadHref = isWindows
-          ? 'https://updates.dsxzai.com/download/windows'
-          : 'https://updates.dsxzai.com/download/mac';
-        const downloadText = isWindows ? '下载 Windows 版' : '下载 macOS 版';
-        const primary = document.getElementById('downloadLink');
-        const nav = document.getElementById('navDownloadLink');
-        if (primary) {
-          primary.href = downloadHref;
-          primary.lastChild.textContent = downloadText;
-        }
-        if (nav) {
-          nav.href = downloadHref;
-        }
-      })();
-    </script>
-  </body>
-</html>
+
+<script>
+(() => {
+  const mac = 'https://updates.dsxzai.com/download/mac';
+  const windows = 'https://updates.dsxzai.com/download/windows';
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const href = /Windows/i.test(ua + platform) ? windows : mac;
+  document.querySelectorAll('[data-platform-download]').forEach((link) => {
+    link.setAttribute('href', href);
+  });
+})();
+</script>
+</body></html>

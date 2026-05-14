@@ -12,10 +12,14 @@ animate, preview mode needed more bottom breathing room, update downloads
 needed visible progress, and the top-right panel entry focus style should not
 show the browser default yellow outline.
 
-The public website also needed to match the newer reference direction: a
-minimal product page with centered headline, simple navigation, primary
-download action, GitHub action, and a desktop preview visible in the first
-viewport.
+The public website also needed to match the saved Variant design exported by
+the user, preserving the adjusted copy and visual structure while replacing
+placeholder links with production download and repository destinations.
+
+The macOS frameless window had a recurring conflict between the draggable title
+area and the top-right PPT list/settings entry buttons: expanding the drag
+region could block clicks, while prioritizing clicks made the top area feel
+undraggable.
 
 ## Decision
 
@@ -26,12 +30,19 @@ viewport.
 - Replace default focus outlines on the PPT list and settings entry buttons
   with the existing blue focus treatment.
 - Add a settings update progress bar for checking/downloading states.
-- Rebuild `site/index.html` into a simpler, reference-aligned landing page and
-  keep stable Cloudflare download links.
+- Rebuild `site/index.html` from the user's saved Variant export, preserving
+  the exported design and copy while wiring navigation, GitHub, and Cloudflare
+  download links.
+- Use the user's exported UI icons for settings, PPT history, open, reveal in
+  Finder, and delete actions.
+- Separate the macOS draggable top region from the right-side controls and keep
+  the controls above it with explicit `no-drag` behavior.
 
 ## Consequences
 
 - Desktop UI interactions feel less browser-like and more app-like.
 - Update download progress is visible in the settings panel.
-- The website now matches the current product positioning and has been
-  deployed to Cloudflare Pages.
+- The website now matches the user's saved design export and has production
+  links suitable for Cloudflare Pages deployment.
+- The top-right app controls remain clickable while the empty top area remains
+  usable for moving the window.
