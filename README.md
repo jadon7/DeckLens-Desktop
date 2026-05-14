@@ -132,7 +132,9 @@ download routes are:
 
 Those routes read the latest electron-builder metadata from R2 and redirect to
 the current versioned installer artifact, so the product website does not need
-to hard-code release file names.
+to hard-code release file names. The redirect is not cached and includes the
+artifact digest as a query string, while installer artifacts use immutable
+caching and proper `Range` responses for cancel/resume downloads.
 
 ## CLI Conversion
 

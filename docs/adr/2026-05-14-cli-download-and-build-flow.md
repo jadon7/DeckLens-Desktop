@@ -19,8 +19,11 @@ and AI modes, and can emit JSON for Agents. The repository also includes a
 
 Expose stable Cloudflare update Worker routes at `/download`, `/download/mac`,
 and `/download/windows`. These routes read the current electron-builder
-metadata from R2 and redirect to versioned installer artifacts. The website can
-therefore link to stable routes while release uploads remain versioned.
+metadata from R2 and redirect to versioned installer artifacts with the artifact
+digest appended as a query string. The redirects are not cached, while
+installer artifacts are immutable and support explicit `Range` responses for
+browser cancel/resume downloads. The website can therefore link to stable routes
+while release uploads remain versioned.
 
 Add explicit unsigned build scripts for local validation. Signed and notarized
 builds remain reserved for release publishing.
@@ -31,5 +34,7 @@ builds remain reserved for release publishing.
 - Website download links can stay stable across releases.
 - R2 artifacts remain cacheable with long immutable headers, while latest
   metadata and download redirects stay fresh.
+- Interrupted installer downloads can resume through standard HTTP 206 partial
+  content responses instead of saving a short partial file as the full download.
 - Developers can run fast local builds without accidentally entering the
   signing or notarization flow.

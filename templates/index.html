@@ -2789,6 +2789,11 @@
         }
 
         body {
+            display: block;
+            align-items: stretch;
+        }
+
+        body {
             align-items: stretch;
             font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
         }
@@ -2839,7 +2844,7 @@
             backdrop-filter: blur(16px);
             cursor: pointer;
             pointer-events: auto;
-            transition: right 0.22s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+            transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
             -webkit-app-region: no-drag;
         }
 
@@ -2849,14 +2854,6 @@
 
         .ppt-sidebar-button {
             right: 72px;
-        }
-
-        body.ppt-sidebar-open .settings-button {
-            right: calc(var(--ppt-sidebar-width) + 22px);
-        }
-
-        body.ppt-sidebar-open .ppt-sidebar-button {
-            right: calc(var(--ppt-sidebar-width) + 72px);
         }
 
         .ppt-sidebar-button[aria-expanded="true"] {
@@ -2913,7 +2910,7 @@
             position: fixed;
             top: 0;
             right: 0;
-            z-index: 100;
+            z-index: 70;
             display: flex;
             flex-direction: column;
             width: min(var(--ppt-sidebar-width), calc(100vw - 28px));
@@ -2935,14 +2932,14 @@
         .ppt-sidebar-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
             gap: 12px;
-            padding: 82px 14px 12px;
+            padding: 82px 14px 10px;
             border-bottom: 1px solid #e2e2df;
         }
 
         .ppt-sidebar-title {
-            display: grid;
+            display: none;
             gap: 4px;
         }
 
@@ -3242,6 +3239,7 @@
         .settings-link-row a {
             display: inline-flex;
             align-items: center;
+            gap: 7px;
             min-height: 30px;
             padding: 0 11px;
             border: 1px solid #e2e2e2;
@@ -3251,6 +3249,36 @@
             font-size: 12px;
             font-weight: 650;
             text-decoration: none;
+        }
+
+        .platform-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            background: #111;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 850;
+            line-height: 1;
+        }
+
+        .platform-icon.douyin {
+            background: linear-gradient(135deg, #111 0%, #111 48%, #00f5ff 49%, #fe2c55 100%);
+        }
+
+        .platform-icon.xiaohongshu {
+            background: #ff2442;
+            font-size: 8px;
+        }
+
+        .platform-icon.bilibili {
+            background: #00aeec;
+            font-size: 12px;
+            font-family: Georgia, serif;
+            font-style: italic;
         }
 
         .settings-link-row a:hover {
@@ -3289,6 +3317,7 @@
             width: 100%;
             max-width: none;
             height: 100vh;
+            margin: 0;
             padding: 0;
             overflow: hidden;
             background: #fff;
@@ -3985,9 +4014,9 @@
                         <strong data-i18n="settings.author.title">作者</strong>
                         <small data-i18n="settings.author.name">大师的AI小灶</small>
                         <div class="settings-link-row">
-                            <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noreferrer" data-i18n="settings.author.douyin">抖音</a>
-                            <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&amp;xsec_source=pc_search" target="_blank" rel="noreferrer" data-i18n="settings.author.xiaohongshu">小红书</a>
-                            <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noreferrer" data-i18n="settings.author.bilibili">B 站</a>
+                            <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noreferrer"><span class="platform-icon douyin" aria-hidden="true">抖</span><span data-i18n="settings.author.douyin">抖音</span></a>
+                            <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&amp;xsec_source=pc_search" target="_blank" rel="noreferrer"><span class="platform-icon xiaohongshu" aria-hidden="true">RED</span><span data-i18n="settings.author.xiaohongshu">小红书</span></a>
+                            <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noreferrer"><span class="platform-icon bilibili" aria-hidden="true">b</span><span data-i18n="settings.author.bilibili">B 站</span></a>
                         </div>
                     </div>
                 </div>

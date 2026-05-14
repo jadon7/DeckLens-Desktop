@@ -48,6 +48,39 @@ function parseArtifactPath(metadata) {
   return match ? match[1].trim().replace(/^["']|["']$/g, "") : "";
 }
 
+function parseArtifactDigest(metadata) {
+  const match = metadata.match(/^sha512:\s*(.+)$/m);
+  return match ? match[1].trim().replace(/^["']|["']$/g, "").slice(0, 24) : "";
+}
+
+function parseRangeHeader(rangeHeader, size) {
+  if (!rangeHeader) return null;
+
+  const match = rangeHeader.match(/^bytes=(\d*)-(\d*)$/);
+  if (!match) return { error: "Invalid range" };
+
+  const [, rawStart, rawEnd] = match;
+  if (!rawStart && !rawEnd) return { error: "Invalid range" };
+
+  if (!rawStart) {
+    const suffixLength = Number(rawEnd);
+    if (!Number.isInteger(suffixLength) || suffixLength <= 0) return { error: "Invalid range" };
+    const offset = Math.max(size - suffixLength, 0);
+    return { offset, length: size - offset };
+  }
+
+  const offset = Number(rawStart);
+  const requestedEnd = rawEnd ? Number(rawEnd) : size - 1;
+  if (!Number.isInteger(offset) || !Number.isInteger(requestedEnd) || offset < 0 || requestedEnd < offset) {
+    return { error: "Invalid range" };
+  }
+
+  if (offset >= size) return { error: "Range not satisfiable" };
+
+  const end = Math.min(requestedEnd, size - 1);
+  return { offset, length: end - offset + 1 };
+}
+
 async function downloadRedirect(request, env, platform) {
   const metadataKey = downloadMetadataKey(platform);
   const metadata = await env.DECKLENS_UPDATES.get(metadataKey);
@@ -61,7 +94,8 @@ async function downloadRedirect(request, env, platform) {
     });
   }
 
-  const artifactPath = parseArtifactPath(await metadata.text());
+  const metadataText = await metadata.text();
+  const artifactPath = parseArtifactPath(metadataText);
   if (!artifactPath) {
     return new Response(`Release metadata is missing an artifact path: ${metadataKey}`, {
       status: 502,
@@ -74,8 +108,15 @@ async function downloadRedirect(request, env, platform) {
 
   const url = new URL(request.url);
   url.pathname = `/${artifactPath}`;
-  url.search = "";
-  return Response.redirect(url.toString(), 302);
+  const digest = parseArtifactDigest(metadataText);
+  url.search = digest ? `?v=${encodeURIComponent(digest)}` : "";
+  return new Response(null, {
+    status: 302,
+    headers: {
+      ...baseHeaders(metadataKey),
+      Location: url.toString()
+    }
+  });
 }
 
 export default {
@@ -123,9 +164,36 @@ export default {
       });
     }
 
+    const rangeHeader = request.headers.get("Range");
+    let requestedRange = null;
+    if (rangeHeader) {
+      const head = await env.DECKLENS_UPDATES.head(key);
+      if (head === null) {
+        return new Response("Not found", {
+          status: 404,
+          headers: {
+            ...baseHeaders(key),
+            "Content-Type": "text/plain; charset=utf-8"
+          }
+        });
+      }
+
+      requestedRange = parseRangeHeader(rangeHeader, head.size);
+      if (requestedRange?.error) {
+        return new Response(requestedRange.error, {
+          status: requestedRange.error === "Range not satisfiable" ? 416 : 400,
+          headers: {
+            ...baseHeaders(key),
+            "Content-Range": `bytes */${head.size}`,
+            "Content-Type": "text/plain; charset=utf-8"
+          }
+        });
+      }
+    }
+
     const object = await env.DECKLENS_UPDATES.get(key, {
       onlyIf: request.headers,
-      range: request.headers
+      range: requestedRange || undefined
     });
 
     if (object === null) {
@@ -146,12 +214,16 @@ export default {
       headers.set("Content-Disposition", `attachment; filename="${key.split("/").pop()}"`);
     }
 
-    const hasRange = object.range &&
-      Number.isFinite(object.range.offset) &&
-      Number.isFinite(object.range.end);
+    const hasRange = requestedRange &&
+      Number.isFinite(requestedRange.offset) &&
+      Number.isFinite(requestedRange.length);
 
     if (hasRange) {
-      headers.set("Content-Range", `bytes ${object.range.offset}-${object.range.end - 1}/${object.size}`);
+      const end = requestedRange.offset + requestedRange.length - 1;
+      headers.set("Content-Range", `bytes ${requestedRange.offset}-${end}/${object.size}`);
+      headers.set("Content-Length", String(requestedRange.length));
+    } else {
+      headers.set("Content-Length", String(object.size));
     }
 
     return new Response(request.method === "HEAD" ? null : object.body, {
