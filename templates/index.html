@@ -20,6 +20,27 @@
             display: none;
         }
 
+        html,
+        body,
+        button,
+        a,
+        label,
+        select,
+        .mode-card,
+        .option-card,
+        .ppt-history-item,
+        .preview-panel {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        input,
+        textarea,
+        [contenteditable="true"] {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #0f0f0f;
@@ -2883,6 +2904,17 @@
             background: #fff;
         }
 
+        .ppt-sidebar-button:focus,
+        .settings-button:focus {
+            outline: none;
+        }
+
+        .ppt-sidebar-button:focus-visible,
+        .settings-button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(80, 156, 248, 0.18);
+        }
+
         .ppt-sidebar-button[aria-expanded="true"]:hover,
         .settings-button[aria-expanded="true"]:hover {
             background: #111;
@@ -3033,7 +3065,6 @@
             display: grid;
             gap: 5px;
             min-width: 0;
-            transition: padding-right 0.14s ease;
         }
 
         .ppt-history-item:hover .ppt-history-main,
@@ -3301,6 +3332,37 @@
 
         .settings-update-status.error .settings-update-dot {
             background: #ef4444;
+        }
+
+        .settings-update-progress {
+            display: none;
+            width: 100%;
+            height: 6px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e7e7e4;
+        }
+
+        .settings-update-progress.active {
+            display: block;
+        }
+
+        .settings-update-progress-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: inherit;
+            background: #509cf8;
+            transition: width 0.16s ease;
+        }
+
+        .settings-update-progress.checking .settings-update-progress-fill {
+            width: 42%;
+            animation: updateProgressSweep 1.1s ease-in-out infinite;
+        }
+
+        @keyframes updateProgressSweep {
+            0% { transform: translateX(-110%); }
+            100% { transform: translateX(250%); }
         }
 
         .settings-actions {
@@ -3943,7 +4005,7 @@
             height: 100vh;
             max-width: 100%;
             margin: 0;
-            padding: 18px;
+            padding: 18px 18px 30px;
             overflow: hidden;
             border: 0;
             border-radius: 0;
@@ -4122,6 +4184,9 @@
                         <div class="settings-update-status" id="updateStatus" aria-live="polite">
                             <span class="settings-update-dot" aria-hidden="true"></span>
                             <span id="updateText" data-i18n="settings.update.idle">检查更新</span>
+                        </div>
+                        <div class="settings-update-progress" id="updateProgressBar" aria-hidden="true">
+                            <span class="settings-update-progress-fill" id="updateProgressFill"></span>
                         </div>
                         <div class="settings-actions">
                             <button class="settings-action" id="updateButton" type="button" data-i18n="settings.update.check">检查更新</button>
@@ -5388,6 +5453,8 @@
             const updateStatus = document.getElementById('updateStatus');
             const text = document.getElementById('updateText');
             const button = document.getElementById('updateButton');
+            const progressBar = document.getElementById('updateProgressBar');
+            const progressFill = document.getElementById('updateProgressFill');
             const versionText = document.getElementById('appVersionText');
             const languageSelect = document.getElementById('languageSelect');
             const updates = window.decklensRuntime?.updates;
@@ -5473,6 +5540,17 @@
                 text.textContent = updateMessage(currentStatus);
                 button.disabled = state === 'checking' || state === 'downloading';
                 button.classList.toggle('secondary', state !== 'available' && state !== 'downloaded');
+                if (progressBar && progressFill) {
+                    const showProgress = state === 'checking' || state === 'downloading';
+                    progressBar.classList.toggle('active', showProgress);
+                    progressBar.classList.toggle('checking', state === 'checking');
+                    if (state === 'downloading') {
+                        const percent = Math.max(0, Math.min(100, Math.round(currentStatus.progress?.percent || 0)));
+                        progressFill.style.width = `${percent}%`;
+                    } else {
+                        progressFill.style.width = state === 'checking' ? '42%' : '0%';
+                    }
+                }
 
                 if (state === 'available') {
                     button.textContent = t('settings.update.download');
