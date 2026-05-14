@@ -62,7 +62,16 @@
             font-weight: 500;
         }
         .hero-social-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             transition: color 0.16s ease;
+        }
+        .hero-social-links img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            border-radius: 50%;
         }
         .hero-social-links a:hover {
             color: #111111;
@@ -1109,9 +1118,9 @@ video {
                 </a>
             </div>
             <div class="hero-social-links" aria-label="社交媒体链接">
-                <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noopener noreferrer">抖音</a>
-                <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&xsec_source=pc_search" target="_blank" rel="noopener noreferrer">小红书</a>
-                <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noopener noreferrer">B 站</a>
+                <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noopener noreferrer"><img src="/assets/social/douyin.svg" alt="" aria-hidden="true">抖音</a>
+                <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&xsec_source=pc_search" target="_blank" rel="noopener noreferrer"><img src="/assets/social/xiaohongshu.svg" alt="" aria-hidden="true">小红书</a>
+                <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noopener noreferrer"><img src="/assets/social/bilibili.svg" alt="" aria-hidden="true">B 站</a>
             </div>
 
 
@@ -1186,10 +1195,10 @@ video {
                     </div>
                     <div class="flex gap-6" vid="75">
                         <div class="w-12 h-12 rounded bg-zinc-50 border border-subtle flex items-center justify-center shrink-0" vid="76">
-                            <i class="ph ph-layers text-xl text-[#111111]" vid="77"></i>
+                            <i class="ph ph-selection-all text-xl text-[#111111]" vid="77"></i>
                         </div>
                         <div vid="78">
-                            <h3 class="font-medium mb-2 text-[#111111] inline-flex items-center gap-2" vid="79"><i class="ph ph-selection-all text-base" aria-hidden="true"></i>元素分层可人工校对</h3>
+                            <h3 class="font-medium mb-2 text-[#111111]" vid="79">元素分层可人工校对</h3>
                             <p class="text-sm text-secondary leading-relaxed" vid="80">图形、图标、文字自动分层管理，支持在导出前进行可视化预览与逻辑调整，保证产出质量。</p>
                         </div>
                     </div>
