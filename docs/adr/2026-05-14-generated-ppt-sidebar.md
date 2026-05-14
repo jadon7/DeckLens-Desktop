@@ -18,13 +18,22 @@ from the desktop output directory and lets users open a deck with the system
 default app, reveal it in the local folder, or delete it.
 
 The sidebar uses a Codex-like two-area layout: the main workbench keeps the
-white canvas and shrinks from the left edge, while the history panel uses a
-muted side background without an overlay shadow. The top history/settings entry
-buttons keep a fixed position above the workbench and sidebar. The history
-entry button is the only open/close control, and the panel omits a separate
-header, close button, and refresh button to keep the side rail lightweight.
-When a conversion completes, DeckLens refreshes and opens this history panel
-directly instead of showing a separate result card.
+white canvas and shrinks from the left edge, while the right panel uses a muted
+side background without an overlay shadow. The history and settings entry
+buttons keep a fixed position above the workbench and side panel, and only one
+right-side panel can be open at a time. Each entry button is also its panel's
+open/close control, so the panels omit separate close buttons and redundant
+headers.
+
+On macOS, a fixed drag region stays above both the workbench and the right-side
+panel while leaving the floating entry buttons non-draggable. This preserves
+window dragging from the app's top area even when a side panel is open.
+
+History file actions stay hidden until the row is hovered or focused. This
+keeps the generated PPT list scannable while preserving open, reveal, and
+delete actions. Settings uses the same side-panel structure as history instead
+of a modal overlay. When a conversion completes, DeckLens refreshes and opens
+the history panel directly instead of showing a separate result card.
 
 The file operations are implemented in the Electron main process. The renderer
 passes only output file names, and the main process resolves them inside

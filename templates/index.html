@@ -2804,10 +2804,10 @@
 
         .electron-shell.platform-darwin .window-drag-region {
             position: fixed;
-            inset: 0 88px auto 0;
-            z-index: 50;
+            inset: 0 0 auto 0;
+            z-index: 75;
             display: block;
-            height: 44px;
+            height: 56px;
             -webkit-app-region: drag;
         }
 
@@ -2823,21 +2823,21 @@
         .electron-shell.platform-darwin .ppt-sidebar-button,
         .electron-shell.platform-darwin .ppt-sidebar,
         .electron-shell.platform-darwin .settings-button,
-        .electron-shell.platform-darwin .settings-modal {
+        .electron-shell.platform-darwin .settings-panel {
             -webkit-app-region: no-drag;
         }
 
         .ppt-sidebar-button,
         .settings-button {
             position: fixed;
-            top: 54px;
+            top: 16px;
             z-index: 80;
             display: none;
             align-items: center;
             justify-content: center;
             width: 42px;
             height: 42px;
-            border: 1px solid rgba(0, 0, 0, 0.10);
+            border: 0;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.92);
             color: #111;
@@ -2856,8 +2856,8 @@
             right: 72px;
         }
 
-        .ppt-sidebar-button[aria-expanded="true"] {
-            border-color: rgba(0, 0, 0, 0.24);
+        .ppt-sidebar-button[aria-expanded="true"],
+        .settings-button[aria-expanded="true"] {
             background: #111;
             color: #fff;
         }
@@ -2890,11 +2890,11 @@
 
         .ppt-sidebar-button:hover,
         .settings-button:hover {
-            border-color: rgba(0, 0, 0, 0.22);
             background: #fff;
         }
 
-        .ppt-sidebar-button[aria-expanded="true"]:hover {
+        .ppt-sidebar-button[aria-expanded="true"]:hover,
+        .settings-button[aria-expanded="true"]:hover {
             background: #111;
             color: #fff;
         }
@@ -2906,7 +2906,8 @@
             pointer-events: none;
         }
 
-        .ppt-sidebar {
+        .ppt-sidebar,
+        .settings-panel {
             position: fixed;
             top: 0;
             right: 0;
@@ -2924,7 +2925,8 @@
             -webkit-app-region: no-drag;
         }
 
-        .ppt-sidebar.active {
+        .ppt-sidebar.active,
+        .settings-panel.active {
             transform: translateX(0);
             pointer-events: auto;
         }
@@ -3015,9 +3017,11 @@
         }
 
         .ppt-history-item {
+            position: relative;
             display: grid;
-            gap: 12px;
-            padding: 10px 8px;
+            min-height: 62px;
+            gap: 5px;
+            padding: 10px 12px;
             border: 0;
             border-radius: 7px;
             background: transparent;
@@ -3052,25 +3056,41 @@
         }
 
         .ppt-history-actions {
+            position: absolute;
+            top: 50%;
+            right: 8px;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 4px;
+            max-width: calc(100% - 16px);
+            padding: 4px;
+            border-radius: 999px;
+            background: rgba(245, 245, 244, 0.92);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-50%);
+            transition: opacity 0.14s ease, background 0.14s ease;
+        }
+
+        .ppt-history-item:hover .ppt-history-actions,
+        .ppt-history-item:focus-within .ppt-history-actions {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .ppt-history-action {
-            min-height: 30px;
-            padding: 0 11px;
-            border: 1px solid #dededb;
+            min-height: 26px;
+            padding: 0 9px;
+            border: 0;
             border-radius: 999px;
-            background: #fdfdfc;
-            color: #111;
-            font-size: 12px;
+            background: transparent;
+            color: #555;
+            font-size: 11px;
             font-weight: 650;
             cursor: pointer;
         }
 
         .ppt-history-action.primary {
-            border-color: #111;
             background: #111;
             color: #fff;
         }
@@ -3080,48 +3100,29 @@
         }
 
         .ppt-history-action:hover {
-            border-color: #bdbdbd;
-            background: #f8f8f8;
+            background: #fff;
+            color: #111;
         }
 
         .ppt-history-action.primary:hover {
-            border-color: #111;
             background: #222;
         }
 
-        .settings-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 120;
-            display: none;
-            align-items: flex-start;
-            justify-content: flex-end;
-            padding: 104px 24px 24px;
-            background: rgba(255, 255, 255, 0.20);
-            backdrop-filter: blur(6px);
-        }
-
-        .settings-overlay.active {
-            display: flex;
+        .settings-panel {
+            z-index: 70;
         }
 
         .settings-modal {
-            width: min(440px, calc(100vw - 32px));
-            max-height: calc(100vh - 96px);
-            overflow: auto;
-            border: 1px solid rgba(0, 0, 0, 0.10);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            min-height: 0;
+            width: 100%;
             color: #111;
         }
 
         .settings-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 18px 18px 10px;
+            display: none;
         }
 
         .settings-header strong {
@@ -3144,23 +3145,30 @@
 
         .settings-body {
             display: grid;
+            flex: 1;
             gap: 8px;
-            padding: 0 18px 18px;
+            min-height: 0;
+            overflow: auto;
+            padding: 82px 8px 8px;
         }
 
         .settings-section {
             display: grid;
             gap: 10px;
-            padding: 14px;
-            border: 1px solid #e7e7e7;
-            border-radius: 8px;
-            background: #fff;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            padding: 12px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            transition: background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .settings-section:hover {
+            background: #ececea;
         }
 
         .settings-section.highlight {
-            border-color: #050505;
             box-shadow: 0 0 0 3px rgba(206, 255, 102, 0.72);
+            background: #fff;
         }
 
         .settings-section label,
@@ -3233,21 +3241,20 @@
         .settings-link-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
 
         .settings-link-row a {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            min-height: 30px;
-            padding: 0 11px;
-            border: 1px solid #e2e2e2;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border: 0;
             border-radius: 999px;
-            background: #fff;
+            background: transparent;
             color: #111;
-            font-size: 12px;
-            font-weight: 650;
             text-decoration: none;
         }
 
@@ -3255,11 +3262,10 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 18px;
-            height: 18px;
-            border-radius: 5px;
-            background: #111;
-            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            background: transparent;
             overflow: hidden;
         }
 
@@ -3270,8 +3276,7 @@
         }
 
         .settings-link-row a:hover {
-            border-color: #bdbdbd;
-            background: #f8f8f8;
+            background: #fff;
         }
 
         .settings-action {
@@ -3312,7 +3317,7 @@
             transition: width 0.22s ease;
         }
 
-        body.ppt-sidebar-open .container {
+        body.side-panel-open .container {
             width: calc(100% - min(var(--ppt-sidebar-width), calc(100vw - 28px)));
         }
 
@@ -3354,7 +3359,7 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             pointer-events: none;
-            -webkit-app-region: no-drag;
+            -webkit-app-region: drag;
         }
 
         .electron-shell.platform-darwin .workbench-nav {
@@ -3915,7 +3920,7 @@
             <path d="M8.25 8.5h7.5M8.25 12h7.5M8.25 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
         </svg>
     </button>
-    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" onclick="openSettings()">
+    <button class="settings-button" id="settingsButton" type="button" aria-label="打开设置" data-i18n-aria-label="settings.open" aria-controls="settingsOverlay" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" stroke="currentColor" stroke-width="1.8"></path>
             <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.07a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.07A1.7 1.7 0 0 0 4.6 8.94a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 10 3.07V3a2 2 0 1 1 4 0v.07a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04a1.7 1.7 0 0 0-.34 1.88 1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.07A1.7 1.7 0 0 0 19.4 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
@@ -3926,7 +3931,7 @@
             <div class="ppt-history-list" id="pptHistoryList"></div>
         </div>
     </aside>
-    <div class="settings-overlay" id="settingsOverlay" aria-hidden="true">
+    <aside class="settings-panel" id="settingsOverlay" aria-hidden="true">
         <section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
             <div class="settings-header">
                 <strong id="settingsTitle" data-i18n="settings.title">设置</strong>
@@ -3984,15 +3989,15 @@
                         <strong data-i18n="settings.author.title">作者</strong>
                         <small data-i18n="settings.author.name">大师的AI小灶</small>
                         <div class="settings-link-row">
-                            <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noreferrer"><span class="platform-icon" aria-hidden="true"><img src="/static/social/douyin.svg" alt=""></span><span data-i18n="settings.author.douyin">抖音</span></a>
-                            <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&amp;xsec_source=pc_search" target="_blank" rel="noreferrer"><span class="platform-icon" aria-hidden="true"><img src="/static/social/xiaohongshu.svg" alt=""></span><span data-i18n="settings.author.xiaohongshu">小红书</span></a>
-                            <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noreferrer"><span class="platform-icon" aria-hidden="true"><img src="/static/social/bilibili.svg" alt=""></span><span data-i18n="settings.author.bilibili">B 站</span></a>
+                            <a href="https://www.douyin.com/user/MS4wLjABAAAAohe8JB4RvITJitJ69b7cV4NTaYTMYrVI43C-3SUnPPc" target="_blank" rel="noreferrer" aria-label="抖音" data-i18n-aria-label="settings.author.douyin"><span class="platform-icon" aria-hidden="true"><img src="/static/social/douyin.svg" alt=""></span></a>
+                            <a href="https://www.xiaohongshu.com/user/profile/62e0c2bb000000001501408c?xsec_token=ABrZskc1MUcZWWuuMx7Fw52EM-knOiMylc1lCrGehvd-w%3D&amp;xsec_source=pc_search" target="_blank" rel="noreferrer" aria-label="小红书" data-i18n-aria-label="settings.author.xiaohongshu"><span class="platform-icon" aria-hidden="true"><img src="/static/social/xiaohongshu.svg" alt=""></span></a>
+                            <a href="https://space.bilibili.com/3537118131391269" target="_blank" rel="noreferrer" aria-label="B 站" data-i18n-aria-label="settings.author.bilibili"><span class="platform-icon" aria-hidden="true"><img src="/static/social/bilibili.svg" alt=""></span></a>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-    </div>
+    </aside>
     <div class="container">
         <section class="hero-shell">
             <header class="workbench-nav" aria-label="DeckLens workspace">
@@ -5130,7 +5135,7 @@
             sidebar.classList.add('active');
             sidebar.setAttribute('aria-hidden', 'false');
             button.setAttribute('aria-expanded', 'true');
-            document.body.classList.add('ppt-sidebar-open');
+            document.body.classList.add('side-panel-open');
             refreshPptHistory();
         }
 
@@ -5141,7 +5146,7 @@
             sidebar.classList.remove('active');
             sidebar.setAttribute('aria-hidden', 'true');
             button.setAttribute('aria-expanded', 'false');
-            document.body.classList.remove('ppt-sidebar-open');
+            document.body.classList.remove('side-panel-open');
         }
 
         function togglePptSidebar() {
@@ -5158,11 +5163,7 @@
                 return;
             }
 
-            button.addEventListener('click', (event) => {
-                if (event.detail === 0) togglePptSidebar();
-            });
-            button.addEventListener('pointerdown', (event) => {
-                event.preventDefault();
+            button.addEventListener('click', () => {
                 togglePptSidebar();
             });
             list.addEventListener('click', async (event) => {
@@ -5322,10 +5323,8 @@
             if (updates) updates.onStatus(render);
             loadStatus();
 
-            settingsButton.addEventListener('click', () => openSettings());
-            settingsButton.addEventListener('pointerdown', (event) => {
-                event.preventDefault();
-                openSettings();
+            settingsButton.addEventListener('click', () => {
+                toggleSettings();
             });
             settingsClose.addEventListener('click', closeSettings);
             settingsOverlay.addEventListener('click', (event) => {
@@ -5374,10 +5373,13 @@
 
         function openSettings({ highlightApiKey = false, markFirstRunSeen = false } = {}) {
             const settingsOverlay = document.getElementById('settingsOverlay');
+            const settingsButton = document.getElementById('settingsButton');
             if (!settingsOverlay) return;
             closePptSidebar();
             settingsOverlay.classList.add('active');
             settingsOverlay.setAttribute('aria-hidden', 'false');
+            settingsButton?.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('side-panel-open');
             if (markFirstRunSeen) {
                 localStorage.setItem(SETTINGS_STORAGE.firstRunSeen, '1');
             }
@@ -5391,9 +5393,18 @@
 
         function closeSettings() {
             const settingsOverlay = document.getElementById('settingsOverlay');
+            const settingsButton = document.getElementById('settingsButton');
             if (!settingsOverlay) return;
             settingsOverlay.classList.remove('active');
             settingsOverlay.setAttribute('aria-hidden', 'true');
+            settingsButton?.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('side-panel-open');
+        }
+
+        function toggleSettings() {
+            const settingsOverlay = document.getElementById('settingsOverlay');
+            if (settingsOverlay?.classList.contains('active')) closeSettings();
+            else openSettings();
         }
 
         initPptSidebar();
