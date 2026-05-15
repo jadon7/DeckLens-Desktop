@@ -147,6 +147,8 @@ decklens convert input.png --output output.pptx
 decklens convert input.pdf --mode element --output output.pptx
 decklens convert input.png input2.jpg --json --output output.pptx
 decklens install-skills
+decklens skills status
+decklens skills update
 ```
 
 From a repository checkout, use the local CLI binary or npm shortcut:
@@ -167,7 +169,11 @@ the bundled `decklens-convert` skill into detected user-global Agent skill
 directories such as `~/.codex/skills`, `~/.claude/skills`, `~/.agents/skills`,
 `~/.openclaw/skills`, and `~/.hermes/skills`. The same operation is available
 from the product CLI via `decklens install-skills`, so an Agent can install or
-refresh the global skill without opening the settings panel.
+refresh the global skill without opening the settings panel. Skill installs are
+versioned through `SKILL.md` metadata plus `.decklens-managed.json`; `decklens
+skills status` reports installed versions and `decklens skills update` refreshes
+DeckLens-managed copies while skipping local user edits unless `--force` is
+passed.
 
 ## Website
 

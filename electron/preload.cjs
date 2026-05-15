@@ -31,7 +31,8 @@ contextBridge.exposeInMainWorld('decklensRuntime', {
   },
   agentSkills: {
     getStatus: () => ipcRenderer.invoke('agent-skills:get-status'),
-    install: () => ipcRenderer.invoke('agent-skills:install')
+    install: () => ipcRenderer.invoke('agent-skills:install'),
+    update: () => ipcRenderer.invoke('agent-skills:update')
   },
   windowControls: {
     moveBy: (deltaX, deltaY) => ipcRenderer.send('window:move-by', { deltaX, deltaY })

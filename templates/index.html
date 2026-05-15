@@ -4613,9 +4613,14 @@
                 'settings.agentSkill.title': 'Agent Skill',
                 'settings.agentSkill.help': '安装后，Codex、Claude、OpenClaw、Hermes 等 Agent 可以直接调用 DeckLens CLI 转换文件。',
                 'settings.agentSkill.install': '安装 Agent Skill',
+                'settings.agentSkill.update': '更新 Agent Skill',
                 'settings.agentSkill.installing': '正在安装...',
+                'settings.agentSkill.updating': '正在更新...',
                 'settings.agentSkill.installed': '已安装到 {count} 个位置',
+                'settings.agentSkill.installedVersion': '已安装到 {count} 个位置，当前版本 {version}',
+                'settings.agentSkill.updateAvailable': '{count} 个位置可更新到 {version}',
                 'settings.agentSkill.partial': '已安装 {count} 个位置，{failed} 个失败',
+                'settings.agentSkill.skipped': '已跳过 {count} 个有本地修改的位置',
                 'settings.agentSkill.none': '没有检测到可安装位置',
                 'settings.agentSkill.unavailable': '当前环境不支持安装 Agent Skill',
                 'settings.agentSkill.failed': '安装失败',
@@ -4825,9 +4830,14 @@
                 'settings.agentSkill.title': 'Agent Skill',
                 'settings.agentSkill.help': 'After installation, Codex, Claude, OpenClaw, Hermes, and other Agents can call the DeckLens CLI to convert files.',
                 'settings.agentSkill.install': 'Install Agent Skill',
+                'settings.agentSkill.update': 'Update Agent Skill',
                 'settings.agentSkill.installing': 'Installing...',
+                'settings.agentSkill.updating': 'Updating...',
                 'settings.agentSkill.installed': 'Installed to {count} locations',
+                'settings.agentSkill.installedVersion': 'Installed to {count} locations, current version {version}',
+                'settings.agentSkill.updateAvailable': '{count} locations can update to {version}',
                 'settings.agentSkill.partial': 'Installed to {count} locations, {failed} failed',
+                'settings.agentSkill.skipped': 'Skipped {count} locations with local edits',
                 'settings.agentSkill.none': 'No install locations detected',
                 'settings.agentSkill.unavailable': 'Agent Skill installation is unavailable here',
                 'settings.agentSkill.failed': 'Install failed',
@@ -5639,9 +5649,11 @@
             });
 
             let currentStatus = { status: 'idle' };
+            let currentAgentSkillStatus = null;
 
             function renderAgentSkillStatus(status, message) {
                 if (!agentSkillText || !agentSkillInstallButton) return;
+                currentAgentSkillStatus = status || null;
                 const visibleTargets = status?.visibleTargets || status?.targets?.filter((target) => target.detected || target.installed) || [];
                 if (message) {
                     agentSkillText.textContent = message;
@@ -5649,13 +5661,23 @@
                     agentSkillText.textContent = t('settings.agentSkill.unavailable');
                 } else if (visibleTargets.length === 0) {
                     agentSkillText.textContent = t('settings.agentSkill.none');
+                } else if ((status?.updateAvailableCount || 0) > 0) {
+                    agentSkillText.textContent = t('settings.agentSkill.updateAvailable', {
+                        count: status.updateAvailableCount,
+                        version: status.sourceVersion || ''
+                    });
                 } else if ((status?.installedCount || 0) > 0) {
-                    agentSkillText.textContent = t('settings.agentSkill.installed', { count: status.installedCount });
+                    agentSkillText.textContent = t('settings.agentSkill.installedVersion', {
+                        count: status.installedCount,
+                        version: status.sourceVersion || status.visibleTargets?.find((target) => target.skillVersion)?.skillVersion || ''
+                    });
                 } else {
                     agentSkillText.textContent = t('settings.agentSkill.help');
                 }
                 agentSkillInstallButton.disabled = !agentSkills || visibleTargets.length === 0;
-                agentSkillInstallButton.textContent = t('settings.agentSkill.install');
+                agentSkillInstallButton.textContent = (status?.updateAvailableCount || 0) > 0
+                    ? t('settings.agentSkill.update')
+                    : t('settings.agentSkill.install');
             }
 
             async function loadAgentSkillStatus() {
@@ -5672,13 +5694,17 @@
 
             agentSkillInstallButton?.addEventListener('click', async () => {
                 if (!agentSkills || !agentSkillInstallButton) return;
+                const shouldUpdate = (currentAgentSkillStatus?.updateAvailableCount || 0) > 0;
                 agentSkillInstallButton.disabled = true;
-                agentSkillInstallButton.textContent = t('settings.agentSkill.installing');
+                agentSkillInstallButton.textContent = shouldUpdate ? t('settings.agentSkill.updating') : t('settings.agentSkill.installing');
                 try {
-                    const result = await agentSkills.install();
+                    const result = shouldUpdate && agentSkills.update ? await agentSkills.update() : await agentSkills.install();
                     const installedCount = result.installed?.length || 0;
                     const failedCount = result.failed?.length || 0;
-                    const message = failedCount
+                    const skippedCount = result.skipped?.length || 0;
+                    const message = skippedCount
+                        ? t('settings.agentSkill.skipped', { count: skippedCount })
+                        : failedCount
                         ? t('settings.agentSkill.partial', { count: installedCount, failed: failedCount })
                         : t('settings.agentSkill.installed', { count: installedCount });
                     renderAgentSkillStatus(result, message);

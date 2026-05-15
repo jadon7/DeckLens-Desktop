@@ -6,7 +6,7 @@ const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
-const { getAgentSkillStatus, installAgentSkills } = require('../lib/agent-skills.cjs');
+const { getAgentSkillStatus, installAgentSkills, updateAgentSkills } = require('../lib/agent-skills.cjs');
 
 const UPDATE_FEED_URL = 'https://updates.dsxzai.com/';
 
@@ -650,6 +650,8 @@ function agentSkillOptions() {
 ipcMain.handle('agent-skills:get-status', () => getAgentSkillStatus(agentSkillOptions()));
 
 ipcMain.handle('agent-skills:install', () => installAgentSkills(agentSkillOptions()));
+
+ipcMain.handle('agent-skills:update', () => updateAgentSkills(agentSkillOptions()));
 
 ipcMain.on('window:move-by', (event, delta) => {
   const win = BrowserWindow.fromWebContents(event.sender);

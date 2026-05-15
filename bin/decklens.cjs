@@ -13,12 +13,15 @@ function printHelp() {
 Usage:
   decklens convert <input...> [options]
   decklens install-skills [options]
+  decklens skills status [options]
+  decklens skills update [options]
   decklens --help
 
 Commands:
   convert    Convert image-like presentation pages into an editable PPTX deck.
   install-skills
              Install the DeckLens Agent skill into user-global Agent skill folders.
+  skills     Inspect or update installed DeckLens Agent skills.
 
 Convert options are passed through to DeckLens' conversion engine:
   --output <file>             Output .pptx path
@@ -31,6 +34,7 @@ Convert options are passed through to DeckLens' conversion engine:
   --json
 
 Install skill options:
+  --force                     Overwrite modified DeckLens-managed skills
   --json                      Print machine-readable install status
 `);
 }
@@ -159,8 +163,35 @@ function skillInstallOptions() {
     appPath: ROOT_DIR,
     resourcesPath: ROOT_DIR,
     isPackaged: false,
-    appVersion: 'cli'
+    appVersion: 'cli',
+    force: process.argv.includes('--force')
   };
+}
+
+function printSkillResult(result, action) {
+  const installed = result.installed || [];
+  const skipped = result.skipped || [];
+  const failed = result.failed || [];
+  if (installed.length > 0) {
+    console.log(`DeckLens Agent Skill ${action} ${installed.length} location${installed.length === 1 ? '' : 's'}:`);
+    for (const target of installed) {
+      console.log(`- ${target.name}: ${target.path}`);
+    }
+  } else {
+    console.log(`No Agent skill locations were ${action}.`);
+  }
+  if (skipped.length > 0) {
+    console.log(`Skipped ${skipped.length} location${skipped.length === 1 ? '' : 's'}:`);
+    for (const target of skipped) {
+      console.log(`- ${target.name}: ${target.reason}`);
+    }
+  }
+  if (failed.length > 0) {
+    console.error(`Failed ${failed.length} location${failed.length === 1 ? '' : 's'}:`);
+    for (const target of failed) {
+      console.error(`- ${target.name}: ${target.error}`);
+    }
+  }
 }
 
 function runInstallSkills(args) {
@@ -170,24 +201,39 @@ function runInstallSkills(args) {
   if (json) {
     console.log(JSON.stringify(result, null, 2));
   } else {
-    const installed = result.installed || [];
-    const failed = result.failed || [];
-    if (installed.length > 0) {
-      console.log(`DeckLens Agent Skill installed to ${installed.length} location${installed.length === 1 ? '' : 's'}:`);
-      for (const target of installed) {
-        console.log(`- ${target.name}: ${target.path}`);
-      }
-    } else {
-      console.log('No detected Agent skill locations were installed.');
-    }
-    if (failed.length > 0) {
-      console.error(`Failed to install ${failed.length} location${failed.length === 1 ? '' : 's'}:`);
-      for (const target of failed) {
-        console.error(`- ${target.name}: ${target.error}`);
-      }
-    }
+    printSkillResult(result, 'installed to');
   }
   return result.failed?.length ? 1 : 0;
+}
+
+function printSkillStatus(result) {
+  console.log(`DeckLens Agent Skill source: ${result.sourceVersion || 'unknown'} (${result.sourceAvailable ? 'available' : 'missing'})`);
+  for (const target of result.visibleTargets || []) {
+    const version = target.skillVersion || 'not installed';
+    const state = target.state || (target.installed ? 'installed' : 'not-installed');
+    console.log(`- ${target.name}: ${version} · ${state}`);
+  }
+}
+
+function runSkills(args) {
+  const subcommand = args[0] || 'status';
+  const json = args.includes('--json');
+  const installer = loadAgentSkillInstaller();
+  if (subcommand === 'status') {
+    const result = installer.getAgentSkillStatus(skillInstallOptions());
+    if (json) console.log(JSON.stringify(result, null, 2));
+    else printSkillStatus(result);
+    return 0;
+  }
+  if (subcommand === 'update') {
+    const result = installer.updateAgentSkills(skillInstallOptions());
+    if (json) console.log(JSON.stringify(result, null, 2));
+    else printSkillResult(result, 'updated');
+    return result.failed?.length ? 1 : 0;
+  }
+  console.error(`Unknown skills command: ${subcommand}`);
+  printHelp();
+  return 1;
 }
 
 function main() {
@@ -204,6 +250,10 @@ function main() {
 
   if (command === 'install-skills') {
     return runInstallSkills(args.slice(1));
+  }
+
+  if (command === 'skills') {
+    return runSkills(args.slice(1));
   }
 
   console.error(`Unknown DeckLens command: ${command}`);

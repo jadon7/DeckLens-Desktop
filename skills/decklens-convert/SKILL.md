@@ -1,6 +1,12 @@
 ---
 name: decklens-convert
 description: Use when a user gives image, screenshot, or PDF files and wants DeckLens to convert or split them into an editable PPTX deck through the local CLI.
+metadata:
+  decklens:
+    version: "0.2.3"
+    min_app_version: "0.2.3"
+    update_channel: stable
+    source: decklens
 ---
 
 # DeckLens Convert
@@ -11,11 +17,12 @@ Use the DeckLens product CLI to convert image-like presentation pages into PPTX.
 
 1. Locate the DeckLens Desktop repository or an installed DeckLens CLI.
 2. If the CLI is available, run `decklens install-skills` once when the user asks to install the Agent skill globally.
-3. If DeckLens is not installed, ask the user whether they want you to install it. If they agree, use the direct platform download link below instead of sending them to the homepage, then retry after the app has been launched once.
-4. Verify the user-provided files exist and are images or PDFs.
-5. Run `decklens convert` from the repository root. If `decklens` is not on `PATH`, use `./bin/decklens.cjs convert`.
-6. Return the generated `.pptx` path and summarize the mode used.
-7. If the requested output already exists, ask before using `--overwrite`.
+3. If the user asks to check or update this skill, run `decklens skills status` or `decklens skills update`. Use `--force` only after the user confirms overwriting local skill edits.
+4. If DeckLens is not installed, ask the user whether they want you to install it. If they agree, use the direct platform download link below instead of sending them to the homepage, then retry after the app has been launched once.
+5. Verify the user-provided files exist and are images or PDFs.
+6. Run `decklens convert` from the repository root. If `decklens` is not on `PATH`, use `./bin/decklens.cjs convert`.
+7. Return the generated `.pptx` path and summarize the mode used.
+8. If the requested output already exists, ask before using `--overwrite`.
 
 ## Direct Downloads
 
@@ -71,6 +78,13 @@ Install or refresh this skill in user-global Agent skill folders:
 
 ```bash
 decklens install-skills
+```
+
+Check or update installed DeckLens Agent skills:
+
+```bash
+decklens skills status
+decklens skills update
 ```
 
 Repository fallback:
