@@ -10,10 +10,11 @@ Use the DeckLens product CLI to convert image-like presentation pages into PPTX.
 ## Workflow
 
 1. Locate the DeckLens Desktop repository or an installed DeckLens CLI.
-2. Verify the user-provided files exist and are images or PDFs.
-3. Run `decklens convert` from the repository root. If `decklens` is not on `PATH`, use `./bin/decklens.cjs convert`.
-4. Return the generated `.pptx` path and summarize the mode used.
-5. If the requested output already exists, ask before using `--overwrite`.
+2. If the CLI is not installed and no repository checkout is available, tell the user to install DeckLens from `https://deck.dsxzai.com/`, then retry after the app has been launched once.
+3. Verify the user-provided files exist and are images or PDFs.
+4. Run `decklens convert` from the repository root. If `decklens` is not on `PATH`, use `./bin/decklens.cjs convert`.
+5. Return the generated `.pptx` path and summarize the mode used.
+6. If the requested output already exists, ask before using `--overwrite`.
 
 ## Commands
 
@@ -66,4 +67,16 @@ Repository fallback when the CLI is not installed globally:
 - Use `--inpaint-backend lama` for the product default, or `--inpaint-backend local_mean` for faster simple backgrounds.
 - Use `DECKLENS_DEVICE=cpu` unless the machine is known to have a working accelerated backend.
 - Existing output files are not replaced unless `--overwrite` is passed.
+- Do not ask the user to install internal Python dependencies for this skill. If DeckLens or its CLI is missing, direct the user to the official DeckLens download page instead.
 - Do not call `decklens_cli.py` directly from a skill. It is an internal backend adapter behind the product CLI.
+
+## Post-processing layered output
+
+When using `--mode element`, inspect the generated PPTX before returning it:
+
+1. Open or parse the PPTX and review the extracted picture layers in slide order.
+2. Identify simple graphic elements that are better as editable vectors: flat-color rectangles, rounded rectangles, circles, ellipses, straight lines, simple icons, and other low-color shapes with clean edges.
+3. Redraw suitable elements as SVG or native PPT shapes, then replace the corresponding raster layer. Preserve the original position, size, opacity, fill color, stroke, and rotation as closely as possible.
+4. Maintain stacking order. Insert replacement vectors at the same z-order position as the original raster shape so foreground/background relationships do not change.
+5. Do not vectorize photographs, 3D renders, gradients, shadows, textured elements, or noisy masks. Keep those as raster layers.
+6. If replacement would reduce visual fidelity or break ordering, keep the original raster layer and mention that it was intentionally left unchanged.
