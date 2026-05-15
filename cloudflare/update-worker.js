@@ -1,5 +1,8 @@
 const CACHE_METADATA = "no-cache, no-store, must-revalidate";
 const CACHE_ARTIFACT = "public, max-age=31536000, immutable";
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_REDIRECTS_PER_MINUTE = 30;
+const RATE_LIMIT_ARTIFACTS_PER_MINUTE = 120;
 
 const CONTENT_TYPES = {
   ".yml": "text/yaml; charset=utf-8",
@@ -25,6 +28,38 @@ function isArtifact(key) {
   return /\.(dmg|zip|exe|blockmap)$/i.test(key);
 }
 
+function clientIp(request) {
+  return request.headers.get("CF-Connecting-IP") ||
+    request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() ||
+    "unknown";
+}
+
+async function checkRateLimit(request, store, scope, limit) {
+  if (!store) return null;
+
+  const now = Date.now();
+  const bucket = Math.floor(now / RATE_LIMIT_WINDOW_MS);
+  const key = `${scope}:${clientIp(request)}:${bucket}`;
+  const current = Number(await store.get(key)) || 0;
+
+  if (current >= limit) {
+    return new Response("Too many download requests. Please retry later.", {
+      status: 429,
+      headers: {
+        ...baseHeaders(""),
+        "Content-Type": "text/plain; charset=utf-8",
+        "Retry-After": String(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000))
+      }
+    });
+  }
+
+  await store.put(key, String(current + 1), {
+    expirationTtl: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) + 30
+  });
+
+  return null;
+}
+
 function baseHeaders(key) {
   return {
     "Access-Control-Allow-Origin": "*",
@@ -48,7 +83,26 @@ function parseArtifactPath(metadata) {
   return match ? match[1].trim().replace(/^["']|["']$/g, "") : "";
 }
 
-function parseArtifactDigest(metadata) {
+function parsePreferredArtifactPath(metadata, extension) {
+  const escapedExtension = extension.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`^\\s*-\\s*url:\\s*(.+${escapedExtension})\\s*$`, "im");
+  const match = metadata.match(pattern);
+  return match ? match[1].trim().replace(/^["']|["']$/g, "") : "";
+}
+
+function parseArtifactDigest(metadata, artifactPath) {
+  if (artifactPath) {
+    const escapedPath = artifactPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const artifactPattern = new RegExp(
+      `^\\s*-\\s*url:\\s*${escapedPath}\\s*\\n\\s*sha512:\\s*(.+)$`,
+      "im"
+    );
+    const artifactMatch = metadata.match(artifactPattern);
+    if (artifactMatch) {
+      return artifactMatch[1].trim().replace(/^["']|["']$/g, "").slice(0, 24);
+    }
+  }
+
   const match = metadata.match(/^sha512:\s*(.+)$/m);
   return match ? match[1].trim().replace(/^["']|["']$/g, "").slice(0, 24) : "";
 }
@@ -82,6 +136,14 @@ function parseRangeHeader(rangeHeader, size) {
 }
 
 async function downloadRedirect(request, env, platform) {
+  const limited = await checkRateLimit(
+    request,
+    env.DECKLENS_RATE_LIMITS,
+    "download-redirect",
+    RATE_LIMIT_REDIRECTS_PER_MINUTE
+  );
+  if (limited) return limited;
+
   const metadataKey = downloadMetadataKey(platform);
   const metadata = await env.DECKLENS_UPDATES.get(metadataKey);
   if (metadata === null) {
@@ -95,7 +157,9 @@ async function downloadRedirect(request, env, platform) {
   }
 
   const metadataText = await metadata.text();
-  const artifactPath = parseArtifactPath(metadataText);
+  const artifactPath = platform === "mac"
+    ? parsePreferredArtifactPath(metadataText, ".dmg") || parseArtifactPath(metadataText)
+    : parseArtifactPath(metadataText);
   if (!artifactPath) {
     return new Response(`Release metadata is missing an artifact path: ${metadataKey}`, {
       status: 502,
@@ -108,7 +172,7 @@ async function downloadRedirect(request, env, platform) {
 
   const url = new URL(request.url);
   url.pathname = `/${artifactPath}`;
-  const digest = parseArtifactDigest(metadataText);
+  const digest = parseArtifactDigest(metadataText, artifactPath);
   url.search = digest ? `?v=${encodeURIComponent(digest)}` : "";
   return new Response(null, {
     status: 302,
@@ -162,6 +226,16 @@ export default {
           "Content-Type": "text/plain; charset=utf-8"
         }
       });
+    }
+
+    if (isArtifact(key)) {
+      const limited = await checkRateLimit(
+        request,
+        env.DECKLENS_RATE_LIMITS,
+        "download-artifact",
+        RATE_LIMIT_ARTIFACTS_PER_MINUTE
+      );
+      if (limited) return limited;
     }
 
     const rangeHeader = request.headers.get("Range");

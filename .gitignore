@@ -41,3 +41,4 @@ dist/
 !.env.example
 .venv/
 .env
+.wrangler/

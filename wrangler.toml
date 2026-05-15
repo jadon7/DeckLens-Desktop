@@ -10,3 +10,7 @@ routes = [
 [[r2_buckets]]
 binding = "DECKLENS_UPDATES"
 bucket_name = "decklens-updates"
+
+[[kv_namespaces]]
+binding = "DECKLENS_RATE_LIMITS"
+id = "62e7e34903cf498e8a3820ca0c0da286"
