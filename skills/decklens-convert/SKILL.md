@@ -3,8 +3,8 @@ name: decklens-convert
 description: Use when a user gives image, screenshot, or PDF files and wants DeckLens to convert or split them into an editable PPTX deck through the local CLI.
 metadata:
   decklens:
-    version: "0.2.5"
-    min_app_version: "0.2.5"
+    version: "0.2.6"
+    min_app_version: "0.2.6"
     update_channel: stable
     source: decklens
 ---
@@ -119,9 +119,11 @@ node "$env:LOCALAPPDATA\Programs\DeckLens\resources\cli\decklens.cjs" install-sk
 
 When using `--mode element`, inspect the generated PPTX before returning it:
 
-1. Open or parse the PPTX and review the extracted picture layers in slide order.
-2. Identify simple graphic elements that are better as editable vectors: flat-color rectangles, rounded rectangles, circles, ellipses, straight lines, simple icons, and other low-color shapes with clean edges.
-3. Redraw suitable elements as SVG or native PPT shapes, then replace the corresponding raster layer. Preserve the original position, size, opacity, fill color, stroke, and rotation as closely as possible.
-4. Maintain stacking order. Insert replacement vectors at the same z-order position as the original raster shape so foreground/background relationships do not change.
-5. Do not vectorize photographs, 3D renders, gradients, shadows, textured elements, or noisy masks. Keep those as raster layers.
-6. If replacement would reduce visual fidelity or break ordering, keep the original raster layer and mention that it was intentionally left unchanged.
+1. Before running or accepting element layering, inspect the source image regions that are likely to become independent layers. Do not rely only on the extracted layer mask, because segmentation can create fuzzy edges, halo pixels, and small fragments that make a simple original shape look complex.
+2. Mark vector candidates from the original visual appearance first: flat or low-detail rectangles, rounded rectangles, circles, ellipses, straight lines, arrows, badges, dividers, common UI icons, logos with simple geometry, and other regular shapes that look clean and not visually complex.
+3. Prefer replacement over tracing for common icons. If an icon clearly matches an SF Symbol, Material Design icon, or another standard symbol available to the target environment, replace it with that symbol first. If no reliable symbol match exists, redraw it as SVG or native PPT shapes.
+4. Use SVG/native shapes for regular but non-standard graphics. Preserve position, size, opacity, fill, stroke, corner radius, rotation, and approximate visual weight. Simplify tiny mask noise instead of reproducing it.
+5. Exclude unsuitable elements even if the segmentation produced a separate layer: photographs, 3D renders, realistic illustrations, complex gradients, heavy shadows, textures, soft glows, detailed logos, screenshots, noisy masks, and anything whose fidelity would be worse after vectorization.
+6. Open or parse the PPTX and review the extracted picture layers in slide order. Replace only the raster layers that correspond to the pre-marked vector candidates.
+7. Maintain stacking order. Insert replacement vectors at the same z-order position as the original raster shape so foreground/background relationships do not change.
+8. If a candidate becomes ambiguous after extraction, compare it against the original source crop. Keep the raster layer when replacement would reduce visual fidelity or break ordering, and mention that it was intentionally left unchanged.
