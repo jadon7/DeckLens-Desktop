@@ -3399,6 +3399,41 @@
             gap: 8px;
         }
 
+        .agent-skill-targets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .agent-skill-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 26px;
+            padding: 0 9px;
+            border-radius: 999px;
+            background: #fff;
+            color: #555;
+            font-size: 11px;
+            font-weight: 650;
+        }
+
+        .agent-skill-pill::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #b8b8b8;
+        }
+
+        .agent-skill-pill.installed {
+            color: #111;
+        }
+
+        .agent-skill-pill.installed::before {
+            background: #509cf8;
+        }
+
         .settings-link-row {
             display: flex;
             flex-wrap: wrap;
@@ -4219,6 +4254,16 @@
                         <a class="settings-help-link" href="https://vupyskvyxk.feishu.cn/wiki/L1t8wJyZIie8jdkCCt5cIxEdnDh?from=from_copylink" target="_blank" rel="noreferrer" data-i18n="settings.api.tutorial">获取 fal.ai API Key 教程</a>
                     </label>
                 </div>
+                <div class="settings-section" id="agentSkillControl">
+                    <div class="settings-row">
+                        <strong data-i18n="settings.agentSkill.title">Agent Skill</strong>
+                        <small id="agentSkillText" data-i18n="settings.agentSkill.help">安装后，Codex、Claude、OpenClaw、Hermes 等 Agent 可以直接调用 DeckLens CLI 转换文件。</small>
+                        <div class="agent-skill-targets" id="agentSkillTargets"></div>
+                        <div class="settings-actions">
+                            <button class="settings-action secondary" id="agentSkillInstallButton" type="button" data-i18n="settings.agentSkill.install">安装 Agent Skill</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="settings-section">
                     <div class="settings-row">
                         <strong data-i18n="settings.update.title">检查更新</strong>
@@ -4601,6 +4646,15 @@
                 'settings.inpaint.localMean': '本地均值',
                 'settings.api.help': '用于 AI 智能分层；会保存在这台电脑。',
                 'settings.api.tutorial': '获取 fal.ai API Key 教程',
+                'settings.agentSkill.title': 'Agent Skill',
+                'settings.agentSkill.help': '安装后，Codex、Claude、OpenClaw、Hermes 等 Agent 可以直接调用 DeckLens CLI 转换文件。',
+                'settings.agentSkill.install': '安装 Agent Skill',
+                'settings.agentSkill.installing': '正在安装...',
+                'settings.agentSkill.installed': '已安装到 {count} 个位置',
+                'settings.agentSkill.partial': '已安装 {count} 个位置，{failed} 个失败',
+                'settings.agentSkill.none': '没有检测到可安装位置',
+                'settings.agentSkill.unavailable': '当前环境不支持安装 Agent Skill',
+                'settings.agentSkill.failed': '安装失败',
                 'settings.update.title': '检查更新',
                 'settings.update.idle': '检查更新',
                 'settings.update.check': '检查更新',
@@ -4804,6 +4858,15 @@
                 'settings.inpaint.localMean': 'Local Mean',
                 'settings.api.help': 'Used for AI layered restore. Saved on this computer.',
                 'settings.api.tutorial': 'How to get a fal.ai API Key',
+                'settings.agentSkill.title': 'Agent Skill',
+                'settings.agentSkill.help': 'After installation, Codex, Claude, OpenClaw, Hermes, and other Agents can call the DeckLens CLI to convert files.',
+                'settings.agentSkill.install': 'Install Agent Skill',
+                'settings.agentSkill.installing': 'Installing...',
+                'settings.agentSkill.installed': 'Installed to {count} locations',
+                'settings.agentSkill.partial': 'Installed to {count} locations, {failed} failed',
+                'settings.agentSkill.none': 'No install locations detected',
+                'settings.agentSkill.unavailable': 'Agent Skill installation is unavailable here',
+                'settings.agentSkill.failed': 'Install failed',
                 'settings.update.title': 'Check for updates',
                 'settings.update.idle': 'Check for updates',
                 'settings.update.check': 'Check for updates',
@@ -5548,6 +5611,10 @@
             const versionText = document.getElementById('appVersionText');
             const languageSelect = document.getElementById('languageSelect');
             const updates = window.decklensRuntime?.updates;
+            const agentSkills = window.decklensRuntime?.agentSkills;
+            const agentSkillText = document.getElementById('agentSkillText');
+            const agentSkillTargets = document.getElementById('agentSkillTargets');
+            const agentSkillInstallButton = document.getElementById('agentSkillInstallButton');
 
             if (!settingsButton || !settingsOverlay || !settingsClose) {
                 return;
@@ -5605,9 +5672,64 @@
                 }
                 applyI18n();
                 render(currentStatus);
+                loadAgentSkillStatus();
             });
 
             let currentStatus = { status: 'idle' };
+
+            function renderAgentSkillStatus(status, message) {
+                if (!agentSkillText || !agentSkillTargets || !agentSkillInstallButton) return;
+                const visibleTargets = status?.visibleTargets || status?.targets?.filter((target) => target.detected || target.installed) || [];
+                agentSkillTargets.innerHTML = visibleTargets.map((target) => `
+                    <span class="agent-skill-pill ${target.installed ? 'installed' : ''}" title="${escapeHtml(target.path || '')}">
+                        ${escapeHtml(target.name)}
+                    </span>
+                `).join('');
+                if (message) {
+                    agentSkillText.textContent = message;
+                } else if (!agentSkills) {
+                    agentSkillText.textContent = t('settings.agentSkill.unavailable');
+                } else if (visibleTargets.length === 0) {
+                    agentSkillText.textContent = t('settings.agentSkill.none');
+                } else if ((status?.installedCount || 0) > 0) {
+                    agentSkillText.textContent = t('settings.agentSkill.installed', { count: status.installedCount });
+                } else {
+                    agentSkillText.textContent = t('settings.agentSkill.help');
+                }
+                agentSkillInstallButton.disabled = !agentSkills || visibleTargets.length === 0;
+                agentSkillInstallButton.textContent = t('settings.agentSkill.install');
+            }
+
+            async function loadAgentSkillStatus() {
+                if (!agentSkills) {
+                    renderAgentSkillStatus(null);
+                    return;
+                }
+                try {
+                    renderAgentSkillStatus(await agentSkills.getStatus());
+                } catch (error) {
+                    renderAgentSkillStatus(null, t('settings.agentSkill.failed'));
+                }
+            }
+
+            agentSkillInstallButton?.addEventListener('click', async () => {
+                if (!agentSkills || !agentSkillInstallButton) return;
+                agentSkillInstallButton.disabled = true;
+                agentSkillInstallButton.textContent = t('settings.agentSkill.installing');
+                try {
+                    const result = await agentSkills.install();
+                    const installedCount = result.installed?.length || 0;
+                    const failedCount = result.failed?.length || 0;
+                    const message = failedCount
+                        ? t('settings.agentSkill.partial', { count: installedCount, failed: failedCount })
+                        : t('settings.agentSkill.installed', { count: installedCount });
+                    renderAgentSkillStatus(result, message);
+                } catch (error) {
+                    renderAgentSkillStatus(null, `${t('settings.agentSkill.failed')}: ${error.message || ''}`);
+                } finally {
+                    agentSkillInstallButton.disabled = !agentSkills || !agentSkillTargets?.children.length;
+                }
+            });
 
             function updateMessage(status) {
                 const state = status.status || 'idle';
@@ -5704,6 +5826,7 @@
 
             if (updates) updates.onStatus(render);
             loadStatus();
+            loadAgentSkillStatus();
 
             settingsOverlay.addEventListener('click', (event) => {
                 if (event.target === settingsOverlay) closeSettings();

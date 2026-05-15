@@ -11,10 +11,10 @@
   "scripts": {
     "electron:dev": "electron .",
     "electron:pack": "electron-builder --dir",
-    "electron:pack:unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --dir --config.mac.sign=null --config.mac.notarize=false",
+    "electron:pack:unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --dir --config.mac.identity=null --config.mac.notarize=false",
     "electron:dist": "electron-builder",
     "electron:dist:mac": "electron-builder --mac",
-    "electron:dist:mac:unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac zip --config.mac.identity=null --config.mac.sign=null --config.mac.notarize=false",
+    "electron:dist:mac:unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac zip --config.mac.identity=null --config.mac.notarize=false",
     "electron:dist:mac:signed": "APPLE_KEYCHAIN_PROFILE=decklens-notary electron-builder --mac",
     "electron:dist:win": "electron-builder --win",
     "electron:dist:win:unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis --x64",
@@ -63,6 +63,13 @@
         "to": "cli",
         "filter": [
           "**/*"
+        ]
+      },
+      {
+        "from": "skills",
+        "to": "skills",
+        "filter": [
+          "decklens-convert/**"
         ]
       },
       {

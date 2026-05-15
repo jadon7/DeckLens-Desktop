@@ -161,6 +161,11 @@ API key through `--fal-key` or `FAL_KEY`. The Agent skill source lives at
 for local Agents. Existing output files are preserved unless `--overwrite` is
 passed.
 
+The desktop settings panel exposes an "Install Agent Skill" action. It copies
+the bundled `decklens-convert` skill into detected user-global Agent skill
+directories such as `~/.codex/skills`, `~/.claude/skills`, `~/.agents/skills`,
+`~/.openclaw/skills`, and `~/.hermes/skills`.
+
 ## Website
 
 The product website lives in `site/` and is deployed to

@@ -10,7 +10,7 @@ Use the DeckLens product CLI to convert image-like presentation pages into PPTX.
 ## Workflow
 
 1. Locate the DeckLens Desktop repository or an installed DeckLens CLI.
-2. If the CLI is not installed and no repository checkout is available, tell the user to install DeckLens from `https://deck.dsxzai.com/`, then retry after the app has been launched once.
+2. If the CLI is not installed and no repository checkout is available, ask the user whether they want you to install DeckLens. If they agree, open the official download page `https://deck.dsxzai.com/` or run the available official installer flow for their platform, then retry after the app has been launched once.
 3. Verify the user-provided files exist and are images or PDFs.
 4. Run `decklens convert` from the repository root. If `decklens` is not on `PATH`, use `./bin/decklens.cjs convert`.
 5. Return the generated `.pptx` path and summarize the mode used.
@@ -67,7 +67,7 @@ Repository fallback when the CLI is not installed globally:
 - Use `--inpaint-backend lama` for the product default, or `--inpaint-backend local_mean` for faster simple backgrounds.
 - Use `DECKLENS_DEVICE=cpu` unless the machine is known to have a working accelerated backend.
 - Existing output files are not replaced unless `--overwrite` is passed.
-- Do not ask the user to install internal Python dependencies for this skill. If DeckLens or its CLI is missing, direct the user to the official DeckLens download page instead.
+- Do not ask the user to install internal Python dependencies for this skill. If DeckLens or its CLI is missing, ask for permission and help the user install DeckLens from the official download page instead.
 - Do not call `decklens_cli.py` directly from a skill. It is an internal backend adapter behind the product CLI.
 
 ## Post-processing layered output
