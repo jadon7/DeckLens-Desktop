@@ -10,11 +10,18 @@ Use the DeckLens product CLI to convert image-like presentation pages into PPTX.
 ## Workflow
 
 1. Locate the DeckLens Desktop repository or an installed DeckLens CLI.
-2. If the CLI is not installed and no repository checkout is available, ask the user whether they want you to install DeckLens. If they agree, open the official download page `https://deck.dsxzai.com/` or run the available official installer flow for their platform, then retry after the app has been launched once.
-3. Verify the user-provided files exist and are images or PDFs.
-4. Run `decklens convert` from the repository root. If `decklens` is not on `PATH`, use `./bin/decklens.cjs convert`.
-5. Return the generated `.pptx` path and summarize the mode used.
-6. If the requested output already exists, ask before using `--overwrite`.
+2. If the CLI is available, run `decklens install-skills` once when the user asks to install the Agent skill globally.
+3. If DeckLens is not installed, ask the user whether they want you to install it. If they agree, use the direct platform download link below instead of sending them to the homepage, then retry after the app has been launched once.
+4. Verify the user-provided files exist and are images or PDFs.
+5. Run `decklens convert` from the repository root. If `decklens` is not on `PATH`, use `./bin/decklens.cjs convert`.
+6. Return the generated `.pptx` path and summarize the mode used.
+7. If the requested output already exists, ask before using `--overwrite`.
+
+## Direct Downloads
+
+- macOS: `https://updates.dsxzai.com/download/mac`
+- Windows: `https://updates.dsxzai.com/download/windows`
+- Auto-detect: `https://updates.dsxzai.com/download`
 
 ## Commands
 
@@ -60,6 +67,30 @@ Repository fallback when the CLI is not installed globally:
 ./bin/decklens.cjs convert "/path/to/input.png" --output "/path/to/output.pptx"
 ```
 
+Install or refresh this skill in user-global Agent skill folders:
+
+```bash
+decklens install-skills
+```
+
+Repository fallback:
+
+```bash
+./bin/decklens.cjs install-skills
+```
+
+Installed app fallback on macOS:
+
+```bash
+node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" install-skills
+```
+
+Installed app fallback on Windows:
+
+```powershell
+node "$env:LOCALAPPDATA\Programs\DeckLens\resources\cli\decklens.cjs" install-skills
+```
+
 ## Notes
 
 - Supported inputs: `.png`, `.jpg`, `.jpeg`, `.pdf`.
@@ -67,7 +98,7 @@ Repository fallback when the CLI is not installed globally:
 - Use `--inpaint-backend lama` for the product default, or `--inpaint-backend local_mean` for faster simple backgrounds.
 - Use `DECKLENS_DEVICE=cpu` unless the machine is known to have a working accelerated backend.
 - Existing output files are not replaced unless `--overwrite` is passed.
-- Do not ask the user to install internal Python dependencies for this skill. If DeckLens or its CLI is missing, ask for permission and help the user install DeckLens from the official download page instead.
+- Do not ask the user to install internal Python dependencies for this skill. If DeckLens or its CLI is missing, ask for permission and help the user install DeckLens from the direct platform download link instead.
 - Do not call `decklens_cli.py` directly from a skill. It is an internal backend adapter behind the product CLI.
 
 ## Post-processing layered output

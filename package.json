@@ -43,7 +43,8 @@
       }
     ],
     "files": [
-      "electron/**/*"
+      "electron/**/*",
+      "lib/**/*"
     ],
     "extraResources": [
       {
@@ -64,6 +65,10 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "lib/agent-skills.cjs",
+        "to": "cli/agent-skills.cjs"
       },
       {
         "from": "skills",

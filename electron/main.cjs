@@ -6,7 +6,7 @@ const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
-const { getAgentSkillStatus, installAgentSkills } = require('./agent-skills.cjs');
+const { getAgentSkillStatus, installAgentSkills } = require('../lib/agent-skills.cjs');
 
 const UPDATE_FEED_URL = 'https://updates.dsxzai.com/';
 

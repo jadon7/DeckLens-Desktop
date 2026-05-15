@@ -12,10 +12,13 @@ function printHelp() {
 
 Usage:
   decklens convert <input...> [options]
+  decklens install-skills [options]
   decklens --help
 
 Commands:
   convert    Convert image-like presentation pages into an editable PPTX deck.
+  install-skills
+             Install the DeckLens Agent skill into user-global Agent skill folders.
 
 Convert options are passed through to DeckLens' conversion engine:
   --output <file>             Output .pptx path
@@ -26,6 +29,9 @@ Convert options are passed through to DeckLens' conversion engine:
   --fal-key <key>
   --overwrite
   --json
+
+Install skill options:
+  --json                      Print machine-readable install status
 `);
 }
 
@@ -133,6 +139,57 @@ function runConvert(args) {
   return result.status === null ? 1 : result.status;
 }
 
+function loadAgentSkillInstaller() {
+  const candidates = [
+    path.join(__dirname, 'agent-skills.cjs'),
+    path.join(ROOT_DIR, 'lib', 'agent-skills.cjs'),
+    path.join(ROOT_DIR, 'electron', 'agent-skills.cjs')
+  ];
+  for (const candidate of candidates) {
+    if (fileExists(candidate)) {
+      return require(candidate);
+    }
+  }
+  throw new Error('DeckLens Agent Skill installer was not found.');
+}
+
+function skillInstallOptions() {
+  return {
+    home: process.env.DECKLENS_SKILL_HOME,
+    appPath: ROOT_DIR,
+    resourcesPath: ROOT_DIR,
+    isPackaged: false,
+    appVersion: 'cli'
+  };
+}
+
+function runInstallSkills(args) {
+  const json = args.includes('--json');
+  const { installAgentSkills } = loadAgentSkillInstaller();
+  const result = installAgentSkills(skillInstallOptions());
+  if (json) {
+    console.log(JSON.stringify(result, null, 2));
+  } else {
+    const installed = result.installed || [];
+    const failed = result.failed || [];
+    if (installed.length > 0) {
+      console.log(`DeckLens Agent Skill installed to ${installed.length} location${installed.length === 1 ? '' : 's'}:`);
+      for (const target of installed) {
+        console.log(`- ${target.name}: ${target.path}`);
+      }
+    } else {
+      console.log('No detected Agent skill locations were installed.');
+    }
+    if (failed.length > 0) {
+      console.error(`Failed to install ${failed.length} location${failed.length === 1 ? '' : 's'}:`);
+      for (const target of failed) {
+        console.error(`- ${target.name}: ${target.error}`);
+      }
+    }
+  }
+  return result.failed?.length ? 1 : 0;
+}
+
 function main() {
   const args = process.argv.slice(2);
   const command = args[0];
@@ -143,6 +200,10 @@ function main() {
 
   if (command === 'convert') {
     return runConvert(args.slice(1));
+  }
+
+  if (command === 'install-skills') {
+    return runInstallSkills(args.slice(1));
   }
 
   console.error(`Unknown DeckLens command: ${command}`);
@@ -156,4 +217,3 @@ try {
   console.error(`DeckLens CLI failed: ${error.message}`);
   process.exitCode = 1;
 }
-
