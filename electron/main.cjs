@@ -6,7 +6,20 @@ const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
-const { getAgentSkillStatus, installAgentSkills, updateAgentSkills } = require('../lib/agent-skills.cjs');
+
+function loadAgentSkillRuntime() {
+  const candidates = [
+    path.join(process.resourcesPath || '', 'cli', 'agent-skills.cjs'),
+    path.join(__dirname, '..', 'lib', 'agent-skills.cjs')
+  ];
+  const runtimePath = candidates.find((candidate) => candidate && fs.existsSync(candidate));
+  if (!runtimePath) {
+    throw new Error(`Cannot find agent skill runtime. Checked: ${candidates.join(', ')}`);
+  }
+  return require(runtimePath);
+}
+
+const { getAgentSkillStatus, installAgentSkills, updateAgentSkills } = loadAgentSkillRuntime();
 
 const UPDATE_FEED_URL = 'https://updates.dsxzai.com/';
 
