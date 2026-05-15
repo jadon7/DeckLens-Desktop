@@ -138,17 +138,20 @@ caching and proper `Range` responses for cancel/resume downloads.
 
 ## CLI Conversion
 
-DeckLens also includes a local CLI wrapper for Agent-driven conversion:
+DeckLens includes a product CLI for Agent-driven conversion. The CLI command is
+the stable integration surface; Agents and skills should not call the internal
+Python backend scripts directly.
 
 ```bash
-python3 decklens_cli.py input.png --output output.pptx
-python3 decklens_cli.py input.pdf --mode element --output output.pptx
-python3 decklens_cli.py input.png input2.jpg --json --output output.pptx
+decklens convert input.png --output output.pptx
+decklens convert input.pdf --mode element --output output.pptx
+decklens convert input.png input2.jpg --json --output output.pptx
 ```
 
-The npm shortcut is:
+From a repository checkout, use the local CLI binary or npm shortcut:
 
 ```bash
+./bin/decklens.cjs convert input.png --output output.pptx
 npm run decklens:convert -- input.png --output output.pptx
 ```
 

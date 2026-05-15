@@ -5,6 +5,9 @@
   "description": "DeckLens desktop shell for macOS and Windows.",
   "author": "DeckLens",
   "main": "electron/main.cjs",
+  "bin": {
+    "decklens": "bin/decklens.cjs"
+  },
   "scripts": {
     "electron:dev": "electron .",
     "electron:pack": "electron-builder --dir",
@@ -15,7 +18,8 @@
     "electron:dist:mac:signed": "APPLE_KEYCHAIN_PROFILE=decklens-notary electron-builder --mac",
     "electron:dist:win": "electron-builder --win",
     "electron:dist:win:unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis --x64",
-    "decklens:convert": "python3 decklens_cli.py",
+    "decklens": "node bin/decklens.cjs",
+    "decklens:convert": "node bin/decklens.cjs convert",
     "site:deploy": "wrangler pages deploy site --project-name decklens-site --branch main"
   },
   "devDependencies": {
@@ -53,6 +57,13 @@
       {
         "from": "decklens_cli.py",
         "to": "backend/decklens_cli.py"
+      },
+      {
+        "from": "bin",
+        "to": "cli",
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "requirements.txt",

@@ -12,9 +12,10 @@ trigger signing or notarization.
 
 ## Decision
 
-Add `decklens_cli.py` as a thin local wrapper around the existing engine
-conversion APIs. The CLI accepts images or PDFs, supports standard, element,
-and AI modes, and can emit JSON for Agents. The repository also includes a
+Add a stable `decklens convert` product CLI around the existing conversion
+engine. The CLI accepts images or PDFs, supports standard, element, and AI
+modes, and can emit JSON for Agents. The internal Python adapter remains an
+implementation detail behind the product CLI. The repository also includes a
 `skills/decklens-convert` skill that documents the Agent usage pattern.
 
 Expose stable Cloudflare update Worker routes at `/download`, `/download/mac`,
@@ -30,7 +31,8 @@ builds remain reserved for release publishing.
 
 ## Consequences
 
-- Agents can convert local files without driving the Electron UI.
+- Agents can convert local files without driving the Electron UI and without
+  calling internal Python scripts directly.
 - Website download links can stay stable across releases.
 - R2 artifacts remain cacheable with long immutable headers, while latest
   metadata and download redirects stay fresh.
