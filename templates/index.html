@@ -3399,41 +3399,6 @@
             gap: 8px;
         }
 
-        .agent-skill-targets {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .agent-skill-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            min-height: 26px;
-            padding: 0 9px;
-            border-radius: 999px;
-            background: #fff;
-            color: #555;
-            font-size: 11px;
-            font-weight: 650;
-        }
-
-        .agent-skill-pill::before {
-            content: "";
-            width: 6px;
-            height: 6px;
-            border-radius: 999px;
-            background: #b8b8b8;
-        }
-
-        .agent-skill-pill.installed {
-            color: #111;
-        }
-
-        .agent-skill-pill.installed::before {
-            background: #509cf8;
-        }
-
         .settings-link-row {
             display: flex;
             flex-wrap: wrap;
@@ -4258,7 +4223,6 @@
                     <div class="settings-row">
                         <strong data-i18n="settings.agentSkill.title">Agent Skill</strong>
                         <small id="agentSkillText" data-i18n="settings.agentSkill.help">安装后，Codex、Claude、OpenClaw、Hermes 等 Agent 可以直接调用 DeckLens CLI 转换文件。</small>
-                        <div class="agent-skill-targets" id="agentSkillTargets"></div>
                         <div class="settings-actions">
                             <button class="settings-action secondary" id="agentSkillInstallButton" type="button" data-i18n="settings.agentSkill.install">安装 Agent Skill</button>
                         </div>
@@ -5613,7 +5577,6 @@
             const updates = window.decklensRuntime?.updates;
             const agentSkills = window.decklensRuntime?.agentSkills;
             const agentSkillText = document.getElementById('agentSkillText');
-            const agentSkillTargets = document.getElementById('agentSkillTargets');
             const agentSkillInstallButton = document.getElementById('agentSkillInstallButton');
 
             if (!settingsButton || !settingsOverlay || !settingsClose) {
@@ -5678,13 +5641,8 @@
             let currentStatus = { status: 'idle' };
 
             function renderAgentSkillStatus(status, message) {
-                if (!agentSkillText || !agentSkillTargets || !agentSkillInstallButton) return;
+                if (!agentSkillText || !agentSkillInstallButton) return;
                 const visibleTargets = status?.visibleTargets || status?.targets?.filter((target) => target.detected || target.installed) || [];
-                agentSkillTargets.innerHTML = visibleTargets.map((target) => `
-                    <span class="agent-skill-pill ${target.installed ? 'installed' : ''}" title="${escapeHtml(target.path || '')}">
-                        ${escapeHtml(target.name)}
-                    </span>
-                `).join('');
                 if (message) {
                     agentSkillText.textContent = message;
                 } else if (!agentSkills) {
@@ -5727,7 +5685,7 @@
                 } catch (error) {
                     renderAgentSkillStatus(null, `${t('settings.agentSkill.failed')}: ${error.message || ''}`);
                 } finally {
-                    agentSkillInstallButton.disabled = !agentSkills || !agentSkillTargets?.children.length;
+                    agentSkillInstallButton.disabled = !agentSkills;
                 }
             });
 
