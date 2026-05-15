@@ -3,8 +3,8 @@ name: decklens-convert
 description: Use when a user gives image, screenshot, or PDF files and wants DeckLens to convert or split them into an editable PPTX deck through the local CLI.
 metadata:
   decklens:
-    version: "0.2.3"
-    min_app_version: "0.2.3"
+    version: "0.2.4"
+    min_app_version: "0.2.4"
     update_channel: stable
     source: decklens
 ---
