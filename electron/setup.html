@@ -6,117 +6,287 @@
     <title>DeckLens Setup</title>
     <style>
       :root {
-        color-scheme: dark;
+        color-scheme: light;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #08111f;
-        color: #eef5ff;
+        background: #f7f7f5;
+        color: #111;
+      }
+
+      * {
+        box-sizing: border-box;
       }
 
       body {
         margin: 0;
         min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background:
-          radial-gradient(circle at 10% 15%, rgba(0, 207, 255, 0.18), transparent 32rem),
-          radial-gradient(circle at 85% 70%, rgba(255, 215, 102, 0.12), transparent 30rem),
-          #08111f;
+        overflow: hidden;
+        background: #f7f7f5;
+        color: #111;
+        user-select: none;
+      }
+
+      .drag-region {
+        position: fixed;
+        inset: 0 0 auto;
+        height: 42px;
+        -webkit-app-region: drag;
       }
 
       main {
-        width: min(760px, calc(100vw - 48px));
-        border: 1px solid rgba(151, 180, 216, 0.24);
-        border-radius: 18px;
-        background: rgba(10, 21, 38, 0.82);
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+        width: min(920px, calc(100vw - 64px));
+        margin: 0 auto;
+        min-height: 100vh;
+        display: grid;
+        align-content: center;
+        gap: 24px;
+        padding: 52px 0 44px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .brand-mark {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        background: #111;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 14px;
+      }
+
+      .panel {
+        border: 1px solid #dfdfdc;
+        border-radius: 10px;
+        background: #fff;
         padding: 32px;
       }
 
       h1 {
-        margin: 0 0 12px;
-        font-size: 28px;
+        margin: 0;
+        font-size: clamp(30px, 5vw, 54px);
+        line-height: 1.04;
         letter-spacing: 0;
+        text-align: center;
       }
 
-      p {
-        color: #aebdd2;
-        line-height: 1.6;
+      .lead {
+        width: min(620px, 100%);
+        margin: 16px auto 0;
+        color: #666;
+        font-size: 15px;
+        line-height: 1.7;
+        text-align: center;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 26px;
       }
 
       button {
-        border: 0;
-        border-radius: 10px;
-        padding: 12px 18px;
-        background: #8fdcff;
-        color: #06121f;
+        height: 42px;
+        border-radius: 999px;
+        border: 1px solid #111;
+        padding: 0 18px;
+        background: #111;
+        color: #fff;
+        font-size: 14px;
         font-weight: 700;
         cursor: pointer;
+        -webkit-app-region: no-drag;
+      }
+
+      button.secondary {
+        border-color: #dfdfdc;
+        background: #fff;
+        color: #111;
+      }
+
+      button:focus {
+        outline: none;
       }
 
       button:disabled {
         cursor: wait;
-        opacity: 0.55;
+        opacity: 0.48;
       }
 
       .meta {
         display: grid;
-        gap: 6px;
-        margin: 22px 0;
-        color: #c6d3e6;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 26px;
+      }
+
+      .meta-item {
+        min-width: 0;
+        border: 1px solid #e7e7e3;
+        border-radius: 8px;
+        background: #fafafa;
+        padding: 14px;
+      }
+
+      .meta-label {
+        display: block;
+        color: #8a8a86;
+        font-size: 12px;
+        line-height: 1.3;
+      }
+
+      .meta-value {
+        display: block;
+        margin-top: 6px;
+        overflow: hidden;
+        color: #111;
         font-size: 13px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .log-panel {
+        border: 1px solid #dfdfdc;
+        border-radius: 10px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      .log-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #eee;
+        padding: 12px 16px;
+        color: #777;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #c7c7c2;
+      }
+
+      .status-dot.active {
+        background: #509cf8;
       }
 
       pre {
-        min-height: 180px;
-        max-height: 320px;
+        height: 210px;
+        margin: 0;
         overflow: auto;
         padding: 16px;
-        border-radius: 12px;
-        background: rgba(3, 8, 15, 0.78);
-        color: #d6e7ff;
+        background: #fff;
+        color: #555;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.55;
         white-space: pre-wrap;
+        word-break: break-word;
+        user-select: text;
+      }
+
+      @media (max-width: 720px) {
+        body {
+          overflow: auto;
+        }
+
+        main {
+          width: min(100vw - 28px, 920px);
+          align-content: start;
+          padding-top: 64px;
+        }
+
+        .panel {
+          padding: 24px;
+        }
+
+        .meta {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
   <body>
+    <div class="drag-region"></div>
     <main>
-      <h1 data-i18n="title">DeckLens needs its Python runtime</h1>
-      <p data-i18n="body">
-        The desktop installer keeps large Python dependencies and model files out of the app bundle.
-        Install the local runtime the first time you use DeckLens; feature-specific models still download only when those features are enabled.
-      </p>
-      <button id="install" data-i18n="install">Install runtime</button>
-      <button id="start" data-i18n="start">Start DeckLens</button>
-      <div class="meta" id="meta"></div>
-      <pre id="log"></pre>
+      <div class="brand">
+        <span class="brand-mark">D</span>
+        <span>DeckLens</span>
+      </div>
+
+      <section class="panel">
+        <h1 data-i18n="title">Install local runtime</h1>
+        <p class="lead" data-i18n="body">
+          DeckLens uses a local Python runtime for image recognition and PPTX generation. Install it once on this computer, then start DeckLens.
+        </p>
+        <div class="actions">
+          <button id="install" data-i18n="install">Install runtime</button>
+          <button class="secondary" id="downloadPython" data-i18n="downloadPython">Download Python 3.12</button>
+          <button class="secondary" id="start" data-i18n="start">Start DeckLens</button>
+        </div>
+        <div class="meta" id="meta"></div>
+      </section>
+
+      <section class="log-panel">
+        <div class="log-header">
+          <span data-i18n="logTitle">Installation log</span>
+          <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+        </div>
+        <pre id="log"></pre>
+      </section>
     </main>
+
     <script>
       const installButton = document.getElementById('install');
+      const downloadPythonButton = document.getElementById('downloadPython');
       const startButton = document.getElementById('start');
+      const statusDot = document.getElementById('statusDot');
       const meta = document.getElementById('meta');
       const log = document.getElementById('log');
       const I18N = {
         zh: {
-          title: 'DeckLens 需要安装 Python 运行环境',
-          body: '桌面安装包会把较大的 Python 依赖和模型文件放在 App 包外。首次使用 DeckLens 时先安装本地运行环境；具体功能用到的模型仍然只会在启用时下载。',
+          title: '安装本地运行环境',
+          body: 'DeckLens 会在本机 Python 运行环境中完成图片识别、图层拆分和 PPTX 生成。首次使用只需要安装一次；Windows 下如果没有 Python，DeckLens 会优先尝试自动安装 Python 3.12。',
           install: '安装运行环境',
+          downloadPython: '下载 Python 3.12',
           start: '启动 DeckLens',
-          runtimeInstalled: '运行环境已安装',
-          yes: '是',
-          no: '否',
+          runtimeInstalled: '运行环境',
+          yes: '已安装',
+          no: '未安装',
           platform: '平台',
-          dataDirectory: '数据目录'
+          dataDirectory: '数据目录',
+          logTitle: '安装日志',
+          ready: '就绪',
+          installing: '安装中'
         },
         en: {
-          title: 'DeckLens needs its Python runtime',
-          body: 'The desktop installer keeps large Python dependencies and model files out of the app bundle. Install the local runtime the first time you use DeckLens; feature-specific models still download only when those features are enabled.',
+          title: 'Install local runtime',
+          body: 'DeckLens uses a local Python runtime for image recognition, layer splitting, and PPTX generation. Install it once on this computer. On Windows, DeckLens tries to install Python 3.12 automatically when Python is missing.',
           install: 'Install runtime',
+          downloadPython: 'Download Python 3.12',
           start: 'Start DeckLens',
-          runtimeInstalled: 'Runtime installed',
-          yes: 'yes',
-          no: 'no',
+          runtimeInstalled: 'Runtime',
+          yes: 'installed',
+          no: 'not installed',
           platform: 'Platform',
-          dataDirectory: 'Data directory'
+          dataDirectory: 'Data directory',
+          logTitle: 'Installation log',
+          ready: 'Ready',
+          installing: 'Installing'
         }
       };
       const activeLanguage = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
@@ -134,19 +304,30 @@
       }
 
       function write(line) {
+        if (!line) return;
         log.textContent += `${line}\n`;
         log.scrollTop = log.scrollHeight;
+      }
+
+      function metaItem(label, value, title = value) {
+        return `
+          <div class="meta-item">
+            <span class="meta-label">${label}</span>
+            <span class="meta-value" title="${String(title).replace(/"/g, '&quot;')}">${value}</span>
+          </div>
+        `;
       }
 
       async function refresh() {
         const status = await window.decklensRuntime.getStatus();
         installButton.disabled = status.installing;
         startButton.disabled = !status.installed || status.installing;
-        meta.innerHTML = `
-          <span>${t('runtimeInstalled')}: ${status.installed ? t('yes') : t('no')}</span>
-          <span>${t('platform')}: ${status.platform} / ${status.arch}</span>
-          <span>${t('dataDirectory')}: ${status.userData}</span>
-        `;
+        statusDot.classList.toggle('active', Boolean(status.installing));
+        meta.innerHTML = [
+          metaItem(t('runtimeInstalled'), status.installed ? t('yes') : t('no')),
+          metaItem(t('platform'), `${status.platform} / ${status.arch}`),
+          metaItem(t('dataDirectory'), status.userData)
+        ].join('');
         if (!log.textContent && status.log.length) {
           log.textContent = `${status.log.join('\n')}\n`;
         }
@@ -155,12 +336,20 @@
       window.decklensRuntime.onLog(write);
       installButton.addEventListener('click', async () => {
         installButton.disabled = true;
+        statusDot.classList.add('active');
         try {
           await window.decklensRuntime.install();
         } catch (error) {
           write(error.message);
         } finally {
           await refresh();
+        }
+      });
+      downloadPythonButton.addEventListener('click', async () => {
+        try {
+          await window.decklensRuntime.openPythonDownload();
+        } catch (error) {
+          write(error.message);
         }
       });
       startButton.addEventListener('click', async () => {

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('decklensRuntime', {
   getStatus: () => ipcRenderer.invoke('runtime:get-status'),
   install: () => ipcRenderer.invoke('runtime:install'),
   start: () => ipcRenderer.invoke('runtime:start'),
+  openPythonDownload: () => ipcRenderer.invoke('runtime:open-python-download'),
   updates: {
     getStatus: () => ipcRenderer.invoke('updates:get-status'),
     check: () => ipcRenderer.invoke('updates:check'),

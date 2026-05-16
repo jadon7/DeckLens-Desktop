@@ -22,6 +22,7 @@ function loadAgentSkillRuntime() {
 const { getAgentSkillStatus, installAgentSkills, updateAgentSkills } = loadAgentSkillRuntime();
 
 const UPDATE_FEED_URL = 'https://updates.dsxzai.com/';
+const PYTHON_DOWNLOAD_URL = 'https://www.python.org/downloads/release/python-31210/';
 
 let mainWindow;
 let backendProcess;
@@ -383,9 +384,19 @@ function pythonCandidates() {
     candidates.push({ cmd: process.env.DECKLENS_PYTHON, args: [] });
   }
   if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA;
+    const programFiles = [process.env.ProgramFiles, process.env['ProgramFiles(x86)']].filter(Boolean);
     candidates.push({ cmd: 'py', args: ['-3.12'] });
     candidates.push({ cmd: 'py', args: ['-3.11'] });
     candidates.push({ cmd: 'py', args: ['-3'] });
+    if (localAppData) {
+      candidates.push({ cmd: path.join(localAppData, 'Programs', 'Python', 'Python312', 'python.exe'), args: [] });
+      candidates.push({ cmd: path.join(localAppData, 'Programs', 'Python', 'Python311', 'python.exe'), args: [] });
+    }
+    for (const root of programFiles) {
+      candidates.push({ cmd: path.join(root, 'Python312', 'python.exe'), args: [] });
+      candidates.push({ cmd: path.join(root, 'Python311', 'python.exe'), args: [] });
+    }
     candidates.push({ cmd: 'python', args: [] });
   } else if (process.platform === 'darwin') {
     const macPythonRoots = [
@@ -448,6 +459,33 @@ function findPython() {
   return null;
 }
 
+async function installWindowsPython() {
+  if (process.platform !== 'win32') {
+    return false;
+  }
+
+  const winget = spawnSync('winget', ['--version'], { encoding: 'utf8' });
+  if (winget.status !== 0) {
+    appendLog('Windows package manager winget was not found. Please install Python 3.12 from the download link below.');
+    return false;
+  }
+
+  appendLog('Python 3.12 was not found. Installing Python 3.12 with winget...');
+  await runCommand('winget', [
+    'install',
+    '-e',
+    '--id',
+    'Python.Python.3.12',
+    '--scope',
+    'user',
+    '--accept-package-agreements',
+    '--accept-source-agreements'
+  ], { cwd: app.getPath('userData') });
+
+  appendLog('Python installer finished. Checking Python again...');
+  return true;
+}
+
 function runCommand(cmd, args, options = {}) {
   return new Promise((resolve, reject) => {
     appendLog(`$ ${cmd} ${args.join(' ')}`);
@@ -479,9 +517,13 @@ async function installRuntime() {
 
   try {
     copyBackendSource();
-    const python = findPython();
+    let python = findPython();
+    if (!python && process.platform === 'win32') {
+      await installWindowsPython();
+      python = findPython();
+    }
     if (!python) {
-      throw new Error('Python 3.11 or 3.12 was not found. Install Python 3.12 and restart DeckLens.');
+      throw new Error(`Python 3.11 or 3.12 was not found. Install Python 3.12 and restart DeckLens: ${PYTHON_DOWNLOAD_URL}`);
     }
 
     fs.mkdirSync(path.dirname(venvDir()), { recursive: true });
@@ -603,6 +645,7 @@ ipcMain.handle('runtime:get-status', () => ({
   userData: app.getPath('userData'),
   platform: process.platform,
   arch: process.arch,
+  pythonDownloadUrl: PYTHON_DOWNLOAD_URL,
   log: setupLog
 }));
 
@@ -613,6 +656,11 @@ ipcMain.handle('runtime:install', async () => {
 
 ipcMain.handle('runtime:start', async () => {
   await startBackendAndLoad();
+  return { ok: true };
+});
+
+ipcMain.handle('runtime:open-python-download', async () => {
+  await shell.openExternal(PYTHON_DOWNLOAD_URL);
   return { ok: true };
 });
 
