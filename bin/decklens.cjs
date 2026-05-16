@@ -723,6 +723,7 @@ function skillInstallOptions() {
 
 function printSkillResult(result, action) {
   const installed = result.installed || [];
+  const removed = result.removed || [];
   const skipped = result.skipped || [];
   const failed = result.failed || [];
   if (installed.length > 0) {
@@ -732,6 +733,12 @@ function printSkillResult(result, action) {
     }
   } else {
     console.log(`No Agent skill locations were ${action}.`);
+  }
+  if (removed.length > 0) {
+    console.log(`Removed ${removed.length} legacy location${removed.length === 1 ? '' : 's'}:`);
+    for (const target of removed) {
+      console.log(`- ${target.name}: ${target.path}`);
+    }
   }
   if (skipped.length > 0) {
     console.log(`Skipped ${skipped.length} location${skipped.length === 1 ? '' : 's'}:`);
