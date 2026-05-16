@@ -1,6 +1,6 @@
 {
   "name": "decklens-desktop",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "private": true,
   "description": "DeckLens desktop shell for macOS and Windows.",
   "author": "DeckLens",
@@ -69,6 +69,74 @@
       {
         "from": "lib/agent-skills.cjs",
         "to": "cli/agent-skills.cjs"
+      },
+      {
+        "from": "node_modules/@img",
+        "to": "cli/node_modules/@img"
+      },
+      {
+        "from": "node_modules/core-util-is",
+        "to": "cli/node_modules/core-util-is"
+      },
+      {
+        "from": "node_modules/detect-libc",
+        "to": "cli/node_modules/detect-libc"
+      },
+      {
+        "from": "node_modules/immediate",
+        "to": "cli/node_modules/immediate"
+      },
+      {
+        "from": "node_modules/inherits",
+        "to": "cli/node_modules/inherits"
+      },
+      {
+        "from": "node_modules/isarray",
+        "to": "cli/node_modules/isarray"
+      },
+      {
+        "from": "node_modules/jszip",
+        "to": "cli/node_modules/jszip"
+      },
+      {
+        "from": "node_modules/lie",
+        "to": "cli/node_modules/lie"
+      },
+      {
+        "from": "node_modules/pako",
+        "to": "cli/node_modules/pako"
+      },
+      {
+        "from": "node_modules/process-nextick-args",
+        "to": "cli/node_modules/process-nextick-args"
+      },
+      {
+        "from": "node_modules/readable-stream",
+        "to": "cli/node_modules/readable-stream"
+      },
+      {
+        "from": "node_modules/safe-buffer",
+        "to": "cli/node_modules/safe-buffer"
+      },
+      {
+        "from": "node_modules/semver",
+        "to": "cli/node_modules/semver"
+      },
+      {
+        "from": "node_modules/setimmediate",
+        "to": "cli/node_modules/setimmediate"
+      },
+      {
+        "from": "node_modules/sharp",
+        "to": "cli/node_modules/sharp"
+      },
+      {
+        "from": "node_modules/string_decoder",
+        "to": "cli/node_modules/string_decoder"
+      },
+      {
+        "from": "node_modules/util-deprecate",
+        "to": "cli/node_modules/util-deprecate"
       },
       {
         "from": "node_modules/lucide-static/icons",
@@ -147,7 +215,9 @@
     "@tabler/icons": "^3.44.0",
     "electron-updater": "^6.8.3",
     "heroicons": "^2.2.0",
+    "jszip": "^3.10.1",
     "lucide-static": "^1.16.0",
-    "phosphor-icons": "^1.4.2"
+    "phosphor-icons": "^1.4.2",
+    "sharp": "^0.34.5"
   }
 }
