@@ -1,6 +1,6 @@
 {
   "name": "decklens-desktop",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "private": true,
   "description": "DeckLens desktop shell for macOS and Windows.",
   "author": "DeckLens",
