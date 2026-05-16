@@ -3,7 +3,7 @@ name: decklens-convert
 description: 当用户提供图片、截图或 PDF，并希望转换、拆分或还原为可编辑 PPTX 时使用。
 metadata:
   decklens:
-    version: "0.2.12"
+    version: "0.2.13"
     min_app_version: "0.2.8"
     update_channel: stable
     source: decklens
@@ -27,7 +27,9 @@ metadata:
 | 页面里有柱状图、条形图、饼图、环形图、折线图 | 优先用 PPT 形状/SVG 重绘基础图表 | 把基础图表当作普通位图保留 |
 | 页面里有背景渐变、底部色带渐变、按钮渐变、卡片渐变 | 必须还原渐变方向、主要色阶和覆盖范围 | 用单一纯色替代明显渐变 |
 | 图标可匹配标准符号 | 优先用内置图标库替换，并保持同页风格一致 | 用 emoji、Unicode 符号或噪声蒙版像素代替 |
+| 页面里有任何 icon 候选 | 必须运行 `decklens icons find` 和 `decklens icons render`，或逐个说明无法匹配 | 不调用 icon 命令却声称完成了 icon 替换 |
 | 矢量/SVG/icon 已替换原图片层 | 删除或隐藏所有对应源位图层，并复查没有重复叠加 | 只新增矢量层但保留原图片 |
+| 新增了 shape/SVG/icon | 对应源图片删除数量必须大于 0，或明确证明该对象原本没有源图片层 | shape 盖在旧图片上，最终仍能选中旧碎片 |
 | OCR 文本回写到 PPT | 单行段落用自动宽度；同样式多行文本用固定宽度、自动高度 | 把同一段文字拆成多个互相漂移的文本框 |
 | SVG 在预览器里显示异常 | 用 `decklens icons render --format png --size 512` 生成透明 PNG 回退 | 交付预览损坏的 PPTX |
 | 元素不适合矢量化 | 明确保留为位图，并说明原因 | 强行重绘照片、3D、复杂纹理、复杂渐变 |
@@ -77,10 +79,10 @@ node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" convert "/
 node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" inspect "/path/to/output.pptx" --json
 ```
 
-6. 建立逐页替换清单：每个语义目标都要列出“源位图层/碎片层 -> 新 PPT 形状、SVG 或 PNG 图标”。没有源位图层编号的替换不允许直接开始。
+6. 建立逐页替换清单：每个语义目标都要列出“源位图层/碎片层 -> 新 PPT 形状、SVG 或 PNG 图标”。没有源位图层编号的替换不允许直接开始，除非明确说明该对象是新增辅助元素且原图没有对应源层。
 7. 按替换清单后处理 PPTX：先删除或隐藏对应源位图层，再插入原生 PPT 形状、SVG 或高清透明 PNG 图标，并保持 z-order。
 8. 对 OCR 文本层应用文本框尺寸策略：单行段落自动宽度；同样式多行固定宽度、自动高度；标题、标签、数值保持原对齐方式。
-9. 后处理完成后再次运行 `inspect`，确认图片层、shape、文本框、图层顺序和被替换源位图删除情况符合预期。
+9. 后处理完成后再次运行 `inspect`，确认图片层、shape、文本框、图层顺序和被替换源位图删除情况符合预期。若仍有大量小图片碎片、重叠图片碎片、未替换 icon 图片，不能交付。
 10. 最终返回 PPTX 路径，并报告转换模式、逐页矢量替换、渐变/背景还原方式、icon 来源、图表重绘情况、保留位图原因。
 
 ## 常用命令
@@ -220,10 +222,12 @@ node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" skills upd
 
 1. 原图观察和候选计划。
 2. DeckLens 原始输出 `inspect`。
-3. 源图层到目标对象的替换清单。
-4. 后处理。
-5. 最终 `inspect`。
-6. 预览或截图核对。
+3. 图片碎片审计。
+4. icon 候选审计。
+5. 源图层到目标对象的替换清单。
+6. 后处理。
+7. 最终 `inspect`。
+8. 预览或截图核对。
 
 替换清单必须包含：
 
@@ -237,6 +241,8 @@ node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" skills upd
 
 不能只说“补了矢量元素”。必须能说明每个新增矢量对应删除了哪些源位图层。若最终 `inspect` 里仍然存在相同位置、相同尺寸、相同视觉内容的源图片层，要继续清理。
 
+后处理脚本必须打印每页实际删除了哪些图片层。如果某页新增了 shape/SVG/icon，但该页实际删除图片层数量为 0，默认视为失败，需要回到 `inspect` 查找并删除对应源层。只有当新增对象确实是原图没有的辅助校正元素时，才允许删除数量为 0，并且必须在最终说明里逐项说明。
+
 复杂位图组合并清单必须额外包含：
 
 - 合并原因，例如“同一张人物照片被拆成 12 个重叠碎片”。
@@ -244,6 +250,56 @@ node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" skills upd
 - 被删除的所有碎片层 index/media path。
 - 新插入的单张图片层位置、尺寸和 z-order。
 - 验收结论：最终该语义对象只能剩一个可选中的图片层。
+
+## 图片碎片审计
+
+DeckLens 的原始分层结果只是中间产物。最终 PPTX 不能保留算法拆出来的无语义碎片。
+
+每页 `inspect` 后必须统计：
+
+- `picture` 总数。
+- 小图片数量：宽和高都小于 `0.8in` 的 `picture`。
+- 重叠图片组：多个 `picture` 的 bbox 高度重叠或互相嵌套，并且肉眼属于同一图像。
+- 背景、照片、截图、纹理、图表、icon、卡片边框等语义分类。
+
+触发强制清理的条件：
+
+- 单页小图片数量超过 6。
+- 单页 `picture` 总数超过该页语义位图对象数量的 2 倍。
+- 多个 picture 位于同一张照片、人物、3D、截图、纹理或插画范围内。
+- 小 picture 看起来是图标、装饰点、边框碎片、阴影碎片、蒙版残片。
+
+清理方式：
+
+- 复杂照片、截图、纹理、3D、插画碎片：从原始输入裁切完整区域，替换成一张图片。
+- 卡片边框、背景、阴影碎片：删除碎片，用 shape 重建卡片容器。
+- icon 碎片：删除碎片，用 `decklens icons render` 输出的 SVG/PNG 替换。
+- 图表碎片：删除碎片，用 shape/SVG 重绘基础图表。
+
+最终 `inspect` 的 picture 数必须能逐个解释为语义对象：整页背景、复杂照片、截图缩略图、纹理、无法重绘的复杂图像，或已渲染的标准 icon。不能解释的 picture 都要继续清理。
+
+如果最终仍有大量小 picture，但没有逐项解释，结果只能称为“原始分层草稿”，不能称为最终交付。
+
+## Icon 审计
+
+只要原图里出现图标、社交媒体标识、功能符号、状态符号、箭头、勾叉、用户、文件、屏幕、增长、目标等常见符号，就必须执行 icon 审计。
+
+icon 审计必须包含：
+
+- 每页 icon 候选数量、位置和语义，例如“第 1 页三个项目卡片角标”“第 2 页底部社交图标”“第 4 页目标卡片编号旁图标”。
+- 对每个候选运行 `decklens icons find <语义名> --json`。第一次失败时至少尝试 2 个同义词或相近词。
+- 对匹配成功的候选运行 `decklens icons render ... --format svg`，若 SVG 预览异常再渲染 PNG。
+- 在 PPTX 中插入渲染后的 SVG/PNG，并删除对应源图片碎片。
+- 最终说明里列出每页实际渲染的 icon 文件路径或 icon 库来源。
+
+失败条件：
+
+- 原图有 icon 候选，但会话里没有任何 `decklens icons find` 调用。
+- 原图有 icon 候选，但没有任何 `decklens icons render` 产物被插入。
+- 最终 PPTX 中仍有可解释为 icon 的小 picture，而没有说明保留原因。
+- 最终报告声称使用了某个 icon 库，但没有实际 render 命令或产物。
+
+如果确实没有任何 icon 候选，最终报告必须写“icon 审计：未发现 icon 候选”。不能省略 icon 审计。
 
 ## 矢量和图标后处理
 
@@ -255,13 +311,13 @@ node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" skills upd
 6. 对背景渐变和底部色带渐变，必须在 Quick Look 或截图预览中与原图并排核对。若渐变方向、亮暗过渡或覆盖范围明显不对，继续调整后再交付。
 7. 对纯色背景、纯色区块、卡片容器，优先用 PPT shape 重建。卡片容器尤其要拆分处理：容器矢量化，内部复杂图片可位图保留。只有卡片本体存在明显纹理、噪声、照片或复杂光影时，才允许把卡片本体保留为位图。
 8. 对基础图表，先判断图表类型和数据关系，再用形状重绘：柱状图/条形图用矩形，饼图/环形图用 SVG 扇区或 PPT 形状，折线图用线段和圆点，坐标轴/网格线/图例用线条和文本。图表的数据值无法精确读出时，允许按视觉比例近似，但要保留原来的标签、颜色和图例顺序。
-9. 对图标先做语义匹配，再使用 `decklens icons find` 和 `decklens icons render`。优先级：`lucide-static` outline、`tabler-icons` outline/filled、`heroicons` outline/solid。
+9. 对图标先做语义匹配，再使用 `decklens icons find` 和 `decklens icons render`。优先级：`lucide-static` outline、`tabler-icons` outline/filled、`heroicons` outline/solid。没有执行这两个命令时，不允许声称完成了图标替换。
 10. 如果 `icons find thumbs-up` 失败，继续尝试同义或单复数名称，例如 `thumb-up`、`like`、`check`、`users`、`user`。不要因为第一次搜索失败就放弃图标替换。
 11. 图标风格以“当前页”为边界统一，不要跨页强行统一。同一页内如果原图的同一组图标都是线性，就全部线性；如果都是面型，就全部面型；如果原图同页本身有线性和面型混用，要按原图分组保留这种差异。不要默认把所有图标都画成线性。
 12. SVG 可用时优先使用 SVG；若预览器或 PowerPoint 显示 SVG 异常，统一渲染为 512px 透明 PNG 再插入。
 13. 插入替换元素时保持原图层顺序。替换元素要放在被删除位图层相同的 z-order 位置，避免遮挡关系变化。
 14. 对复杂位图组，优先从原始输入图按完整语义区域裁切，不要尝试把 DeckLens 的碎片重新拼起来。原图裁切能保留边缘、纹理和抗锯齿，拼碎片通常会留下缝隙、毛边和重复像素。
-15. 每新增一个 shape/SVG/icon/合并位图替换原图内容，都必须删除或隐藏对应源位图层。不要让“新对象 + 旧碎片”同时叠在一起。
+15. 每新增一个 shape/SVG/icon/合并位图替换原图内容，都必须删除或隐藏对应源位图层。不要让“新对象 + 旧碎片”同时叠在一起。最终 `inspect` 里如果还能看到同一位置的旧 picture，必须继续清理。
 16. 不要运行 `npm install`、不要从网络下载图标包、不要要求用户安装图标依赖。
 
 ## 文本图层规则
