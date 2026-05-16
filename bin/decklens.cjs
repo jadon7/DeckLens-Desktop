@@ -12,6 +12,8 @@ function printHelp() {
 
 Usage:
   decklens convert <input...> [options]
+  decklens icons find <name> [options]
+  decklens icons libraries [options]
   decklens install-skills [options]
   decklens skills status [options]
   decklens skills update [options]
@@ -19,6 +21,7 @@ Usage:
 
 Commands:
   convert    Convert image-like presentation pages into an editable PPTX deck.
+  icons      Find bundled icon assets for Agent PPT post-processing.
   install-skills
              Install the DeckLens Agent skill into user-global Agent skill folders.
   skills     Inspect or update installed DeckLens Agent skills.
@@ -36,6 +39,10 @@ Convert options are passed through to DeckLens' conversion engine:
 Install skill options:
   --force                     Overwrite modified DeckLens-managed skills
   --json                      Print machine-readable install status
+
+Icon options:
+  --style <outline|solid|filled|regular>
+  --json                      Print machine-readable icon matches
 `);
 }
 
@@ -143,6 +150,196 @@ function runConvert(args) {
   return result.status === null ? 1 : result.status;
 }
 
+function normalizeIconName(name) {
+  const normalized = String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const aliases = {
+    email: 'mail',
+    envelope: 'mail',
+    world: 'globe',
+    website: 'globe',
+    next: 'arrow-right',
+    right: 'arrow-right',
+    account: 'user',
+    person: 'user',
+    tick: 'check',
+    confirm: 'check',
+    close: 'x',
+    delete: 'trash',
+    remove: 'trash'
+  };
+  return aliases[normalized] || normalized;
+}
+
+function optionValue(args, name) {
+  const index = args.indexOf(name);
+  if (index === -1) return null;
+  return args[index + 1] || null;
+}
+
+function bundledIconRoots() {
+  const roots = [
+    path.join(__dirname, 'icons'),
+    path.join(ROOT_DIR, 'icons'),
+    path.join(ROOT_DIR, 'cli', 'icons'),
+    path.join(process.resourcesPath || '', 'cli', 'icons')
+  ];
+  if (process.env.DECKLENS_ICON_DIR) {
+    roots.unshift(process.env.DECKLENS_ICON_DIR);
+  }
+  return roots;
+}
+
+function nodeModuleRoots() {
+  return [
+    path.join(ROOT_DIR, 'node_modules'),
+    path.join(process.resourcesPath || '', 'app.asar.unpacked', 'node_modules')
+  ];
+}
+
+function iconLibraries() {
+  const candidates = [];
+
+  function addDirs(library, style, dirs, extension = 'svg') {
+    for (const dir of dirs) {
+      candidates.push({ library, style, dir, extension });
+    }
+  }
+
+  const bundledRoots = bundledIconRoots();
+  const moduleRoots = nodeModuleRoots();
+  addDirs('lucide-static', 'outline', [
+    ...bundledRoots.map((root) => path.join(root, 'lucide-static')),
+    ...moduleRoots.map((root) => path.join(root, 'lucide-static', 'icons'))
+  ]);
+  addDirs('tabler-icons', 'outline', [
+    ...bundledRoots.map((root) => path.join(root, 'tabler-icons', 'outline')),
+    ...moduleRoots.map((root) => path.join(root, '@tabler', 'icons', 'icons', 'outline'))
+  ]);
+  addDirs('tabler-icons', 'filled', [
+    ...bundledRoots.map((root) => path.join(root, 'tabler-icons', 'filled')),
+    ...moduleRoots.map((root) => path.join(root, '@tabler', 'icons', 'icons', 'filled'))
+  ]);
+  addDirs('heroicons', 'outline', [
+    ...bundledRoots.map((root) => path.join(root, 'heroicons', '24', 'outline')),
+    ...moduleRoots.map((root) => path.join(root, 'heroicons', '24', 'outline'))
+  ]);
+  addDirs('heroicons', 'solid', [
+    ...bundledRoots.map((root) => path.join(root, 'heroicons', '24', 'solid')),
+    ...bundledRoots.map((root) => path.join(root, 'heroicons', '20', 'solid')),
+    ...bundledRoots.map((root) => path.join(root, 'heroicons', '16', 'solid')),
+    ...moduleRoots.map((root) => path.join(root, 'heroicons', '24', 'solid')),
+    ...moduleRoots.map((root) => path.join(root, 'heroicons', '20', 'solid')),
+    ...moduleRoots.map((root) => path.join(root, 'heroicons', '16', 'solid'))
+  ]);
+  addDirs('phosphor-icons', 'font', [
+    ...bundledRoots.map((root) => path.join(root, 'phosphor-icons', 'fonts')),
+    ...moduleRoots.map((root) => path.join(root, 'phosphor-icons', 'src', 'fonts'))
+  ], 'font');
+  return candidates;
+}
+
+function existingIconLibraries() {
+  return iconLibraries().filter((library) => {
+    try {
+      return fs.statSync(library.dir).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+}
+
+function findIcons(args) {
+  const json = args.includes('--json');
+  const preferredStyle = optionValue(args, '--style');
+  const positional = [];
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--json') continue;
+    if (arg === '--style') {
+      index += 1;
+      continue;
+    }
+    if (!arg.startsWith('--')) positional.push(arg);
+  }
+  const name = normalizeIconName(positional[0] || '');
+  if (!name) {
+    throw new Error('Icon name is required. Example: decklens icons find mail --json');
+  }
+
+  const names = [name];
+  if (name === 'globe') names.push('globe-2', 'globe-alt', 'globe-americas', 'world');
+  if (name === 'mail') names.push('envelope');
+  if (name === 'user') names.push('user-circle');
+
+  const matches = [];
+  const seenPaths = new Set();
+  for (const library of existingIconLibraries()) {
+    if (preferredStyle && library.style !== preferredStyle) continue;
+    if (library.extension === 'font') {
+      continue;
+    }
+    for (const candidateName of names) {
+      const filePath = path.join(library.dir, `${candidateName}.svg`);
+      if (fileExists(filePath) && !seenPaths.has(filePath)) {
+        seenPaths.add(filePath);
+        matches.push({
+          library: library.library,
+          style: library.style,
+          name: candidateName,
+          path: filePath
+        });
+      }
+    }
+  }
+
+  if (json) {
+    console.log(JSON.stringify({ query: name, matches }, null, 2));
+  } else if (matches.length) {
+    for (const match of matches) {
+      console.log(`${match.library}/${match.style}/${match.name}: ${match.path}`);
+    }
+  } else {
+    console.log(`No bundled icon found for "${name}".`);
+  }
+  return matches.length ? 0 : 1;
+}
+
+function listIconLibraries(args) {
+  const json = args.includes('--json');
+  const libraries = existingIconLibraries().map((library) => ({
+    library: library.library,
+    style: library.style,
+    path: library.dir,
+    type: library.extension === 'font' ? 'font' : 'svg'
+  }));
+  if (json) {
+    console.log(JSON.stringify({ libraries }, null, 2));
+  } else {
+    for (const library of libraries) {
+      console.log(`${library.library}/${library.style} (${library.type}): ${library.path}`);
+    }
+  }
+  return 0;
+}
+
+function runIcons(args) {
+  const subcommand = args[0] || 'libraries';
+  if (subcommand === 'find') {
+    return findIcons(args.slice(1));
+  }
+  if (subcommand === 'libraries') {
+    return listIconLibraries(args.slice(1));
+  }
+  console.error(`Unknown icons command: ${subcommand}`);
+  printHelp();
+  return 1;
+}
+
 function loadAgentSkillInstaller() {
   const candidates = [
     path.join(__dirname, 'agent-skills.cjs'),
@@ -246,6 +443,10 @@ function main() {
 
   if (command === 'convert') {
     return runConvert(args.slice(1));
+  }
+
+  if (command === 'icons') {
+    return runIcons(args.slice(1));
   }
 
   if (command === 'install-skills') {

@@ -1,6 +1,6 @@
 {
   "name": "decklens-desktop",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "private": true,
   "description": "DeckLens desktop shell for macOS and Windows.",
   "author": "DeckLens",
@@ -71,6 +71,22 @@
         "to": "cli/agent-skills.cjs"
       },
       {
+        "from": "node_modules/lucide-static/icons",
+        "to": "cli/icons/lucide-static"
+      },
+      {
+        "from": "node_modules/@tabler/icons/icons",
+        "to": "cli/icons/tabler-icons"
+      },
+      {
+        "from": "node_modules/heroicons",
+        "to": "cli/icons/heroicons"
+      },
+      {
+        "from": "node_modules/phosphor-icons/src",
+        "to": "cli/icons/phosphor-icons"
+      },
+      {
         "from": "skills",
         "to": "skills",
         "filter": [
@@ -128,6 +144,10 @@
     }
   },
   "dependencies": {
-    "electron-updater": "^6.8.3"
+    "@tabler/icons": "^3.44.0",
+    "electron-updater": "^6.8.3",
+    "heroicons": "^2.2.0",
+    "lucide-static": "^1.16.0",
+    "phosphor-icons": "^1.4.2"
   }
 }
