@@ -362,6 +362,10 @@ function windowsRuntimeSanitizedMarkerPath() {
   return userPath('python-runtime', 'windows-no-torch-v1.json');
 }
 
+function windowsPaddlePinnedMarkerPath() {
+  return userPath('python-runtime', 'windows-paddle-3.2.2.json');
+}
+
 function appendLog(message) {
   const line = `[${new Date().toLocaleTimeString()}] ${message}`;
   setupLog.push(line);
@@ -412,35 +416,92 @@ function runtimeRequirementsPath() {
   if (process.platform !== 'win32') {
     return requirementsPath;
   }
-  const excluded = /^(torch|torchvision|torchaudio|ultralytics|simple-lama-inpainting|segment-anything)([<>=~! ].*)?$/i;
+  const excluded = /^(torch|torchvision|torchaudio|ultralytics|simple-lama-inpainting|segment-anything|paddlepaddle)([<>=~! ].*)?$/i;
   const source = fs.readFileSync(requirementsPath, 'utf8');
-  const filtered = source
+  const lines = source
     .split(/\r?\n/)
     .filter((line) => !excluded.test(line.trim()))
-    .join('\n');
+    .filter((line) => line.trim() !== '');
+  lines.push('paddlepaddle==3.2.2');
   const windowsRequirementsPath = path.join(backendDir(), 'requirements-windows.txt');
-  fs.writeFileSync(windowsRequirementsPath, filtered.endsWith('\n') ? filtered : `${filtered}\n`);
+  fs.writeFileSync(windowsRequirementsPath, `${lines.join('\n')}\n`);
   return windowsRequirementsPath;
 }
 
+function installedPaddleVersion() {
+  if (process.platform !== 'win32' || !fs.existsSync(venvPython())) {
+    return null;
+  }
+  const result = spawnSync(venvPython(), ['-c', 'import importlib.metadata as m; print(m.version("paddlepaddle"))'], {
+    cwd: backendDir(),
+    env: process.env,
+    encoding: 'utf8'
+  });
+  if (result.status !== 0) {
+    return null;
+  }
+  const output = `${result.stdout || ''}${result.stderr || ''}`;
+  const match = output.match(/\b\d+\.\d+\.\d+(?:[a-zA-Z0-9.+-]*)?\b/);
+  return match ? match[0] : null;
+}
+
+async function ensureWindowsPaddleRuntime() {
+  if (process.platform !== 'win32' || !fs.existsSync(venvPython())) {
+    return;
+  }
+  const requiredVersion = '3.2.2';
+  const currentVersion = installedPaddleVersion();
+  if (currentVersion === requiredVersion && fs.existsSync(windowsPaddlePinnedMarkerPath())) {
+    return;
+  }
+  if (currentVersion !== requiredVersion) {
+    appendLog(`Pinning Windows paddlepaddle runtime: ${currentVersion || 'missing'} -> ${requiredVersion}`);
+    await runCommand(venvPython(), ['-m', 'pip', 'install', `paddlepaddle==${requiredVersion}`]);
+  }
+  fs.writeFileSync(windowsPaddlePinnedMarkerPath(), JSON.stringify({
+    pinnedAt: new Date().toISOString(),
+    package: 'paddlepaddle',
+    version: requiredVersion,
+    reason: 'Avoid Paddle 3.3.x oneDNN/PIR OCR failures on Windows.'
+  }, null, 2));
+}
+
 async function sanitizeWindowsRuntime() {
-  if (process.platform !== 'win32' || !fs.existsSync(venvPython()) || fs.existsSync(windowsRuntimeSanitizedMarkerPath())) {
+  if (process.platform !== 'win32' || !fs.existsSync(venvPython())) {
+    return;
+  }
+  const blockedPackages = [
+    'torch',
+    'torchvision',
+    'torchaudio',
+    'ultralytics',
+    'simple-lama-inpainting',
+    'segment-anything'
+  ];
+  const probe = spawnSync(venvPython(), [
+    '-c',
+    `import importlib.metadata as m
+blocked = ${JSON.stringify(blockedPackages)}
+installed = []
+for pkg in blocked:
+    try:
+        m.version(pkg)
+        installed.append(pkg)
+    except m.PackageNotFoundError:
+        pass
+print("\\n".join(installed))`
+  ], {
+    cwd: backendDir(),
+    env: process.env,
+    encoding: 'utf8'
+  });
+  const installed = (probe.stdout || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (installed.length === 0 && fs.existsSync(windowsRuntimeSanitizedMarkerPath())) {
     return;
   }
   appendLog('Removing torch-backed optional packages from the Windows runtime...');
   try {
-    await runCommand(venvPython(), [
-      '-m',
-      'pip',
-      'uninstall',
-      '-y',
-      'torch',
-      'torchvision',
-      'torchaudio',
-      'ultralytics',
-      'simple-lama-inpainting',
-      'segment-anything'
-    ]);
+    await runCommand(venvPython(), ['-m', 'pip', 'uninstall', '-y', ...blockedPackages]);
   } catch (error) {
     appendLog(`Windows runtime optional package cleanup skipped: ${error.message}`);
   }
@@ -645,6 +706,7 @@ async function installRuntime() {
     });
     await runCommand(venvPython(), ['-m', 'pip', 'install', '-r', runtimeRequirementsPath()]);
     await sanitizeWindowsRuntime();
+    await ensureWindowsPaddleRuntime();
 
     fs.writeFileSync(setupMarkerPath(), JSON.stringify({
       installedAt: new Date().toISOString(),
@@ -730,6 +792,7 @@ async function startBackendAndLoad() {
 
   copyBackendSource();
   await sanitizeWindowsRuntime();
+  await ensureWindowsPaddleRuntime();
   const port = await findFreePort();
   backendUrl = `http://127.0.0.1:${port}`;
   const dataDir = userPath('data');
