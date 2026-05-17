@@ -2838,14 +2838,10 @@
             display: none;
         }
 
-        .electron-shell.platform-darwin .window-drag-region {
-            display: none;
-        }
-
-        .electron-shell.platform-darwin .window-topbar {
+        .electron-shell .window-topbar {
             position: fixed;
-            inset: 0 0 auto 72px;
-            z-index: 1000;
+            inset: 0 0 auto 0;
+            z-index: 5000;
             display: flex;
             justify-content: flex-end;
             align-items: flex-start;
@@ -2854,6 +2850,14 @@
             padding: 16px 22px 0 0;
             pointer-events: auto;
             -webkit-app-region: no-drag;
+        }
+
+        .electron-shell.platform-darwin .window-drag-region {
+            display: none;
+        }
+
+        .electron-shell.platform-darwin .window-topbar {
+            inset: 0 0 auto 72px;
         }
 
         .electron-shell.platform-darwin button,

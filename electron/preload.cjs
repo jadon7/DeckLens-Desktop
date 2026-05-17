@@ -8,7 +8,11 @@ contextBridge.exposeInMainWorld('decklensRuntime', {
   getStatus: () => ipcRenderer.invoke('runtime:get-status'),
   install: () => ipcRenderer.invoke('runtime:install'),
   start: () => ipcRenderer.invoke('runtime:start'),
-  openPythonDownload: () => ipcRenderer.invoke('runtime:open-python-download'),
+  onStatus: (callback) => {
+    const listener = (_event, status) => callback(status);
+    ipcRenderer.on('runtime-status', listener);
+    return () => ipcRenderer.removeListener('runtime-status', listener);
+  },
   updates: {
     getStatus: () => ipcRenderer.invoke('updates:get-status'),
     check: () => ipcRenderer.invoke('updates:check'),

@@ -22,13 +22,17 @@ function loadAgentSkillRuntime() {
 const { getAgentSkillStatus, installAgentSkills, updateAgentSkills } = loadAgentSkillRuntime();
 
 const UPDATE_FEED_URL = 'https://updates.dsxzai.com/';
-const PYTHON_DOWNLOAD_URL = 'https://www.python.org/downloads/release/python-31210/';
-
 let mainWindow;
 let backendProcess;
 let backendUrl;
 let runtimeInstalling = false;
 const setupLog = [];
+const runtimeState = {
+  status: 'idle',
+  message: '准备本地运行环境',
+  progress: 0,
+  error: null
+};
 let updateCheckStarted = false;
 let updateCheckSilent = false;
 let updateErrorSuppressedUntil = 0;
@@ -55,6 +59,14 @@ function publishUpdateState(patch = {}) {
     mainWindow.webContents.send('update-status', { ...updateState });
   }
   return { ...updateState };
+}
+
+function publishRuntimeState(patch = {}) {
+  Object.assign(runtimeState, patch);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('runtime-status', { ...runtimeState });
+  }
+  return { ...runtimeState };
 }
 
 function updateErrorState(error, fallbackMessage) {
@@ -466,10 +478,16 @@ async function installWindowsPython() {
 
   const winget = spawnSync('winget', ['--version'], { encoding: 'utf8' });
   if (winget.status !== 0) {
-    appendLog('Windows package manager winget was not found. Please install Python 3.12 from the download link below.');
+    appendLog('Windows package manager winget was not found.');
     return false;
   }
 
+  publishRuntimeState({
+    status: 'installing',
+    message: '正在准备 Python 3.12...',
+    progress: 22,
+    error: null
+  });
   appendLog('Python 3.12 was not found. Installing Python 3.12 with winget...');
   await runCommand('winget', [
     'install',
@@ -482,6 +500,12 @@ async function installWindowsPython() {
     '--accept-source-agreements'
   ], { cwd: app.getPath('userData') });
 
+  publishRuntimeState({
+    status: 'installing',
+    message: '正在确认 Python 运行环境...',
+    progress: 36,
+    error: null
+  });
   appendLog('Python installer finished. Checking Python again...');
   return true;
 }
@@ -514,21 +538,51 @@ async function installRuntime() {
   }
   runtimeInstalling = true;
   setupLog.length = 0;
+  publishRuntimeState({
+    status: 'installing',
+    message: '正在准备 DeckLens 运行环境...',
+    progress: 6,
+    error: null
+  });
 
   try {
     copyBackendSource();
+    publishRuntimeState({
+      status: 'installing',
+      message: '正在检查 Python 运行环境...',
+      progress: 14,
+      error: null
+    });
     let python = findPython();
     if (!python && process.platform === 'win32') {
       await installWindowsPython();
       python = findPython();
     }
     if (!python) {
-      throw new Error(`Python 3.11 or 3.12 was not found. Install Python 3.12 and restart DeckLens: ${PYTHON_DOWNLOAD_URL}`);
+      throw new Error('Python 3.11 or 3.12 was not found.');
     }
 
     fs.mkdirSync(path.dirname(venvDir()), { recursive: true });
+    publishRuntimeState({
+      status: 'installing',
+      message: '正在创建本地运行环境...',
+      progress: 42,
+      error: null
+    });
     await runCommand(python.cmd, [...python.args, '-m', 'venv', venvDir()]);
+    publishRuntimeState({
+      status: 'installing',
+      message: '正在准备基础依赖...',
+      progress: 58,
+      error: null
+    });
     await runCommand(venvPython(), ['-m', 'pip', 'install', '--upgrade', 'pip', 'setuptools', 'wheel']);
+    publishRuntimeState({
+      status: 'installing',
+      message: '正在安装图像识别与 PPTX 生成依赖...',
+      progress: 72,
+      error: null
+    });
     await runCommand(venvPython(), ['-m', 'pip', 'install', '-r', path.join(backendDir(), 'requirements.txt')]);
 
     fs.writeFileSync(setupMarkerPath(), JSON.stringify({
@@ -536,13 +590,28 @@ async function installRuntime() {
       platform: process.platform,
       arch: process.arch
     }, null, 2));
+    publishRuntimeState({
+      status: 'starting',
+      message: '依赖安装完成，正在进入 DeckLens...',
+      progress: 96,
+      error: null
+    });
     appendLog('Runtime installation complete.');
     await startBackendAndLoad();
   } catch (error) {
+    publishRuntimeState({
+      status: 'error',
+      message: '运行环境准备失败',
+      progress: 0,
+      error: error.message
+    });
     appendLog(`Runtime installation failed: ${error.message}`);
     throw error;
   } finally {
     runtimeInstalling = false;
+    if (runtimeState.status === 'installing') {
+      publishRuntimeState({ status: 'idle' });
+    }
   }
 }
 
@@ -645,7 +714,7 @@ ipcMain.handle('runtime:get-status', () => ({
   userData: app.getPath('userData'),
   platform: process.platform,
   arch: process.arch,
-  pythonDownloadUrl: PYTHON_DOWNLOAD_URL,
+  runtime: { ...runtimeState },
   log: setupLog
 }));
 
@@ -656,11 +725,6 @@ ipcMain.handle('runtime:install', async () => {
 
 ipcMain.handle('runtime:start', async () => {
   await startBackendAndLoad();
-  return { ok: true };
-});
-
-ipcMain.handle('runtime:open-python-download', async () => {
-  await shell.openExternal(PYTHON_DOWNLOAD_URL);
   return { ok: true };
 });
 

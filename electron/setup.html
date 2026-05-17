@@ -33,9 +33,9 @@
       }
 
       main {
-        width: min(920px, calc(100vw - 64px));
-        margin: 0 auto;
+        width: min(760px, calc(100vw - 56px));
         min-height: 100vh;
+        margin: 0 auto;
         display: grid;
         align-content: center;
         gap: 24px;
@@ -66,19 +66,21 @@
         border: 1px solid #dfdfdc;
         border-radius: 10px;
         background: #fff;
-        padding: 32px;
+        padding: 34px;
       }
 
       h1 {
         margin: 0;
-        font-size: clamp(30px, 5vw, 54px);
+        color: #050505;
+        font-size: clamp(30px, 4.8vw, 48px);
         line-height: 1.04;
+        font-weight: 760;
         letter-spacing: 0;
         text-align: center;
       }
 
       .lead {
-        width: min(620px, 100%);
+        width: min(560px, 100%);
         margin: 16px auto 0;
         color: #666;
         font-size: 15px;
@@ -86,35 +88,76 @@
         text-align: center;
       }
 
+      .progress {
+        margin-top: 28px;
+      }
+
+      .progress-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        color: #555;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .progress-percent {
+        color: #111;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .progress-track {
+        height: 8px;
+        margin-top: 12px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgb(92 92 92 / 6%);
+      }
+
+      .progress-fill {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #6366f1, #3ab27c, #8fb53f);
+        transition: width 0.28s ease;
+      }
+
+      .status-card {
+        margin-top: 22px;
+        border: 1px solid #e7e7e3;
+        border-radius: 8px;
+        background: #fafafa;
+        padding: 14px 16px;
+        color: #777;
+        font-size: 13px;
+        line-height: 1.6;
+        text-align: center;
+      }
+
+      .status-card.error {
+        border-color: rgba(255, 88, 88, 0.32);
+        background: rgba(255, 88, 88, 0.06);
+        color: #9b2b2b;
+      }
+
       .actions {
         display: flex;
-        flex-wrap: wrap;
         justify-content: center;
-        gap: 10px;
-        margin-top: 26px;
+        margin-top: 24px;
       }
 
       button {
         height: 42px;
-        border-radius: 999px;
         border: 1px solid #111;
-        padding: 0 18px;
+        border-radius: 999px;
         background: #111;
         color: #fff;
+        padding: 0 20px;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
         -webkit-app-region: no-drag;
-      }
-
-      button.secondary {
-        border-color: #dfdfdc;
-        background: #fff;
-        color: #111;
-      }
-
-      button:focus {
-        outline: none;
       }
 
       button:disabled {
@@ -122,101 +165,8 @@
         opacity: 0.48;
       }
 
-      .meta {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
-        margin-top: 26px;
-      }
-
-      .meta-item {
-        min-width: 0;
-        border: 1px solid #e7e7e3;
-        border-radius: 8px;
-        background: #fafafa;
-        padding: 14px;
-      }
-
-      .meta-label {
-        display: block;
-        color: #8a8a86;
-        font-size: 12px;
-        line-height: 1.3;
-      }
-
-      .meta-value {
-        display: block;
-        margin-top: 6px;
-        overflow: hidden;
-        color: #111;
-        font-size: 13px;
-        font-weight: 700;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .log-panel {
-        border: 1px solid #dfdfdc;
-        border-radius: 10px;
-        background: #fff;
-        overflow: hidden;
-      }
-
-      .log-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid #eee;
-        padding: 12px 16px;
-        color: #777;
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #c7c7c2;
-      }
-
-      .status-dot.active {
-        background: #509cf8;
-      }
-
-      pre {
-        height: 210px;
-        margin: 0;
-        overflow: auto;
-        padding: 16px;
-        background: #fff;
-        color: #555;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 12px;
-        line-height: 1.55;
-        white-space: pre-wrap;
-        word-break: break-word;
-        user-select: text;
-      }
-
-      @media (max-width: 720px) {
-        body {
-          overflow: auto;
-        }
-
-        main {
-          width: min(100vw - 28px, 920px);
-          align-content: start;
-          padding-top: 64px;
-        }
-
-        .panel {
-          padding: 24px;
-        }
-
-        .meta {
-          grid-template-columns: 1fr;
-        }
+      button:focus {
+        outline: none;
       }
     </style>
   </head>
@@ -229,64 +179,59 @@
       </div>
 
       <section class="panel">
-        <h1 data-i18n="title">Install local runtime</h1>
+        <h1 data-i18n="title">Preparing DeckLens</h1>
         <p class="lead" data-i18n="body">
-          DeckLens uses a local Python runtime for image recognition and PPTX generation. Install it once on this computer, then start DeckLens.
+          DeckLens is preparing the local runtime used for image recognition and PPTX generation. This only needs to happen once on this computer.
         </p>
+
+        <div class="progress" aria-live="polite">
+          <div class="progress-head">
+            <span id="statusMessage" data-i18n="idle">Ready to install local runtime</span>
+            <span class="progress-percent" id="progressPercent">0%</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <div class="status-card" id="statusCard" data-i18n="note">
+          Keep DeckLens open while the runtime is prepared. The app will open automatically when setup completes.
+        </div>
+
         <div class="actions">
           <button id="install" data-i18n="install">Install runtime</button>
-          <button class="secondary" id="downloadPython" data-i18n="downloadPython">Download Python 3.12</button>
-          <button class="secondary" id="start" data-i18n="start">Start DeckLens</button>
         </div>
-        <div class="meta" id="meta"></div>
-      </section>
-
-      <section class="log-panel">
-        <div class="log-header">
-          <span data-i18n="logTitle">Installation log</span>
-          <span class="status-dot" id="statusDot" aria-hidden="true"></span>
-        </div>
-        <pre id="log"></pre>
       </section>
     </main>
 
     <script>
       const installButton = document.getElementById('install');
-      const downloadPythonButton = document.getElementById('downloadPython');
-      const startButton = document.getElementById('start');
-      const statusDot = document.getElementById('statusDot');
-      const meta = document.getElementById('meta');
-      const log = document.getElementById('log');
+      const statusMessage = document.getElementById('statusMessage');
+      const statusCard = document.getElementById('statusCard');
+      const progressFill = document.getElementById('progressFill');
+      const progressPercent = document.getElementById('progressPercent');
       const I18N = {
         zh: {
-          title: '安装本地运行环境',
-          body: 'DeckLens 会在本机 Python 运行环境中完成图片识别、图层拆分和 PPTX 生成。首次使用只需要安装一次；Windows 下如果没有 Python，DeckLens 会优先尝试自动安装 Python 3.12。',
-          install: '安装运行环境',
-          downloadPython: '下载 Python 3.12',
-          start: '启动 DeckLens',
-          runtimeInstalled: '运行环境',
-          yes: '已安装',
-          no: '未安装',
-          platform: '平台',
-          dataDirectory: '数据目录',
-          logTitle: '安装日志',
-          ready: '就绪',
-          installing: '安装中'
+          title: '正在准备 DeckLens',
+          body: 'DeckLens 会在本机准备图片识别、图层拆分和 PPTX 生成所需的运行环境。这个过程只需要在这台电脑上完成一次。',
+          install: '开始安装',
+          idle: '准备安装本地运行环境',
+          note: '安装完成后会自动进入 DeckLens，请保持应用打开。',
+          installing: '正在准备本地运行环境...',
+          starting: '正在进入 DeckLens...',
+          failed: '运行环境准备失败，请检查网络后重试。',
+          retry: '重试安装'
         },
         en: {
-          title: 'Install local runtime',
-          body: 'DeckLens uses a local Python runtime for image recognition, layer splitting, and PPTX generation. Install it once on this computer. On Windows, DeckLens tries to install Python 3.12 automatically when Python is missing.',
+          title: 'Preparing DeckLens',
+          body: 'DeckLens is preparing the local runtime used for image recognition, layer splitting, and PPTX generation. This only needs to happen once on this computer.',
           install: 'Install runtime',
-          downloadPython: 'Download Python 3.12',
-          start: 'Start DeckLens',
-          runtimeInstalled: 'Runtime',
-          yes: 'installed',
-          no: 'not installed',
-          platform: 'Platform',
-          dataDirectory: 'Data directory',
-          logTitle: 'Installation log',
-          ready: 'Ready',
-          installing: 'Installing'
+          idle: 'Ready to install local runtime',
+          note: 'DeckLens opens automatically when setup completes. Keep the app open.',
+          installing: 'Preparing local runtime...',
+          starting: 'Opening DeckLens...',
+          failed: 'Runtime setup failed. Check your network and try again.',
+          retry: 'Retry installation'
         }
       };
       const activeLanguage = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
@@ -303,62 +248,38 @@
         });
       }
 
-      function write(line) {
-        if (!line) return;
-        log.textContent += `${line}\n`;
-        log.scrollTop = log.scrollHeight;
-      }
-
-      function metaItem(label, value, title = value) {
-        return `
-          <div class="meta-item">
-            <span class="meta-label">${label}</span>
-            <span class="meta-value" title="${String(title).replace(/"/g, '&quot;')}">${value}</span>
-          </div>
-        `;
+      function renderRuntimeState(runtime = {}) {
+        const progress = Math.max(0, Math.min(100, Math.round(Number(runtime.progress || 0))));
+        progressFill.style.width = `${progress}%`;
+        progressPercent.textContent = `${progress}%`;
+        statusMessage.textContent = runtime.message || t(runtime.status || 'idle');
+        statusCard.classList.toggle('error', runtime.status === 'error');
+        if (runtime.status === 'error') {
+          statusCard.textContent = runtime.error ? `${t('failed')} ${runtime.error}` : t('failed');
+          installButton.textContent = t('retry');
+          installButton.disabled = false;
+        } else {
+          statusCard.textContent = t('note');
+          installButton.disabled = runtime.status === 'installing' || runtime.status === 'starting';
+        }
       }
 
       async function refresh() {
         const status = await window.decklensRuntime.getStatus();
-        installButton.disabled = status.installing;
-        startButton.disabled = !status.installed || status.installing;
-        statusDot.classList.toggle('active', Boolean(status.installing));
-        meta.innerHTML = [
-          metaItem(t('runtimeInstalled'), status.installed ? t('yes') : t('no')),
-          metaItem(t('platform'), `${status.platform} / ${status.arch}`),
-          metaItem(t('dataDirectory'), status.userData)
-        ].join('');
-        if (!log.textContent && status.log.length) {
-          log.textContent = `${status.log.join('\n')}\n`;
-        }
+        renderRuntimeState(status.runtime || {});
       }
 
-      window.decklensRuntime.onLog(write);
+      window.decklensRuntime.onStatus(renderRuntimeState);
       installButton.addEventListener('click', async () => {
         installButton.disabled = true;
-        statusDot.classList.add('active');
+        renderRuntimeState({ status: 'installing', message: t('installing'), progress: 4 });
         try {
           await window.decklensRuntime.install();
         } catch (error) {
-          write(error.message);
-        } finally {
-          await refresh();
+          renderRuntimeState({ status: 'error', error: error.message, progress: 0 });
         }
       });
-      downloadPythonButton.addEventListener('click', async () => {
-        try {
-          await window.decklensRuntime.openPythonDownload();
-        } catch (error) {
-          write(error.message);
-        }
-      });
-      startButton.addEventListener('click', async () => {
-        try {
-          await window.decklensRuntime.start();
-        } catch (error) {
-          write(error.message);
-        }
-      });
+
       applyI18n();
       refresh();
     </script>
