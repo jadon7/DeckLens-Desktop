@@ -45,6 +45,9 @@ INPAINT_BACKEND_LABELS = {
 DEFAULT_INPAINT_BACKEND = os.environ.get("DECKLENS_INPAINT_BACKEND", "lama").strip().lower()
 if DEFAULT_INPAINT_BACKEND not in INPAINT_BACKENDS:
     DEFAULT_INPAINT_BACKEND = "lama"
+TORCH_DISABLED = os.environ.get("DECKLENS_DISABLE_TORCH", "1" if sys.platform == "win32" else "0").strip().lower() in {"1", "true", "yes", "on"}
+if TORCH_DISABLED and DEFAULT_INPAINT_BACKEND == "lama":
+    DEFAULT_INPAINT_BACKEND = "local_mean"
 OUTPUT_MODE_LABELS = {
     "none": "标准还原",
     "sam": "元素分层",
@@ -152,6 +155,8 @@ def convert():
     inpaint_backend = request.form.get("inpaint_backend", DEFAULT_INPAINT_BACKEND).strip().lower()
     if inpaint_backend not in INPAINT_BACKENDS:
         return jsonify({"error": f"不支持的底图清理算法: {inpaint_backend}"}), 400
+    if TORCH_DISABLED and inpaint_backend == "lama":
+        inpaint_backend = "local_mean"
     if decompose and decompose_mode == "none":
         decompose_mode = "sam"
     decompose = decompose_mode != "none"

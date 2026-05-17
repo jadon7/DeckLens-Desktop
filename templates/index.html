@@ -5588,11 +5588,16 @@
             }
 
             const savedBackend = localStorage.getItem(SETTINGS_STORAGE.inpaintBackend);
-            const platformDefaultBackend = document.documentElement.classList.contains('platform-win32') ? 'local_mean' : 'lama';
-            if (savedBackend && Array.from(inpaintBackend.options).some((option) => option.value === savedBackend)) {
+            const isWindowsDesktop = document.documentElement.classList.contains('platform-win32');
+            const platformDefaultBackend = isWindowsDesktop ? 'local_mean' : 'lama';
+            if (!isWindowsDesktop && savedBackend && Array.from(inpaintBackend.options).some((option) => option.value === savedBackend)) {
                 inpaintBackend.value = savedBackend;
             } else {
                 inpaintBackend.value = platformDefaultBackend;
+                if (isWindowsDesktop) {
+                    localStorage.setItem(SETTINGS_STORAGE.inpaintBackend, platformDefaultBackend);
+                    persistDesktopSettings({ inpaintBackend: platformDefaultBackend });
+                }
             }
             if (languageSelect) {
                 languageSelect.value = getLanguagePreference();

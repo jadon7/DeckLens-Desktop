@@ -47,6 +47,8 @@ _load_local_env()
 
 def _get_torch():
     """Import torch only for features that actually need it."""
+    if _env_truthy("DECKLENS_DISABLE_TORCH", default=sys.platform == "win32"):
+        raise RuntimeError("当前环境已禁用 torch 后端")
     import torch
     return torch
 
@@ -129,23 +131,25 @@ class TextBlock:
 # ─── OCR 检测（PaddleOCR） ───
 
 _paddle_ocr = None
+_paddle_ocr_lock = threading.RLock()
 
 
 def get_paddle_ocr():
     """懒加载 PaddleOCR"""
     global _paddle_ocr
-    if _paddle_ocr is None:
-        import warnings
-        os.environ.setdefault("GLOG_minloglevel", "2")
-        os.environ.setdefault("FLAGS_minloglevel", "2")
-        warnings.filterwarnings("ignore")
-        from paddleocr import PaddleOCR
-        _paddle_ocr = PaddleOCR(
-            lang="ch",
-            use_doc_orientation_classify=False,
-            use_doc_unwarping=False,
-            use_textline_orientation=False,
-        )
+    with _paddle_ocr_lock:
+        if _paddle_ocr is None:
+            import warnings
+            os.environ.setdefault("GLOG_minloglevel", "2")
+            os.environ.setdefault("FLAGS_minloglevel", "2")
+            warnings.filterwarnings("ignore")
+            from paddleocr import PaddleOCR
+            _paddle_ocr = PaddleOCR(
+                lang="ch",
+                use_doc_orientation_classify=False,
+                use_doc_unwarping=False,
+                use_textline_orientation=False,
+            )
     return _paddle_ocr
 
 
@@ -159,7 +163,8 @@ def detect_text_paddle(image_path: str, expand_px: int = 3) -> List[TextBlock]:
         raise ValueError(f"无法读取图片: {image_path}")
 
     img_h, img_w = image.shape[:2]
-    result = ocr.predict(image_path)
+    with _paddle_ocr_lock:
+        result = ocr.predict(image_path)
 
     blocks = []
     if not result or len(result) == 0:
@@ -1118,6 +1123,9 @@ def remove_text_from_image(image_path: str, blocks: List[TextBlock], device="mps
     h, w = image.shape[:2]
 
     backend = (backend or os.environ.get("DECKLENS_INPAINT_BACKEND", "lama")).strip().lower()
+    if backend == "lama" and _env_truthy("DECKLENS_DISABLE_TORCH", default=sys.platform == "win32"):
+        print("  [INPAINT] 当前环境禁用 torch，改用本地均值", flush=True)
+        backend = "local_mean"
     hard_mask = _text_blocks_to_mask((h, w), blocks, dilate_px=0)
 
     if backend == "opencv":

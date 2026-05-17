@@ -14,6 +14,12 @@ SUPPORTED_INPUTS = {".png", ".jpg", ".jpeg", ".pdf"}
 INPAINT_BACKENDS = {"lama", "local_mean"}
 
 
+def default_inpaint_backend() -> str:
+    if os.name == "nt" and os.environ.get("DECKLENS_DISABLE_TORCH", "1").strip().lower() in {"1", "true", "yes", "on"}:
+        return "local_mean"
+    return os.environ.get("DECKLENS_INPAINT_BACKEND", "lama")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="decklens",
@@ -31,7 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--inpaint-backend",
         choices=sorted(INPAINT_BACKENDS),
-        default=os.environ.get("DECKLENS_INPAINT_BACKEND", "lama"),
+        default=default_inpaint_backend(),
         help="Background cleanup algorithm.",
     )
     parser.add_argument("--device", default=os.environ.get("DECKLENS_DEVICE", "cpu"), help="Processing device.")
@@ -81,6 +87,8 @@ def main() -> int:
 
         if args.inpaint_backend not in INPAINT_BACKENDS:
             raise ValueError(f"Unsupported inpaint backend: {args.inpaint_backend}")
+        if os.name == "nt" and os.environ.get("DECKLENS_DISABLE_TORCH", "1").strip().lower() in {"1", "true", "yes", "on"} and args.inpaint_backend == "lama":
+            args.inpaint_backend = "local_mean"
 
         inputs = validate_inputs(args.inputs)
         output = Path(args.output).expanduser().resolve() if args.output else default_output_path(inputs, args.output_dir)

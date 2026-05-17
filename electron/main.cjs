@@ -358,6 +358,10 @@ function setupMarkerPath() {
   return userPath('python-runtime', 'installed.json');
 }
 
+function windowsRuntimeSanitizedMarkerPath() {
+  return userPath('python-runtime', 'windows-no-torch-v1.json');
+}
+
 function appendLog(message) {
   const line = `[${new Date().toLocaleTimeString()}] ${message}`;
   setupLog.push(line);
@@ -401,6 +405,49 @@ function copyBackendSource() {
       filter: (src) => !src.includes('__pycache__') && !src.endsWith('.pyc')
     });
   }
+}
+
+function runtimeRequirementsPath() {
+  const requirementsPath = path.join(backendDir(), 'requirements.txt');
+  if (process.platform !== 'win32') {
+    return requirementsPath;
+  }
+  const excluded = /^(torch|torchvision|torchaudio|ultralytics|simple-lama-inpainting|segment-anything)([<>=~! ].*)?$/i;
+  const source = fs.readFileSync(requirementsPath, 'utf8');
+  const filtered = source
+    .split(/\r?\n/)
+    .filter((line) => !excluded.test(line.trim()))
+    .join('\n');
+  const windowsRequirementsPath = path.join(backendDir(), 'requirements-windows.txt');
+  fs.writeFileSync(windowsRequirementsPath, filtered.endsWith('\n') ? filtered : `${filtered}\n`);
+  return windowsRequirementsPath;
+}
+
+async function sanitizeWindowsRuntime() {
+  if (process.platform !== 'win32' || !fs.existsSync(venvPython()) || fs.existsSync(windowsRuntimeSanitizedMarkerPath())) {
+    return;
+  }
+  appendLog('Removing torch-backed optional packages from the Windows runtime...');
+  try {
+    await runCommand(venvPython(), [
+      '-m',
+      'pip',
+      'uninstall',
+      '-y',
+      'torch',
+      'torchvision',
+      'torchaudio',
+      'ultralytics',
+      'simple-lama-inpainting',
+      'segment-anything'
+    ]);
+  } catch (error) {
+    appendLog(`Windows runtime optional package cleanup skipped: ${error.message}`);
+  }
+  fs.writeFileSync(windowsRuntimeSanitizedMarkerPath(), JSON.stringify({
+    sanitizedAt: new Date().toISOString(),
+    reason: 'Avoid torch c10.dll initialization failures on Windows.'
+  }, null, 2));
 }
 
 function pythonCandidates() {
@@ -596,7 +643,8 @@ async function installRuntime() {
       progress: 72,
       error: null
     });
-    await runCommand(venvPython(), ['-m', 'pip', 'install', '-r', path.join(backendDir(), 'requirements.txt')]);
+    await runCommand(venvPython(), ['-m', 'pip', 'install', '-r', runtimeRequirementsPath()]);
+    await sanitizeWindowsRuntime();
 
     fs.writeFileSync(setupMarkerPath(), JSON.stringify({
       installedAt: new Date().toISOString(),
@@ -681,6 +729,7 @@ async function startBackendAndLoad() {
   }
 
   copyBackendSource();
+  await sanitizeWindowsRuntime();
   const port = await findFreePort();
   backendUrl = `http://127.0.0.1:${port}`;
   const dataDir = userPath('data');
@@ -695,6 +744,7 @@ async function startBackendAndLoad() {
       DECKLENS_DEVICE: process.env.DECKLENS_DEVICE || 'cpu',
       DECKLENS_INPAINT_BACKEND: process.env.DECKLENS_INPAINT_BACKEND || (process.platform === 'win32' ? 'local_mean' : 'lama'),
       DECKLENS_SEGMENT_BACKEND: process.env.DECKLENS_SEGMENT_BACKEND || (process.platform === 'win32' ? 'opencv' : 'fastsam'),
+      DECKLENS_DISABLE_TORCH: process.env.DECKLENS_DISABLE_TORCH || (process.platform === 'win32' ? '1' : '0'),
       DECKLENS_KEEP_OCR_MODEL: process.env.DECKLENS_KEEP_OCR_MODEL || (process.platform === 'win32' ? '1' : '0')
     },
     shell: false
