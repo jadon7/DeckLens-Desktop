@@ -1130,8 +1130,8 @@ def remove_text_from_image(image_path: str, blocks: List[TextBlock], device="mps
         except Exception as exc:
             if not _env_truthy("DECKLENS_INPAINT_FALLBACK", True):
                 raise
-            print(f"  [INPAINT] LaMa 失败，回退 OpenCV: {exc}", flush=True)
-            inpainted_bgr = _opencv_inpaint(image, hard_mask)
+            print(f"  [INPAINT] LaMa 失败，回退本地均值: {exc}", flush=True)
+            inpainted_bgr = _local_mean_inpaint(image, blocks)
 
     inpainted_rgb = cv2.cvtColor(inpainted_bgr, cv2.COLOR_BGR2RGB)
     return Image.fromarray(inpainted_rgb)
@@ -1588,7 +1588,8 @@ def release_cached_models():
     """Release heavyweight model singletons after a task to keep desktop RSS bounded."""
     global _paddle_ocr, _lama_model, _sam_model, _sam_mask_generator, _fastsam_model
 
-    if not _env_truthy("DECKLENS_KEEP_OCR_MODEL", default=False):
+    keep_ocr_default = sys.platform == "win32"
+    if not _env_truthy("DECKLENS_KEEP_OCR_MODEL", default=keep_ocr_default):
         _paddle_ocr = None
     if _env_truthy("DECKLENS_RELEASE_OPTIONAL_MODELS", default=True):
         _lama_model = None
@@ -2177,6 +2178,10 @@ def decompose_background_sam(
     try:
         rgb_image = background_image.convert("RGB")
         img_w, img_h = rgb_image.size
+
+        if os.environ.get("DECKLENS_SEGMENT_BACKEND", "fastsam").strip().lower() == "opencv":
+            print("  [FastSAM] 当前环境指定使用 OpenCV 兜底分割", flush=True)
+            return _fallback_layers(rgb_image, img_w, img_h)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(_run_fastsam, rgb_image, img_w, img_h)

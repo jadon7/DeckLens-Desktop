@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -191,6 +191,8 @@ function scheduleUpdateCheck() {
 }
 
 function createWindow() {
+  Menu.setApplicationMenu(null);
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 860,
@@ -198,10 +200,20 @@ function createWindow() {
     minHeight: 720,
     title: 'DeckLens',
     backgroundColor: '#ffffff',
+    autoHideMenuBar: true,
     ...(process.platform === 'darwin'
       ? {
           titleBarStyle: 'hiddenInset',
           trafficLightPosition: { x: 16, y: 16 }
+        }
+      : process.platform === 'win32'
+      ? {
+          titleBarStyle: 'hidden',
+          titleBarOverlay: {
+            color: '#ffffff',
+            symbolColor: '#111111',
+            height: 42
+          }
         }
       : {}),
     webPreferences: {
@@ -230,6 +242,7 @@ function createWindow() {
   });
 
   boot();
+  autoInstallAgentSkills();
 }
 
 function userPath(...parts) {
@@ -680,7 +693,9 @@ async function startBackendAndLoad() {
       PORT: String(port),
       DECKLENS_DATA_DIR: dataDir,
       DECKLENS_DEVICE: process.env.DECKLENS_DEVICE || 'cpu',
-      DECKLENS_INPAINT_BACKEND: process.env.DECKLENS_INPAINT_BACKEND || 'opencv'
+      DECKLENS_INPAINT_BACKEND: process.env.DECKLENS_INPAINT_BACKEND || (process.platform === 'win32' ? 'local_mean' : 'lama'),
+      DECKLENS_SEGMENT_BACKEND: process.env.DECKLENS_SEGMENT_BACKEND || (process.platform === 'win32' ? 'opencv' : 'fastsam'),
+      DECKLENS_KEEP_OCR_MODEL: process.env.DECKLENS_KEEP_OCR_MODEL || (process.platform === 'win32' ? '1' : '0')
     },
     shell: false
   });
@@ -770,6 +785,33 @@ function agentSkillOptions() {
     isPackaged: app.isPackaged,
     appVersion: app.getVersion()
   };
+}
+
+let agentSkillAutoInstallStarted = false;
+
+function autoInstallAgentSkills() {
+  if (agentSkillAutoInstallStarted) {
+    return;
+  }
+  agentSkillAutoInstallStarted = true;
+  setTimeout(() => {
+    try {
+      const status = getAgentSkillStatus(agentSkillOptions());
+      const visibleTargets = status?.visibleTargets || status?.targets?.filter((target) => target.detected || target.installed) || [];
+      if (!status?.sourceAvailable || visibleTargets.length === 0) {
+        return;
+      }
+      const needsUpdate = (status.updateAvailableCount || 0) > 0;
+      const needsInstall = (status.installedCount || 0) === 0;
+      if (!needsUpdate && !needsInstall) {
+        return;
+      }
+      const result = needsUpdate ? updateAgentSkills(agentSkillOptions()) : installAgentSkills(agentSkillOptions());
+      appendLog(`Agent Skill auto-sync complete: ${result.installed?.length || 0} installed, ${result.skipped?.length || 0} skipped, ${result.failed?.length || 0} failed.`);
+    } catch (error) {
+      appendLog(`Agent Skill auto-sync failed: ${error.message}`);
+    }
+  }, 1500);
 }
 
 ipcMain.handle('agent-skills:get-status', () => getAgentSkillStatus(agentSkillOptions()));

@@ -42,6 +42,9 @@ INPAINT_BACKEND_LABELS = {
     "lama": "LaMa",
     "local_mean": "本地均值",
 }
+DEFAULT_INPAINT_BACKEND = os.environ.get("DECKLENS_INPAINT_BACKEND", "lama").strip().lower()
+if DEFAULT_INPAINT_BACKEND not in INPAINT_BACKENDS:
+    DEFAULT_INPAINT_BACKEND = "lama"
 OUTPUT_MODE_LABELS = {
     "none": "标准还原",
     "sam": "元素分层",
@@ -146,7 +149,7 @@ def convert():
     decompose_mode = request.form.get("decompose_mode", "sam" if decompose else "none")
     if decompose_mode not in {"none", "sam", "qwen"}:
         return jsonify({"error": f"不支持的分层模式: {decompose_mode}"}), 400
-    inpaint_backend = request.form.get("inpaint_backend", "lama").strip().lower()
+    inpaint_backend = request.form.get("inpaint_backend", DEFAULT_INPAINT_BACKEND).strip().lower()
     if inpaint_backend not in INPAINT_BACKENDS:
         return jsonify({"error": f"不支持的底图清理算法: {inpaint_backend}"}), 400
     if decompose and decompose_mode == "none":
@@ -243,8 +246,8 @@ def status(task_id):
         "current_step": task.get("current_step", ""),
         "decompose": task.get("decompose", False),
         "decompose_mode": task.get("decompose_mode", "none"),
-        "inpaint_backend": task.get("inpaint_backend", "lama"),
-        "inpaint_backend_label": task.get("inpaint_backend_label", "LaMa"),
+        "inpaint_backend": task.get("inpaint_backend", DEFAULT_INPAINT_BACKEND),
+        "inpaint_backend_label": task.get("inpaint_backend_label", INPAINT_BACKEND_LABELS[DEFAULT_INPAINT_BACKEND]),
         "qwen_num_layers": task.get("qwen_num_layers", 4),
         "qwen_api_configured": task.get("qwen_api_configured", False),
         "elapsed": task.get("elapsed", 0),
@@ -495,9 +498,11 @@ def _process_for_preview(task_id: str, all_images: list, task_dir: str, start_ti
         total_area = img_w * img_h
 
         try:
+            if os.environ.get("DECKLENS_SEGMENT_BACKEND", "fastsam").strip().lower() == "opencv":
+                raise RuntimeError("当前环境指定使用 OpenCV 兜底分割")
             masks = generate_background_fastsam_masks(bg_np, device=DEFAULT_DEVICE)
         except Exception as e:
-            print(f"  [FastSAM] 预览分割失败，改用 OpenCV 兜底分割: {e}", flush=True)
+            print(f"  [FastSAM] 预览分割跳过/失败，改用 OpenCV 兜底分割: {e}", flush=True)
             masks = segment_background_cv_masks(bg_np)
 
         # 后处理（与 decompose_background_sam 一致）
