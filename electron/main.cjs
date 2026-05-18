@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, shell, Menu } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('node:fs');
 const http = require('node:http');
+const https = require('node:https');
 const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
@@ -23,6 +24,8 @@ const { getAgentSkillStatus, installAgentSkills, updateAgentSkills } = loadAgent
 
 const UPDATE_FEED_URL = 'https://updates.dsxzai.com/';
 const WINDOWS_PINNED_PADDLE_VERSION = '3.2.2';
+const WINDOWS_MANAGED_PYTHON_VERSION = '3.12.10';
+const WINDOWS_MANAGED_PYTHON_SHA256 = '67b5635e80ea51072b87941312d00ec8927c4db9ba18938f7ad2d27b328b95fb';
 const WINDOWS_BLOCKED_RUNTIME_PACKAGES = [
   'torch',
   'torchvision',
@@ -321,6 +324,18 @@ function venvDir() {
   return userPath('python-runtime', 'venv');
 }
 
+function managedWindowsPythonDir() {
+  return userPath('python-runtime', `python-${WINDOWS_MANAGED_PYTHON_VERSION}`);
+}
+
+function managedWindowsPython() {
+  return path.join(managedWindowsPythonDir(), 'python.exe');
+}
+
+function pythonInstallerCachePath() {
+  return userPath('python-runtime', 'downloads', `python-${WINDOWS_MANAGED_PYTHON_VERSION}-amd64.exe`);
+}
+
 function outputDir() {
   return userPath('data', 'outputs');
 }
@@ -589,17 +604,26 @@ function pythonCandidates() {
   }
   if (process.platform === 'win32') {
     const localAppData = process.env.LOCALAPPDATA;
+    const windowsRoot = process.env.SystemRoot || 'C:\\Windows';
     const programFiles = [process.env.ProgramFiles, process.env['ProgramFiles(x86)']].filter(Boolean);
+    candidates.push({ cmd: managedWindowsPython(), args: [] });
     candidates.push({ cmd: 'py', args: ['-3.12'] });
     candidates.push({ cmd: 'py', args: ['-3.11'] });
     candidates.push({ cmd: 'py', args: ['-3'] });
+    candidates.push({ cmd: path.join(windowsRoot, 'py.exe'), args: ['-3.12'] });
+    candidates.push({ cmd: path.join(windowsRoot, 'py.exe'), args: ['-3.11'] });
     if (localAppData) {
       candidates.push({ cmd: path.join(localAppData, 'Programs', 'Python', 'Python312', 'python.exe'), args: [] });
       candidates.push({ cmd: path.join(localAppData, 'Programs', 'Python', 'Python311', 'python.exe'), args: [] });
+      candidates.push({ cmd: path.join(localAppData, 'Microsoft', 'WindowsApps', 'python3.12.exe'), args: [] });
+      candidates.push({ cmd: path.join(localAppData, 'Microsoft', 'WindowsApps', 'python3.11.exe'), args: [] });
+      candidates.push({ cmd: path.join(localAppData, 'Microsoft', 'WindowsApps', 'python.exe'), args: [] });
+      candidates.push(...pythonCandidatesFromDirectory(path.join(localAppData, 'Programs', 'Python')));
     }
     for (const root of programFiles) {
       candidates.push({ cmd: path.join(root, 'Python312', 'python.exe'), args: [] });
       candidates.push({ cmd: path.join(root, 'Python311', 'python.exe'), args: [] });
+      candidates.push(...pythonCandidatesFromDirectory(root));
     }
     candidates.push({ cmd: 'python', args: [] });
   } else if (process.platform === 'darwin') {
@@ -623,6 +647,21 @@ function pythonCandidates() {
     candidates.push({ cmd: 'python3.11', args: [] });
     candidates.push({ cmd: 'python3', args: [] });
     candidates.push({ cmd: 'python', args: [] });
+  }
+  return candidates;
+}
+
+function pythonCandidatesFromDirectory(root) {
+  const candidates = [];
+  try {
+    for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+      if (!entry.isDirectory() || !/^Python3(11|12)/i.test(entry.name)) {
+        continue;
+      }
+      candidates.push({ cmd: path.join(root, entry.name, 'python.exe'), args: [] });
+    }
+  } catch {
+    // Some Windows locations, especially WindowsApps, are not listable by normal apps.
   }
   return candidates;
 }
@@ -668,7 +707,13 @@ async function installWindowsPython() {
     return false;
   }
 
-  const winget = spawnSync('winget', ['--version'], { encoding: 'utf8' });
+  const wingetPath = findWinget();
+  if (!wingetPath) {
+    appendLog('Windows package manager winget was not found.');
+    return false;
+  }
+
+  const winget = spawnSync(wingetPath, ['--version'], { encoding: 'utf8' });
   if (winget.status !== 0) {
     appendLog('Windows package manager winget was not found.');
     return false;
@@ -681,13 +726,16 @@ async function installWindowsPython() {
     error: null
   });
   appendLog('Python 3.12 was not found. Installing Python 3.12 with winget...');
-  await runCommand('winget', [
+  await runCommand(wingetPath, [
     'install',
     '-e',
     '--id',
     'Python.Python.3.12',
+    '--source',
+    'winget',
     '--scope',
     'user',
+    '--disable-interactivity',
     '--accept-package-agreements',
     '--accept-source-agreements'
   ], { cwd: app.getPath('userData') });
@@ -700,6 +748,24 @@ async function installWindowsPython() {
   });
   appendLog('Python installer finished. Checking Python again...');
   return true;
+}
+
+function findWinget() {
+  if (process.platform !== 'win32') {
+    return null;
+  }
+  const localAppData = process.env.LOCALAPPDATA;
+  const candidates = [
+    'winget',
+    localAppData ? path.join(localAppData, 'Microsoft', 'WindowsApps', 'winget.exe') : null
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    const probe = spawnSync(candidate, ['--version'], { encoding: 'utf8' });
+    if (probe.status === 0) {
+      return candidate;
+    }
+  }
+  return null;
 }
 
 function runCommand(cmd, args, options = {}) {
@@ -722,6 +788,140 @@ function runCommand(cmd, args, options = {}) {
       }
     });
   });
+}
+
+function requestModuleForUrl(url) {
+  return url.startsWith('https:') ? https : http;
+}
+
+function fileSha256(filePath) {
+  const hash = require('node:crypto').createHash('sha256');
+  hash.update(fs.readFileSync(filePath));
+  return hash.digest('hex');
+}
+
+function downloadFile(url, destination, redirectCount = 0) {
+  return new Promise((resolve, reject) => {
+    if (redirectCount > 5) {
+      reject(new Error(`Too many redirects while downloading ${url}`));
+      return;
+    }
+
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    const request = requestModuleForUrl(url).get(url, (response) => {
+      const status = response.statusCode || 0;
+      if (status >= 300 && status < 400 && response.headers.location) {
+        response.resume();
+        const nextUrl = new URL(response.headers.location, url).toString();
+        downloadFile(nextUrl, destination, redirectCount + 1).then(resolve, reject);
+        return;
+      }
+      if (status < 200 || status >= 300) {
+        response.resume();
+        reject(new Error(`Download failed with HTTP ${status}: ${url}`));
+        return;
+      }
+
+      const tempPath = `${destination}.download`;
+      const file = fs.createWriteStream(tempPath);
+      response.pipe(file);
+      file.on('finish', () => {
+        file.close(() => {
+          fs.renameSync(tempPath, destination);
+          resolve(destination);
+        });
+      });
+      file.on('error', (error) => {
+        fs.rmSync(tempPath, { force: true });
+        reject(error);
+      });
+    });
+    request.on('error', reject);
+    request.setTimeout(120000, () => request.destroy(new Error(`Download timed out: ${url}`)));
+  });
+}
+
+async function waitForFile(filePath, timeoutMs = 90000) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    if (fs.existsSync(filePath)) {
+      return true;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  return fs.existsSync(filePath);
+}
+
+async function installManagedWindowsPython() {
+  if (process.platform !== 'win32') {
+    return false;
+  }
+  if (fs.existsSync(managedWindowsPython())) {
+    return true;
+  }
+
+  const installerPath = pythonInstallerCachePath();
+  const urls = [
+    `${UPDATE_FEED_URL}runtime/python-${WINDOWS_MANAGED_PYTHON_VERSION}-amd64.exe`,
+    `https://www.python.org/ftp/python/${WINDOWS_MANAGED_PYTHON_VERSION}/python-${WINDOWS_MANAGED_PYTHON_VERSION}-amd64.exe`
+  ];
+
+  publishRuntimeState({
+    status: 'installing',
+    message: '正在下载 DeckLens 内置 Python 运行环境...',
+    progress: 22,
+    error: null
+  });
+
+  let lastDownloadError = null;
+  for (const url of urls) {
+    try {
+      appendLog(`Downloading managed Python ${WINDOWS_MANAGED_PYTHON_VERSION} from ${url}`);
+      if (!fs.existsSync(installerPath) || fs.statSync(installerPath).size < 1024 * 1024) {
+        await downloadFile(url, installerPath);
+      }
+      const digest = fileSha256(installerPath);
+      if (digest !== WINDOWS_MANAGED_PYTHON_SHA256) {
+        throw new Error(`Managed Python checksum mismatch: ${digest}`);
+      }
+      lastDownloadError = null;
+      break;
+    } catch (error) {
+      lastDownloadError = error;
+      appendLog(`Managed Python download failed: ${error.message}`);
+      fs.rmSync(installerPath, { force: true });
+    }
+  }
+  if (lastDownloadError) {
+    throw lastDownloadError;
+  }
+
+  publishRuntimeState({
+    status: 'installing',
+    message: '正在安装 DeckLens 内置 Python 运行环境...',
+    progress: 30,
+    error: null
+  });
+
+  fs.rmSync(managedWindowsPythonDir(), { recursive: true, force: true });
+  fs.mkdirSync(managedWindowsPythonDir(), { recursive: true });
+  await runCommand(installerPath, [
+    '/quiet',
+    'InstallAllUsers=0',
+    `TargetDir=${managedWindowsPythonDir()}`,
+    'Include_launcher=0',
+    'Include_pip=1',
+    'Include_test=0',
+    'PrependPath=0',
+    'Shortcuts=0'
+  ], { cwd: app.getPath('userData') });
+
+  const installed = await waitForFile(managedWindowsPython());
+  if (!installed) {
+    throw new Error('Managed Python installer finished but python.exe was not created.');
+  }
+  appendLog(`Managed Python installed at ${managedWindowsPython()}`);
+  return true;
 }
 
 async function installRuntime() {
@@ -747,11 +947,20 @@ async function installRuntime() {
     });
     let python = findPython();
     if (!python && process.platform === 'win32') {
-      await installWindowsPython();
+      try {
+        await installManagedWindowsPython();
+      } catch (error) {
+        appendLog(`Managed Python install failed, falling back to winget: ${error.message}`);
+        try {
+          await installWindowsPython();
+        } catch (wingetError) {
+          appendLog(`winget Python install failed: ${wingetError.message}`);
+        }
+      }
       python = findPython();
     }
     if (!python) {
-      throw new Error('Python 3.11 or 3.12 was not found.');
+      throw new Error('DeckLens could not prepare Python 3.11/3.12 automatically. Check the network and retry.');
     }
 
     fs.mkdirSync(path.dirname(venvDir()), { recursive: true });
