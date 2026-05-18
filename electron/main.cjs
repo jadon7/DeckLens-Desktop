@@ -22,6 +22,15 @@ function loadAgentSkillRuntime() {
 const { getAgentSkillStatus, installAgentSkills, updateAgentSkills } = loadAgentSkillRuntime();
 
 const UPDATE_FEED_URL = 'https://updates.dsxzai.com/';
+const WINDOWS_PINNED_PADDLE_VERSION = '3.2.2';
+const WINDOWS_BLOCKED_RUNTIME_PACKAGES = [
+  'torch',
+  'torchvision',
+  'torchaudio',
+  'ultralytics',
+  'simple-lama-inpainting',
+  'segment-anything'
+];
 let mainWindow;
 let backendProcess;
 let backendUrl;
@@ -445,43 +454,14 @@ function installedPaddleVersion() {
   return match ? match[0] : null;
 }
 
-async function ensureWindowsPaddleRuntime() {
+function installedWindowsBlockedRuntimePackages() {
   if (process.platform !== 'win32' || !fs.existsSync(venvPython())) {
-    return;
+    return [];
   }
-  const requiredVersion = '3.2.2';
-  const currentVersion = installedPaddleVersion();
-  if (currentVersion === requiredVersion && fs.existsSync(windowsPaddlePinnedMarkerPath())) {
-    return;
-  }
-  if (currentVersion !== requiredVersion) {
-    appendLog(`Pinning Windows paddlepaddle runtime: ${currentVersion || 'missing'} -> ${requiredVersion}`);
-    await runCommand(venvPython(), ['-m', 'pip', 'install', `paddlepaddle==${requiredVersion}`]);
-  }
-  fs.writeFileSync(windowsPaddlePinnedMarkerPath(), JSON.stringify({
-    pinnedAt: new Date().toISOString(),
-    package: 'paddlepaddle',
-    version: requiredVersion,
-    reason: 'Avoid Paddle 3.3.x oneDNN/PIR OCR failures on Windows.'
-  }, null, 2));
-}
-
-async function sanitizeWindowsRuntime() {
-  if (process.platform !== 'win32' || !fs.existsSync(venvPython())) {
-    return;
-  }
-  const blockedPackages = [
-    'torch',
-    'torchvision',
-    'torchaudio',
-    'ultralytics',
-    'simple-lama-inpainting',
-    'segment-anything'
-  ];
   const probe = spawnSync(venvPython(), [
     '-c',
     `import importlib.metadata as m
-blocked = ${JSON.stringify(blockedPackages)}
+blocked = ${JSON.stringify(WINDOWS_BLOCKED_RUNTIME_PACKAGES)}
 installed = []
 for pkg in blocked:
     try:
@@ -495,13 +475,77 @@ print("\\n".join(installed))`
     env: process.env,
     encoding: 'utf8'
   });
-  const installed = (probe.stdout || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (probe.status !== 0) {
+    return [];
+  }
+  return (probe.stdout || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+}
+
+function windowsRuntimeRepairStatus() {
+  if (process.platform !== 'win32' || !runtimeInstalled()) {
+    return {
+      needed: false,
+      paddleVersion: null,
+      blockedPackages: []
+    };
+  }
+  const paddleVersion = installedPaddleVersion();
+  const blockedPackages = installedWindowsBlockedRuntimePackages();
+  return {
+    needed: paddleVersion !== WINDOWS_PINNED_PADDLE_VERSION || blockedPackages.length > 0,
+    paddleVersion,
+    blockedPackages
+  };
+}
+
+async function ensureWindowsPaddleRuntime({ showProgress = false } = {}) {
+  if (process.platform !== 'win32' || !fs.existsSync(venvPython())) {
+    return;
+  }
+  const requiredVersion = WINDOWS_PINNED_PADDLE_VERSION;
+  const currentVersion = installedPaddleVersion();
+  if (currentVersion === requiredVersion && fs.existsSync(windowsPaddlePinnedMarkerPath())) {
+    return;
+  }
+  if (currentVersion !== requiredVersion) {
+    if (showProgress) {
+      publishRuntimeState({
+        status: 'repairing',
+        message: '正在升级 Windows 图像识别运行环境...',
+        progress: 52,
+        error: null
+      });
+    }
+    appendLog(`Pinning Windows paddlepaddle runtime: ${currentVersion || 'missing'} -> ${requiredVersion}`);
+    await runCommand(venvPython(), ['-m', 'pip', 'install', `paddlepaddle==${requiredVersion}`]);
+  }
+  fs.writeFileSync(windowsPaddlePinnedMarkerPath(), JSON.stringify({
+    pinnedAt: new Date().toISOString(),
+    package: 'paddlepaddle',
+    version: requiredVersion,
+    reason: 'Avoid Paddle 3.3.x oneDNN/PIR OCR failures on Windows.'
+  }, null, 2));
+}
+
+async function sanitizeWindowsRuntime({ showProgress = false } = {}) {
+  if (process.platform !== 'win32' || !fs.existsSync(venvPython())) {
+    return;
+  }
+  const installed = installedWindowsBlockedRuntimePackages();
   if (installed.length === 0 && fs.existsSync(windowsRuntimeSanitizedMarkerPath())) {
     return;
   }
+  if (installed.length > 0 && showProgress) {
+    publishRuntimeState({
+      status: 'repairing',
+      message: '正在清理 Windows 兼容性依赖...',
+      progress: 34,
+      error: null
+    });
+  }
   appendLog('Removing torch-backed optional packages from the Windows runtime...');
   try {
-    await runCommand(venvPython(), ['-m', 'pip', 'uninstall', '-y', ...blockedPackages]);
+    await runCommand(venvPython(), ['-m', 'pip', 'uninstall', '-y', ...WINDOWS_BLOCKED_RUNTIME_PACKAGES]);
   } catch (error) {
     appendLog(`Windows runtime optional package cleanup skipped: ${error.message}`);
   }
@@ -509,6 +553,33 @@ print("\\n".join(installed))`
     sanitizedAt: new Date().toISOString(),
     reason: 'Avoid torch c10.dll initialization failures on Windows.'
   }, null, 2));
+}
+
+async function repairWindowsRuntimeIfNeeded({ showProgress = false } = {}) {
+  const repairStatus = windowsRuntimeRepairStatus();
+  if (!repairStatus.needed) {
+    return false;
+  }
+  if (showProgress) {
+    setupLog.length = 0;
+    publishRuntimeState({
+      status: 'repairing',
+      message: '正在升级 DeckLens 运行环境...',
+      progress: 18,
+      error: null
+    });
+  }
+  await sanitizeWindowsRuntime({ showProgress });
+  await ensureWindowsPaddleRuntime({ showProgress });
+  if (showProgress) {
+    publishRuntimeState({
+      status: 'starting',
+      message: '运行环境升级完成，正在进入 DeckLens...',
+      progress: 94,
+      error: null
+    });
+  }
+  return true;
 }
 
 function pythonCandidates() {
@@ -705,8 +776,8 @@ async function installRuntime() {
       error: null
     });
     await runCommand(venvPython(), ['-m', 'pip', 'install', '-r', runtimeRequirementsPath()]);
-    await sanitizeWindowsRuntime();
-    await ensureWindowsPaddleRuntime();
+    await sanitizeWindowsRuntime({ showProgress: false });
+    await ensureWindowsPaddleRuntime({ showProgress: false });
 
     fs.writeFileSync(setupMarkerPath(), JSON.stringify({
       installedAt: new Date().toISOString(),
@@ -791,8 +862,13 @@ async function startBackendAndLoad() {
   }
 
   copyBackendSource();
-  await sanitizeWindowsRuntime();
-  await ensureWindowsPaddleRuntime();
+  if (process.platform === 'win32' && windowsRuntimeRepairStatus().needed) {
+    await mainWindow.loadFile(path.join(__dirname, 'setup.html'));
+  }
+  const repaired = await repairWindowsRuntimeIfNeeded({ showProgress: true });
+  if (repaired && mainWindow && !mainWindow.isDestroyed()) {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
   const port = await findFreePort();
   backendUrl = `http://127.0.0.1:${port}`;
   const dataDir = userPath('data');
@@ -883,7 +959,7 @@ ipcMain.handle('updates:install', () => {
   if (updateState.status !== 'downloaded') {
     return { ...updateState };
   }
-  autoUpdater.quitAndInstall(false, true);
+  autoUpdater.quitAndInstall(process.platform === 'win32', true);
   return { ...updateState };
 });
 

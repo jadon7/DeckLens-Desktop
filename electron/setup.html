@@ -168,6 +168,10 @@
       button:focus {
         outline: none;
       }
+
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -206,6 +210,8 @@
 
     <script>
       const installButton = document.getElementById('install');
+      const pageTitle = document.querySelector('h1');
+      const pageBody = document.querySelector('.lead');
       const statusMessage = document.getElementById('statusMessage');
       const statusCard = document.getElementById('statusCard');
       const progressFill = document.getElementById('progressFill');
@@ -218,6 +224,9 @@
           idle: '准备安装本地运行环境',
           note: '安装完成后会自动进入 DeckLens，请保持应用打开。',
           installing: '正在准备本地运行环境...',
+          repairingTitle: '正在升级 DeckLens',
+          repairingBody: 'DeckLens 正在修复本机运行环境兼容性。这个过程会自动完成，完成后会直接进入应用。',
+          repairing: '正在升级本地运行环境...',
           starting: '正在进入 DeckLens...',
           failed: '运行环境准备失败，请检查网络后重试。',
           retry: '重试安装'
@@ -229,6 +238,9 @@
           idle: 'Ready to install local runtime',
           note: 'DeckLens opens automatically when setup completes. Keep the app open.',
           installing: 'Preparing local runtime...',
+          repairingTitle: 'Updating DeckLens',
+          repairingBody: 'DeckLens is repairing the local runtime compatibility. This completes automatically and then opens the app.',
+          repairing: 'Updating local runtime...',
           starting: 'Opening DeckLens...',
           failed: 'Runtime setup failed. Check your network and try again.',
           retry: 'Retry installation'
@@ -253,14 +265,19 @@
         progressFill.style.width = `${progress}%`;
         progressPercent.textContent = `${progress}%`;
         statusMessage.textContent = runtime.message || t(runtime.status || 'idle');
+        const isRepairing = runtime.status === 'repairing';
+        pageTitle.textContent = isRepairing ? t('repairingTitle') : t('title');
+        pageBody.textContent = isRepairing ? t('repairingBody') : t('body');
         statusCard.classList.toggle('error', runtime.status === 'error');
         if (runtime.status === 'error') {
           statusCard.textContent = runtime.error ? `${t('failed')} ${runtime.error}` : t('failed');
           installButton.textContent = t('retry');
           installButton.disabled = false;
+          installButton.classList.remove('hidden');
         } else {
-          statusCard.textContent = t('note');
-          installButton.disabled = runtime.status === 'installing' || runtime.status === 'starting';
+          statusCard.textContent = isRepairing ? t('repairingBody') : t('note');
+          installButton.disabled = runtime.status === 'installing' || runtime.status === 'starting' || isRepairing;
+          installButton.classList.toggle('hidden', runtime.status === 'repairing' || runtime.status === 'starting');
         }
       }
 
