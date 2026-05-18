@@ -26,6 +26,12 @@ const UPDATE_FEED_URL = 'https://updates.dsxzai.com/';
 const WINDOWS_PINNED_PADDLE_VERSION = '3.2.2';
 const WINDOWS_MANAGED_PYTHON_VERSION = '3.12.10';
 const WINDOWS_MANAGED_PYTHON_SHA256 = '67b5635e80ea51072b87941312d00ec8927c4db9ba18938f7ad2d27b328b95fb';
+const MAC_MANAGED_PYTHON_VERSION = '3.12.13';
+const MAC_MANAGED_PYTHON_BUILD = '20260510';
+const MAC_MANAGED_PYTHON_SHA256 = {
+  arm64: '5a30271f8d345a5b02b0c9e4e31e0f1e1455a8e4a04fba95cd9762472abc3b17',
+  x64: 'cd369e76973c3179bc578230d8615ab621968ed758c5e32f636eecef4ad79894'
+};
 const WINDOWS_BLOCKED_RUNTIME_PACKAGES = [
   'torch',
   'torchvision',
@@ -336,6 +342,30 @@ function pythonInstallerCachePath() {
   return userPath('python-runtime', 'downloads', `python-${WINDOWS_MANAGED_PYTHON_VERSION}-amd64.exe`);
 }
 
+function macPythonRuntimeArch() {
+  return process.arch === 'arm64' ? 'aarch64' : 'x86_64';
+}
+
+function macPythonArchKey() {
+  return process.arch === 'arm64' ? 'arm64' : 'x64';
+}
+
+function macPythonArchiveName() {
+  return `cpython-${MAC_MANAGED_PYTHON_VERSION}-${MAC_MANAGED_PYTHON_BUILD}-${macPythonRuntimeArch()}-apple-darwin-install_only.tar.gz`;
+}
+
+function managedMacPythonDir() {
+  return userPath('python-runtime', `cpython-${MAC_MANAGED_PYTHON_VERSION}-${MAC_MANAGED_PYTHON_BUILD}-${macPythonRuntimeArch()}`);
+}
+
+function managedMacPython() {
+  return path.join(managedMacPythonDir(), 'python', 'bin', 'python3.12');
+}
+
+function macPythonArchiveCachePath() {
+  return userPath('python-runtime', 'downloads', macPythonArchiveName());
+}
+
 function outputDir() {
   return userPath('data', 'outputs');
 }
@@ -638,6 +668,7 @@ function pythonCandidates() {
       candidates.push({ cmd: path.join(root, 'python3.12'), args: [] });
       candidates.push({ cmd: path.join(root, 'python3.11'), args: [] });
     }
+    candidates.push({ cmd: managedMacPython(), args: [] });
     candidates.push({ cmd: 'python3.12', args: [] });
     candidates.push({ cmd: 'python3.11', args: [] });
     candidates.push({ cmd: 'python3', args: [] });
@@ -924,6 +955,74 @@ async function installManagedWindowsPython() {
   return true;
 }
 
+async function installManagedMacPython() {
+  if (process.platform !== 'darwin') {
+    return false;
+  }
+  if (fs.existsSync(managedMacPython())) {
+    return true;
+  }
+
+  const archivePath = macPythonArchiveCachePath();
+  const archiveName = macPythonArchiveName();
+  const encodedUpstreamName = `cpython-${MAC_MANAGED_PYTHON_VERSION}%2B${MAC_MANAGED_PYTHON_BUILD}-${macPythonRuntimeArch()}-apple-darwin-install_only.tar.gz`;
+  const urls = [
+    `${UPDATE_FEED_URL}runtime/${archiveName}`,
+    `https://github.com/astral-sh/python-build-standalone/releases/download/${MAC_MANAGED_PYTHON_BUILD}/${encodedUpstreamName}`
+  ];
+
+  publishRuntimeState({
+    status: 'installing',
+    message: '正在下载 DeckLens 内置 Python 运行环境...',
+    progress: 22,
+    error: null
+  });
+
+  let lastDownloadError = null;
+  for (const url of urls) {
+    try {
+      appendLog(`Downloading managed macOS Python ${MAC_MANAGED_PYTHON_VERSION} from ${url}`);
+      if (!fs.existsSync(archivePath) || fs.statSync(archivePath).size < 1024 * 1024) {
+        await downloadFile(url, archivePath);
+      }
+      const digest = fileSha256(archivePath);
+      const expectedDigest = MAC_MANAGED_PYTHON_SHA256[macPythonArchKey()];
+      if (digest !== expectedDigest) {
+        throw new Error(`Managed macOS Python checksum mismatch: ${digest}`);
+      }
+      lastDownloadError = null;
+      break;
+    } catch (error) {
+      lastDownloadError = error;
+      appendLog(`Managed macOS Python download failed: ${error.message}`);
+      fs.rmSync(archivePath, { force: true });
+    }
+  }
+  if (lastDownloadError) {
+    throw lastDownloadError;
+  }
+
+  publishRuntimeState({
+    status: 'installing',
+    message: '正在安装 DeckLens 内置 Python 运行环境...',
+    progress: 30,
+    error: null
+  });
+
+  fs.rmSync(managedMacPythonDir(), { recursive: true, force: true });
+  fs.mkdirSync(managedMacPythonDir(), { recursive: true });
+  await runCommand('/usr/bin/tar', ['-xzf', archivePath, '-C', managedMacPythonDir()], {
+    cwd: app.getPath('userData')
+  });
+
+  const installed = await waitForFile(managedMacPython());
+  if (!installed) {
+    throw new Error('Managed macOS Python archive extracted but python3.12 was not created.');
+  }
+  appendLog(`Managed macOS Python installed at ${managedMacPython()}`);
+  return true;
+}
+
 async function installRuntime() {
   if (runtimeInstalling) {
     return;
@@ -957,6 +1056,10 @@ async function installRuntime() {
           appendLog(`winget Python install failed: ${wingetError.message}`);
         }
       }
+      python = findPython();
+    }
+    if (!python && process.platform === 'darwin') {
+      await installManagedMacPython();
       python = findPython();
     }
     if (!python) {
