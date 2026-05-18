@@ -3394,8 +3394,14 @@
             width: 0%;
             height: 100%;
             border-radius: inherit;
-            background: #509cf8;
+            background: linear-gradient(90deg, #509cf8, #7db8ff, #509cf8);
+            background-size: 200% 100%;
             transition: width 0.16s ease;
+        }
+
+        .settings-update-progress.downloading .settings-update-progress-fill {
+            min-width: 18%;
+            animation: updateProgressPulse 1s linear infinite;
         }
 
         .settings-update-progress.checking .settings-update-progress-fill {
@@ -3406,6 +3412,11 @@
         @keyframes updateProgressSweep {
             0% { transform: translateX(-110%); }
             100% { transform: translateX(250%); }
+        }
+
+        @keyframes updateProgressPulse {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
         }
 
         .settings-actions {
@@ -5655,9 +5666,10 @@
                     const showProgress = state === 'checking' || state === 'downloading';
                     progressBar.classList.toggle('active', showProgress);
                     progressBar.classList.toggle('checking', state === 'checking');
+                    progressBar.classList.toggle('downloading', state === 'downloading');
                     if (state === 'downloading') {
                         const percent = Math.max(0, Math.min(100, Math.round(currentStatus.progress?.percent || 0)));
-                        progressFill.style.width = `${percent}%`;
+                        progressFill.style.width = `${Math.max(percent, 8)}%`;
                     } else {
                         progressFill.style.width = state === 'checking' ? '42%' : '0%';
                     }

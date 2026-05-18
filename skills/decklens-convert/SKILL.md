@@ -3,8 +3,8 @@ name: decklens-convert
 description: 当用户提供图片、截图或 PDF，并希望转换、拆分或还原为可编辑 PPTX 时使用。
 metadata:
   decklens:
-    version: "0.2.15"
-    min_app_version: "0.2.8"
+    version: "0.2.17"
+    min_app_version: "0.2.17"
     update_channel: stable
     source: decklens
 ---
@@ -42,7 +42,7 @@ metadata:
 
 ## CLI 位置
 
-优先使用已安装 App 内置 CLI，不要让 Agent 到处搜索仓库。找到 CLI 后必须先看 `--help`，确认输出里同时有 `inspect` 和 `icons render`。如果没有这两个命令，说明 App CLI 低于 `0.2.8`，不要继续用它做分层后处理。
+优先使用已安装 App 内置 CLI，不要让 Agent 到处搜索仓库。找到 CLI 后必须先看 `--help`，确认输出里同时有 `review create`、`review apply`、`inspect` 和 `icons render`。如果没有 `review` 命令，说明 App CLI 低于 `0.2.17`，不要继续用它做 Agent 分层审阅，先让用户更新 DeckLens。
 
 macOS 默认路径：
 
@@ -56,7 +56,7 @@ Windows 默认路径：
 node "$env:LOCALAPPDATA\Programs\DeckLens\resources\cli\decklens.cjs" --help
 ```
 
-如果默认 App CLI 不存在，或 `--help` 缺少 `inspect` / `icons render`，再按顺序回退：
+如果默认 App CLI 不存在，或 `--help` 缺少 `review` / `inspect` / `icons render`，再按顺序回退：
 
 1. 当前仓库：`./bin/decklens.cjs`
 2. 当前开发机固定仓库路径：`/Users/jadon7/Documents/SynologyDrive/code/DeckLens/bin/decklens.cjs`
@@ -64,31 +64,38 @@ node "$env:LOCALAPPDATA\Programs\DeckLens\resources\cli\decklens.cjs" --help
 4. `PATH` 中的 `decklens`
 5. 如果以上都不可用，先提示用户安装或更新 DeckLens，再继续转换。
 
-找到可用 CLI 后，后续所有 `convert`、`inspect`、`icons` 命令必须使用同一个 CLI 路径，避免一会儿用旧安装版、一会儿用仓库版导致 icon 库或命令能力不一致。
+找到可用 CLI 后，后续所有 `review`、`convert`、`inspect`、`icons` 命令必须使用同一个 CLI 路径，避免一会儿用旧安装版、一会儿用仓库版导致 icon 库或命令能力不一致。
 
 ## 工作流程
 
 1. 确认输入文件存在，并且是 `.png`、`.jpg`、`.jpeg` 或 `.pdf`。
-2. 选择 DeckLens CLI。优先使用上方固定 App CLI 路径，但必须确认它支持 `inspect` 和 `icons render`。
+2. 选择 DeckLens CLI。优先使用上方固定 App CLI 路径，但必须确认它支持 `review create`、`review apply`、`inspect` 和 `icons render`。
 3. 查看每一页原始图片，逐页写下 7 类判断：可矢量化目标、卡片容器目标、可 icon 替换目标、可合并的碎片目标、复杂位图组目标、必须保留位图目标、必须保留或重建的渐变/背景装饰目标。
-4. 默认运行元素分层：
+4. 默认先创建 Agent 审阅包，而不是直接生成最终 PPTX：
 
 ```bash
-node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" convert "/path/to/input.png" --mode element --output "/path/to/output.pptx"
+node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" review create "/path/to/input.png" --review-dir "/path/to/decklens-review" --json
 ```
 
-5. 生成后立即检查 PPTX 结构：
+5. 打开审阅包里的 `manifest.json`、每页 `preview_numbered.jpg`、`contact_sheet.jpg` 和 `masks/mask_###_context.jpg`。逐页判断哪些 mask 是同一语义对象，编辑 `decision.template.json` 为 `decision.json`。
+6. 应用决策生成 PPTX：
+
+```bash
+node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" review apply "/path/to/decklens-review/manifest.json" --decision "/path/to/decklens-review/decision.json" --output "/path/to/output.pptx" --json
+```
+
+7. 生成后立即检查 PPTX 结构：
 
 ```bash
 node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" inspect "/path/to/output.pptx" --json
 ```
 
-6. 建立逐页替换清单：每个语义目标都要列出“源位图层/碎片层 -> 新 PPT 形状、SVG 或 PNG 图标”。没有源位图层编号的替换不允许直接开始，除非明确说明该对象是新增辅助元素且原图没有对应源层。
-7. 按替换清单后处理 PPTX：先删除或隐藏对应源位图层，再插入原生 PPT 形状、SVG 或高清透明 PNG 图标，并保持 z-order。
-8. 对 OCR 文本层应用文本框尺寸策略：单行段落自动宽度；同样式多行固定宽度、自动高度；标题、标签、数值保持原对齐方式。
-9. 后处理完成后再次运行 `inspect`，确认图片层、shape、文本框、图层顺序和被替换源位图删除情况符合预期。若仍有大量小图片碎片、重叠图片碎片、未替换 icon 图片，不能交付。
-10. 做一次 Agent 自检：逐页核对原图计划、最终 `inspect`、替换清单和剩余 picture。发现单一视觉对象仍被拆成多块、卡片/圆形/背景未进入 shape 判断、icon 未执行 render 时，返回后处理继续修。
-11. 最终返回 PPTX 路径，并报告转换模式、逐页矢量替换、渐变/背景还原方式、icon 来源、图表重绘情况、保留位图原因和自检结论。
+8. 建立逐页替换清单：每个语义目标都要列出“源位图层/碎片层 -> 新 PPT 形状、SVG 或 PNG 图标”。没有源位图层编号的替换不允许直接开始，除非明确说明该对象是新增辅助元素且原图没有对应源层。
+9. 按替换清单后处理 PPTX：先删除或隐藏对应源位图层，再插入原生 PPT 形状、SVG 或高清透明 PNG 图标，并保持 z-order。
+10. 对 OCR 文本层应用文本框尺寸策略：单行段落自动宽度；同样式多行固定宽度、自动高度；标题、标签、数值保持原对齐方式。
+11. 后处理完成后再次运行 `inspect`，确认图片层、shape、文本框、图层顺序和被替换源位图删除情况符合预期。若仍有大量小图片碎片、重叠图片碎片、未替换 icon 图片，不能交付。
+12. 做一次 Agent 自检：逐页核对原图计划、审阅决策、最终 `inspect`、替换清单和剩余 picture。发现单一视觉对象仍被拆成多块、卡片/圆形/背景未进入 shape 判断、icon 未执行 render 时，返回后处理继续修。
+13. 最终返回 PPTX 路径，并报告转换模式、逐页合并/删除决策、矢量替换、渐变/背景还原方式、icon 来源、图表重绘情况、保留位图原因和自检结论。
 
 ## 常用命令
 
@@ -114,6 +121,13 @@ node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" convert "/
 
 ```bash
 node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" convert "/path/to/input.png" --mode element --output "/path/to/deck.pptx"
+```
+
+Agent 审阅式元素分层：
+
+```bash
+node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" review create "/path/to/input.png" --review-dir "/path/to/decklens-review" --json
+node "/Applications/DeckLens.app/Contents/Resources/cli/decklens.cjs" review apply "/path/to/decklens-review/manifest.json" --decision "/path/to/decklens-review/decision.json" --output "/path/to/deck.pptx" --json
 ```
 
 AI 智能分层：

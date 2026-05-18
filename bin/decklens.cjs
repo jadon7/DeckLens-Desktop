@@ -13,6 +13,8 @@ function printHelp() {
 
 Usage:
   decklens convert <input...> [options]
+  decklens review create <input...> --review-dir <dir> [options]
+  decklens review apply <manifest.json> --decision <decision.json> --output <deck.pptx>
   decklens inspect <deck.pptx> [options]
   decklens icons find <name> [options]
   decklens icons render <name> [options]
@@ -24,6 +26,7 @@ Usage:
 
 Commands:
   convert    Convert image-like presentation pages into an editable PPTX deck.
+  review     Create/apply Agent review packages for background element merge/delete.
   inspect    Inspect a PPTX deck and print slide/layer structure for Agent review.
   icons      Find bundled icon assets for Agent PPT post-processing.
   install-skills
@@ -37,6 +40,14 @@ Convert options are passed through to DeckLens' conversion engine:
   --inpaint-backend <lama|local_mean>
   --qwen-layers <3-8>
   --fal-key <key>
+  --overwrite
+  --json
+
+Review options:
+  create --review-dir <dir>   Write numbered previews, mask crops, manifest, and decision template
+  apply --decision <file>     Apply merge/delete decisions and generate PPTX
+  --inpaint-backend <lama|local_mean>
+  --device <cpu|mps>
   --overwrite
   --json
 
@@ -151,6 +162,23 @@ function runConvert(args) {
   };
 
   const result = spawnSync(python.cmd, [...python.args, script, ...args], {
+    cwd: backendRoot,
+    env,
+    stdio: 'inherit'
+  });
+  return result.status === null ? 1 : result.status;
+}
+
+function runReview(args) {
+  const backendRoot = findBackendRoot();
+  const python = findPython();
+  const script = path.join(backendRoot, 'decklens_cli.py');
+  const env = {
+    ...process.env,
+    PYTHONPATH: process.env.PYTHONPATH ? `${backendRoot}${path.delimiter}${process.env.PYTHONPATH}` : backendRoot
+  };
+
+  const result = spawnSync(python.cmd, [...python.args, script, 'review', ...args], {
     cwd: backendRoot,
     env,
     stdio: 'inherit'
@@ -806,6 +834,10 @@ async function main() {
 
   if (command === 'convert') {
     return runConvert(args.slice(1));
+  }
+
+  if (command === 'review') {
+    return runReview(args.slice(1));
   }
 
   if (command === 'inspect') {

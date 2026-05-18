@@ -20,11 +20,7 @@ def default_inpaint_backend() -> str:
     return os.environ.get("DECKLENS_INPAINT_BACKEND", "lama")
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        prog="decklens",
-        description="Convert image-like presentation pages into an editable PPTX deck.",
-    )
+def add_convert_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("inputs", nargs="+", help="Input image or PDF files.")
     parser.add_argument("-o", "--output", help="Output .pptx path.")
     parser.add_argument("--output-dir", help="Directory for the output PPTX when --output is omitted.")
@@ -45,7 +41,46 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fal-key", default=os.environ.get("FAL_KEY", ""), help="fal.ai API key for --mode ai.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite an existing output PPTX.")
     parser.add_argument("--json", action="store_true", help="Print machine-readable conversion metadata.")
-    return parser.parse_args()
+
+
+def parse_args() -> argparse.Namespace:
+    if len(sys.argv) > 1 and sys.argv[1] == "review":
+        parser = argparse.ArgumentParser(
+            prog="decklens review",
+            description="Create or apply an Agent review package for background element merge/delete decisions.",
+        )
+        subparsers = parser.add_subparsers(dest="review_command", required=True)
+        create_parser = subparsers.add_parser("create", help="Create a review directory with numbered previews and mask crops.")
+        create_parser.add_argument("inputs", nargs="+", help="Input image or PDF files.")
+        create_parser.add_argument("--review-dir", required=True, help="Directory to write review files.")
+        create_parser.add_argument(
+            "--inpaint-backend",
+            choices=sorted(INPAINT_BACKENDS),
+            default=default_inpaint_backend(),
+            help="Background cleanup algorithm.",
+        )
+        create_parser.add_argument("--device", default=os.environ.get("DECKLENS_DEVICE", "cpu"), help="Processing device.")
+        create_parser.add_argument("--json", action="store_true", help="Print machine-readable review metadata.")
+
+        apply_parser = subparsers.add_parser("apply", help="Apply a review decision JSON and generate PPTX.")
+        apply_parser.add_argument("manifest", help="Path to manifest.json produced by review create.")
+        apply_parser.add_argument("--decision", required=True, help="Path to decision JSON.")
+        apply_parser.add_argument("-o", "--output", required=True, help="Output .pptx path.")
+        apply_parser.add_argument("--overwrite", action="store_true", help="Overwrite an existing output PPTX.")
+        apply_parser.add_argument("--json", action="store_true", help="Print machine-readable apply summary.")
+
+        args = parser.parse_args(sys.argv[2:])
+        args.command = "review"
+        return args
+
+    parser = argparse.ArgumentParser(
+        prog="decklens",
+        description="Convert image-like presentation pages into an editable PPTX deck.",
+    )
+    add_convert_arguments(parser)
+    args = parser.parse_args()
+    args.command = "convert"
+    return args
 
 
 def validate_inputs(inputs: list[str]) -> list[Path]:
@@ -83,6 +118,42 @@ def expand_inputs(inputs: list[Path], temp_dir: str) -> list[str]:
 def main() -> int:
     args = parse_args()
     try:
+        if args.command == "review":
+            from review_pipeline import apply_review, create_review
+
+            if args.review_command == "create":
+                if os.name == "nt" and os.environ.get("DECKLENS_DISABLE_TORCH", "1").strip().lower() in {"1", "true", "yes", "on"} and args.inpaint_backend == "lama":
+                    args.inpaint_backend = "local_mean"
+
+                def progress(current: int, total: int, filename: str, message: str) -> None:
+                    if not args.json:
+                        print(f"[{current + 1}/{total}] {filename}: {message}", flush=True)
+
+                manifest = create_review(
+                    args.inputs,
+                    args.review_dir,
+                    device=args.device,
+                    inpaint_backend=args.inpaint_backend,
+                    progress_callback=progress,
+                )
+                result = {
+                    "ok": True,
+                    "manifest": str(Path(args.review_dir).expanduser().resolve() / "manifest.json"),
+                    "review_dir": str(Path(args.review_dir).expanduser().resolve()),
+                    "slides": manifest["total_slides"],
+                    "decision_template": str(Path(args.review_dir).expanduser().resolve() / manifest["decision_template"]),
+                }
+                print(json.dumps(result, ensure_ascii=False) if args.json else f"Review manifest: {result['manifest']}")
+                return 0
+
+            output = Path(args.output).expanduser().resolve()
+            if output.exists() and not args.overwrite:
+                raise FileExistsError(f"Output already exists, pass --overwrite to replace it: {output}")
+            summary = apply_review(args.manifest, args.decision, str(output))
+            result = {"ok": True, **summary}
+            print(json.dumps(result, ensure_ascii=False) if args.json else f"Output: {output}")
+            return 0
+
         from engine import images_to_pptx
 
         if args.inpaint_backend not in INPAINT_BACKENDS:

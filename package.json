@@ -1,6 +1,6 @@
 {
   "name": "decklens-desktop",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "private": true,
   "description": "DeckLens desktop shell for macOS and Windows.",
   "author": "DeckLens",
@@ -58,6 +58,10 @@
       {
         "from": "decklens_cli.py",
         "to": "backend/decklens_cli.py"
+      },
+      {
+        "from": "review_pipeline.py",
+        "to": "backend/review_pipeline.py"
       },
       {
         "from": "bin",
